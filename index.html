@@ -448,6 +448,8 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 
 .pu-persona-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px 0 14px;scrollbar-width:none}.pu-persona-tabs button{flex:0 0 auto;border:1px solid #e7e7eb;background:#f6f6f8;color:#75757d;padding:9px 11px;border-radius:13px;font-size:11px}.pu-persona-tabs button.active{background:#e8e8ec;color:#303037;border-color:#d8d8df;font-weight:650}#puPersonaStory textarea,#puPersonaFirst textarea{width:100%;min-height:260px;line-height:1.7;font-size:12px}.pu-world-preview{padding:12px;background:#f7f7f9;border-radius:12px;margin:8px 0}.pu-world-preview b{font-size:13px}.pu-world-preview small{display:block;color:#999;font-size:10px;margin:4px 0}.pu-world-preview p{font-size:11px;color:#666;white-space:pre-wrap;overflow-wrap:anywhere}.pu-import-report{background:#edf3ee;color:#536d59;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;margin:12px 0}</style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
+</style><style>
+.pu-story-screen{background:#f5f0e9!important;color:#38312e}.pu-story-screen .bar{background:#f8f4ef;border-bottom:1px solid #e6ddd4}.pu-story-scroll{padding:15px 17px 25px;overflow-y:auto;flex:1}.pu-story-page{padding:20px 18px;margin:0 0 17px;background:#fffdf9;border:1px solid #e9e1d8;border-radius:9px;box-shadow:0 3px 15px #3c30240a;font-size:14px;line-height:2.05;white-space:pre-wrap;overflow-wrap:anywhere}.pu-story-page.user{background:#f3eae2;border-color:#e7d8ca}.pu-story-author{font-size:11px;color:#9b8c81;margin-bottom:11px;letter-spacing:1px}.pu-story-compose{padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:#f8f4ef;border-top:1px solid #e6ddd4;display:flex;flex-direction:column;gap:9px}.pu-story-compose textarea{width:100%;min-height:75px;max-height:145px;resize:vertical;border:1px solid #dfd4c9;background:#fffdf9;border-radius:12px;padding:11px;font-size:13px}.pu-story-compose .btn{align-self:flex-end}.pu-world-group{border:1px solid #e8dce4;border-radius:13px;padding:12px;margin:10px 0;background:#fff}.pu-world-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.pu-world-group-actions{display:flex;gap:6px;flex-wrap:wrap}.pu-world-group-actions button{font-size:11px;padding:6px 9px;border:1px solid #e5c9d7;border-radius:8px;background:#fff}.pu-world-off{opacity:.48}.pu-world-group small{font-size:11px;color:#888}.pu-crop-overlay{position:fixed;inset:0;background:#0009;z-index:9999;display:grid;place-items:center;padding:18px}.pu-crop-overlay[hidden]{display:none}.pu-crop-dialog{width:min(100%,390px);background:#fff;border-radius:19px;padding:18px;color:#333;display:flex;flex-direction:column;gap:12px}.pu-crop-head{display:flex;justify-content:space-between}.pu-crop-head button{border:0;background:transparent;font-size:19px}.pu-crop-dialog p{font-size:12px;color:#777;margin:0}.pu-crop-viewport{width:min(65vw,260px);height:min(65vw,260px);margin:auto;border-radius:15px;overflow:hidden;position:relative;background:#ddd;touch-action:none;cursor:grab}.pu-crop-viewport img{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none}.pu-crop-dialog label{font-size:12px;display:flex;align-items:center;gap:12px}.pu-crop-dialog input{flex:1}
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -477,8 +479,8 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 <section class="screen" id="notes"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>备忘录</h2><button class="btn small" onclick="editNote()">＋ 新建</button></header><div class="body" id="noteList"></div></section>
 <section class="screen" id="profile"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>我的<small>MY PROFILE</small></h2></header><div class="body"><div class="card" style="text-align:center"><button class="avatar big" id="profileAvatar" onclick="puPickUserAvatar()" aria-label="导入我的头像"></button><h2 id="profileName">未填写名字</h2><p id="profileSign" class="muted">尚未填写签名</p></div><div class="card" id="profileDetails"></div><button class="btn" onclick="puEditUser()">编辑我的资料</button></div></section>
 <section class="screen" id="memories"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>长期记忆</h2><button class="btn small" onclick="editMemory()">＋ 新增</button></header><div class="body"><p class="muted">这里保存希望角色长期记得的事。每次接口回复时会连同最近聊天一起发送；说“记住……”也会自动提取一条。达到上限时需手动整理，不会悄悄删除旧记忆。</p><div id="memoryList"></div></div></section>
-<section class="screen" id="persona"><header class="bar"><button class="back" onclick="puPersonaBack()">‹</button><h2>人设卡</h2><button class="btn small pu-soft-btn" onclick="document.getElementById('personaFile').click()"><svg viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></svg>导入</button></header><div class="body"><p class="muted">导入完整资料包后，可分别查看人设、世界书和开场白。原文会单独保留，不再只读取第一行。</p><div class="pu-avatar-edit"><button class="pu-persona-avatar" id="puPersonaAvatar" onclick="puPickCharAvatar()" aria-label="导入角色头像"></button><div><b>Char 头像</b><small>点击左侧方形头像导入图片</small><button class="pu-soft-btn" onclick="puPickCharAvatar()">更换头像</button></div></div><p class="pu-required-tip" id="puPersonaRequired">带 * 的项目为必填项，保存时会检查是否填写完整。</p><div class="pu-persona-tabs"><button type="button" class="active" onclick="puPersonaTab('basic',this)">基础资料</button><button type="button" onclick="puPersonaTab('story',this)">完整人设</button><button type="button" onclick="puPersonaTab('world',this)">世界书</button><button type="button" onclick="puPersonaTab('first',this)">开场白</button></div><div id="puPersonaBasic"><div id="personaFields"></div></div><div id="puPersonaStory" style="display:none"><label class="label">完整原文（导入后永久保留，可编辑）</label><textarea id="puPersonaRaw" rows="15" placeholder="完整资料包原文将在这里显示"></textarea><p class="muted" id="puRawCount"></p></div><div id="puPersonaWorld" style="display:none"><p class="muted">这里展示导入的世界书条目；可前往世界书应用单独修改。</p><div id="puPersonaWorldList"></div><button type="button" class="btn alt small" onclick="puOriginalGo('world')">打开世界书</button></div><div id="puPersonaFirst" style="display:none"><label class="label">完整开场白</label><textarea id="puPersonaFirstText" rows="13"></textarea></div><div id="puImportReport" class="pu-import-report" hidden></div><input class="hidden" type="file" id="puAvatarFile" accept="image/*" onchange="puAvatarUpload(this)"><input class="hidden" type="file" id="personaFile" accept=".json,.txt,text/plain,application/json" onchange="importPersona(this)"><button class="btn" onclick="savePersona()">保存人设 · 立即生效</button></div></section>
-<section class="screen" id="world"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>世界书</h2><button class="btn small" onclick="editWorld()">＋ 新建</button></header><div class="body"><p class="muted">常驻条目每次发送；其他条目只有最近对话命中关键词时才发送。</p><div class="row wrap"><button class="btn alt small" onclick="exportWorld()">导出 JSON</button><button class="btn alt small" onclick="document.getElementById('worldFile').click()">导入 JSON</button></div><input class="hidden" id="worldFile" type="file" accept=".json,application/json" onchange="importWorld(this)"><div class="spacer"></div><div id="worldList"></div></div></section>
+<section class="screen pu-story-screen" id="puStory"><header class="bar"><button class="back" onclick="puReturnToChat()">‹</button><h2>长文互动 <small id="puStoryName"></small></h2><button class="iconbtn" onclick="go('persona')" title="角色设定">◇</button></header><div class="body pu-story-scroll" id="puStoryScroll"><div id="puStoryList"></div><div id="puStoryTyping" hidden>正在续写故事…</div></div><div class="pu-story-compose"><textarea id="puStoryInput" rows="3" placeholder="描写你的行动、台词，或推动故事发展…"></textarea><button class="btn" id="puStorySend" onclick="puSendStory()">继续剧情 →</button></div></section><section class="screen" id="persona"><header class="bar"><button class="back" onclick="puPersonaBack()">‹</button><h2>人设卡</h2><button class="btn small pu-soft-btn" onclick="document.getElementById('personaFile').click()"><svg viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/></svg>导入</button></header><div class="body"><p class="muted">导入完整资料包后，可分别查看人设、世界书和开场白。原文会单独保留，不再只读取第一行。</p><div class="pu-avatar-edit"><button class="pu-persona-avatar" id="puPersonaAvatar" onclick="puPickCharAvatar()" aria-label="导入角色头像"></button><div><b>Char 头像</b><small>点击左侧方形头像导入图片</small><button class="pu-soft-btn" onclick="puPickCharAvatar()">更换头像</button></div></div><p class="pu-required-tip" id="puPersonaRequired">带 * 的项目为必填项，保存时会检查是否填写完整。</p><div class="pu-persona-tabs"><button type="button" class="active" onclick="puPersonaTab('basic',this)">基础资料</button><button type="button" onclick="puPersonaTab('story',this)">完整人设</button><button type="button" onclick="puPersonaTab('world',this)">世界书</button><button type="button" onclick="puPersonaTab('first',this)">开场白</button></div><div id="puPersonaBasic"><div id="personaFields"></div></div><div id="puPersonaStory" style="display:none"><label class="label">完整原文（导入后永久保留，可编辑）</label><textarea id="puPersonaRaw" rows="15" placeholder="完整资料包原文将在这里显示"></textarea><p class="muted" id="puRawCount"></p></div><div id="puPersonaWorld" style="display:none"><p class="muted">这里展示导入的世界书条目；可前往世界书应用单独修改。</p><div id="puPersonaWorldList"></div><button type="button" class="btn alt small" onclick="puOriginalGo('world')">打开世界书</button></div><div id="puPersonaFirst" style="display:none"><label class="label">完整开场白</label><textarea id="puPersonaFirstText" rows="13"></textarea></div><div id="puImportReport" class="pu-import-report" hidden></div><input class="hidden" type="file" id="puAvatarFile" accept="image/*" onchange="puAvatarUpload(this)"><input class="hidden" type="file" id="personaFile" accept=".json,.txt,text/plain,application/json" onchange="importPersona(this)"><button class="btn" onclick="savePersona()">保存人设 · 立即生效</button></div></section>
+<section class="screen" id="world"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>世界书</h2><button class="btn small" onclick="editWorld()">＋ 新建</button></header><div class="body"><p class="muted">常驻条目每次发送；其他条目只有最近对话命中关键词时才发送。</p><div class="row wrap"><button class="btn alt small" onclick="exportWorld()">导出 JSON</button><button class="btn alt small" onclick="document.getElementById('worldFile').click()">导入 JSON</button></div><input class="hidden" id="worldFile" type="file" accept=".json,application/json" onchange="importWorld(this)"><div class="spacer"></div><div id="puWorldGroups"></div><div id="worldList"></div></div></section>
 <section class="screen" id="api"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>接口</h2></header><div class="body"><div class="card"><label class="label">回复模式</label><select id="apiMode"><option value="local">本地 · 关键词回复（离线）</option><option value="remote">接口 · AI 模型回复</option></select><label class="label">接口地址（OpenAI 兼容）</label><input id="apiUrl" placeholder="https://api.gemai.cc/v1/chat/completions"><p class="muted">GitHub Pages 个人版：填写服务商的 HTTPS 接口地址。请勿把密钥写进 GitHub 仓库。</p><label class="label">模型名</label><input id="apiModel" placeholder="例如模型服务商提供的 model id"><label class="label">API 密钥</label><input id="apiKey" type="password" autocomplete="off" placeholder="仅保存在本机浏览器中"><label class="label">随机性：<span id="tempLabel">0.8</span></label><input id="apiTemp" type="range" min="0" max="2" step="0.1" oninput="document.getElementById('tempLabel').textContent=this.value"><p class="muted">只有接口模式会联网。本版本直接从浏览器连接服务商，须服务商允许 CORS。密钥仅保存在此浏览器的本地存储中，不会上传 GitHub，但可能被设备使用者或页面脚本读取；请仅个人使用并设置用量限额。</p><div class="row wrap"><button class="btn" onclick="saveApi()">保存接口</button><button class="btn alt" id="testApiBtn" onclick="testApi()">测一下</button></div><p id="apiResult" style="white-space:pre-wrap;overflow-wrap:anywhere" class="muted"></p></div><div class="card"><h3>本地关键词回复表</h3><p class="muted">每行写：关键词=回复内容。没有匹配时使用默认回复。</p><textarea id="localRules" rows="7"></textarea><button class="btn alt" onclick="saveRules()">保存关键词表</button></div></div></section>
 <section class="screen" id="backup"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>备份与恢复</h2></header><div class="body"><div class="card"><h3>本机存储概况</h3><div id="storageStats" class="muted">统计中…</div></div><div class="card"><h3>完整备份</h3><p class="muted">包含聊天、人设、世界书、设置、接口设置、图片和音频。不包含 Netlify 服务器端 API 密钥；仍可能包含私人聊天与人设，请妥善保管。大文件备份可能耗时较长。</p><div class="row wrap"><button class="btn" id="backupBtn" onclick="exportBackup()">导出备份 JSON</button><button class="btn alt" onclick="document.getElementById('backupFile').click()">导入备份</button></div><input class="hidden" id="backupFile" type="file" accept=".json,application/json" onchange="importBackup(this)"></div><div class="card"><h3>危险操作</h3><p class="muted">只清除当前浏览器里这个小手机的数据，不会清除云端模型服务的数据。</p><button class="btn danger" onclick="clearAll()">清空全部（两次确认）</button></div></div></section>
 <section class="screen" id="settings"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>设置</h2></header><div class="body"><div class="card"><label class="label">他的名字（与人设卡同步）</label><input id="settingName"><label class="label">桌面底部小字</label><input id="settingFooter"><label class="label">锁屏短话</label><input id="settingQuote"><label class="label">主题色</label><div class="row"><input type="color" id="settingColor"><span class="muted">自定义主色</span></div><label class="label">最近上下文消息数</label><input id="settingContext" type="number" min="2" max="60"><label class="label"><input id="settingSummary" type="checkbox"> 启用旧聊天摘要</label><label class="label">长期记忆条数上限</label><input id="settingMaxMem" type="number" min="5" max="500"><p class="muted">摘要会在接口模式下按需调用模型生成并保存；首次生成会增加一次请求。若摘要失败则保留原摘要，不影响聊天。</p><button class="btn" onclick="saveSettings()">保存设置</button></div><button class="btn alt" onclick="go('backup')">备份、恢复或清除数据 →</button></div></section>
@@ -526,7 +528,7 @@ let tracks=[],trackIndex=-1,musicUrl=null;async function renderMusic(){tracks=aw
 /* 通用编辑器：减少重复表单代码，所有条目都可新增、修改和删除 */
 let editType='',editId=null;function closeEditor(){$('editor').classList.remove('show')}function showEditor(type,id,fields,title){editType=type;editId=id;$('editorTitle').textContent=title;$('editorFields').innerHTML=fields.map(f=>`<label class="label">${esc(f.label)}</label>${f.type==='check'?`<input type="checkbox" id="edit_${f.key}" ${f.value?'checked':''}>`:f.type==='area'?`<textarea id="edit_${f.key}" rows="4">${esc(f.value)}</textarea>`:`<input id="edit_${f.key}" value="${esc(f.value)}">`}`).join('');$('editor').classList.add('show')}let editorFields=[];function launchEditor(type,id,fields,title){editorFields=fields;showEditor(type,id,fields,title)}function field(key){let f=editorFields.find(x=>x.key===key);return f?.type==='check'?$('edit_'+key).checked:$('edit_'+key).value.trim()}function saveEditor(){let arr=state[editType];if(!Array.isArray(arr))return;let data={id:editId||uid(),date:now()};for(let f of editorFields)data[f.key]=field(f.key);let ix=arr.findIndex(x=>x.id===editId);if(ix>=0){data.date=arr[ix].date;arr[ix]=data}else arr.unshift(data);if(editType==='memories'&&arr.length>state.settings.maxMem){toast('记忆已达到上限，请先整理旧记忆');return}persist();closeEditor();({memories:renderMemories,notes:renderNotes,world:renderWorld,moments:renderMoments}[editType])();toast('保存成功')}function deleteEntry(type,id){if(!confirm('确定删除这条内容？'))return;state[type]=state[type].filter(x=>x.id!==id);persist();({memories:renderMemories,notes:renderNotes,world:renderWorld,moments:renderMoments}[type])()}
 function editMemory(id){let d=state.memories.find(x=>x.id===id)||{};launchEditor('memories',id,[{key:'text',label:'希望他一直记得的事',type:'area',value:d.text||''}],id?'编辑记忆':'新增记忆')}function renderMemories(){$('memoryList').innerHTML=`<p class="muted">已保存 ${state.memories.length} / ${state.settings.maxMem} 条</p>`+state.memories.map(x=>`<div class="card"><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.text)}</p><div class="row"><span class="muted grow">${esc(x.date)}</span><button class="btn alt small" onclick="editMemory('${x.id}')">编辑</button><button class="btn danger small" onclick="deleteEntry('memories','${x.id}')">删除</button></div></div>`).join('')}function editNote(id){let d=state.notes.find(x=>x.id===id)||{};launchEditor('notes',id,[{key:'title',label:'标题',value:d.title||''},{key:'text',label:'内容',type:'area',value:d.text||''}],id?'编辑备忘':'新增备忘')}function renderNotes(){$('noteList').innerHTML=state.notes.map(x=>`<div class="card"><b>${esc(x.title||'无标题')}</b><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.text)}</p><div class="row"><span class="muted grow">${esc(x.date)}</span><button class="btn alt small" onclick="editNote('${x.id}')">编辑</button><button class="btn danger small" onclick="deleteEntry('notes','${x.id}')">删除</button></div></div>`).join('')||'<div class="empty">还没有备忘</div>'}
-function editWorld(id){let d=state.world.find(x=>x.id===id)||{};launchEditor('world',id,[{key:'title',label:'标题',value:d.title||''},{key:'keywords',label:'关键词（用逗号隔开）',value:d.keywords||''},{key:'content',label:'设定内容',type:'area',value:d.content||''},{key:'always',label:'常驻：每次请求都携带',type:'check',value:d.always||false}],id?'编辑世界书':'新建世界书')}function renderWorld(){$('worldList').innerHTML=state.world.map(x=>`<div class="card"><div class="item-head"><b>${esc(x.title||'无标题')}</b><span class="tag">${x.always?'常驻':'关键词触发'}</span></div><p class="muted">关键词：${esc(x.keywords)}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.content)}</p><div class="row"><button class="btn alt small" onclick="editWorld('${x.id}')">编辑</button><button class="btn danger small" onclick="deleteEntry('world','${x.id}')">删除</button></div></div>`).join('')||'<div class="empty">世界书还是空的</div>'}function download(name,blob){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}function jsonDownload(name,data){download(name,new Blob([JSON.stringify(data,null,2)],{type:'application/json'}))}function exportWorld(){jsonDownload('世界书.json',state.world)}async function importWorld(input){let f=input.files[0];input.value='';if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data))data=data.entries||data.world||[];if(!Array.isArray(data))throw Error('格式不是条目数组');state.world=data.map(x=>({id:uid(),title:String(x.title||''),keywords:Array.isArray(x.keywords)?x.keywords.join(','):String(x.keywords||''),content:String(x.content||''),always:!!x.always,date:now()}));persist();renderWorld();toast('世界书导入成功')}catch(e){toast('导入失败：'+e.message)}}
+function editWorld(id){let d=state.world.find(x=>x.id===id)||{};launchEditor('world',id,[{key:'title',label:'标题',value:d.title||''},{key:'keywords',label:'关键词（用逗号隔开）',value:d.keywords||''},{key:'content',label:'设定内容',type:'area',value:d.content||''},{key:'group',label:'所属分组（例如：人物关系、剧情规则）',value:d.group||'未分组'},{key:'always',label:'常驻：每次请求都携带',type:'check',value:d.always||false}],id?'编辑世界书':'新建世界书')}function renderWorld(){$('worldList').innerHTML=state.world.map(x=>`<div class="card"><div class="item-head"><b>${esc(x.title||'无标题')}</b><span class="tag">${x.always?'常驻':'关键词触发'}</span></div><p class="muted">关键词：${esc(x.keywords)}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.content)}</p><div class="row"><button class="btn alt small" onclick="editWorld('${x.id}')">编辑</button><button class="btn danger small" onclick="deleteEntry('world','${x.id}')">删除</button></div></div>`).join('')||'<div class="empty">世界书还是空的</div>'}function download(name,blob){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}function jsonDownload(name,data){download(name,new Blob([JSON.stringify(data,null,2)],{type:'application/json'}))}function exportWorld(){jsonDownload('世界书.json',state.world)}async function importWorld(input){let f=input.files[0];input.value='';if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data))data=data.entries||data.world||[];if(!Array.isArray(data))throw Error('格式不是条目数组');state.world=data.map(x=>({id:uid(),title:String(x.title||''),keywords:Array.isArray(x.keywords)?x.keywords.join(','):String(x.keywords||''),content:String(x.content||''),always:!!x.always,group:String(x.group||'未分组'),enabled:x.enabled!==false,date:now()}));persist();renderWorld();toast('世界书导入成功')}catch(e){toast('导入失败：'+e.message)}}
 /* 朋友圈支持文字、时间、点赞和可选图片（选择相册已有图片） */
 function editMoment(id){let d=state.moments.find(x=>x.id===id)||{};launchEditor('moments',id,[{key:'text',label:'动态内容',type:'area',value:d.text||''},{key:'photoId',label:'相册图片 ID（可留空，见相册图片列表）',value:d.photoId||''}],id?'编辑动态':'发布动态')}async function renderMoments(){let photos=await dbAll('photos');let map=new Map(photos.map(p=>[p.id,p]));$('momentList').innerHTML='';for(let x of state.moments){let box=document.createElement('div');box.className='card';box.innerHTML=`<div class="row"><div class="avatar">${esc(initial())}</div><div class="grow"><b>${esc(displayName())}</b><div class="muted">${esc(x.date)}</div></div></div><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.text)}</p><div class="momentPhoto"></div><div class="row wrap"><button class="btn alt small like">${x.liked?'♥ 已赞':'♡ 点赞'}</button><button class="btn alt small edit">编辑</button><button class="btn danger small del">删除</button></div>`;if(x.photoId&&map.has(x.photoId)){let u=URL.createObjectURL(map.get(x.photoId).blob),img=document.createElement('img');img.src=u;img.style='max-width:100%;max-height:280px;border-radius:12px';box.querySelector('.momentPhoto').appendChild(img);img.onload=()=>setTimeout(()=>URL.revokeObjectURL(u),10000)}box.querySelector('.like').onclick=()=>{x.liked=!x.liked;persist();renderMoments()};box.querySelector('.edit').onclick=()=>editMoment(x.id);box.querySelector('.del').onclick=()=>deleteEntry('moments',x.id);$('momentList').appendChild(box)}if(!state.moments.length)$('momentList').innerHTML='<div class="empty">还没有动态</div>';if(photos.length){let p=document.createElement('p');p.className='muted';p.textContent='可用图片 ID：'+photos.map(x=>x.name+' → '+x.id).join('；');$('momentList').appendChild(p)}}
 /* 人设卡：字段完整保存，支持常见 JSON 键名及文本标签 */
@@ -589,7 +591,7 @@ async function importPersona(input){
   const incoming=pack.persona||{};
   for(const [k,v] of Object.entries(incoming))if(v!==undefined&&v!==null&&String(v).length)state.persona[k]=String(v);
   state.persona.rawSource=original;
-  const additions=(pack.world||[]).map(w=>({id:uid(),title:String(w.title||'未命名条目'),keywords:Array.isArray(w.keywords)?w.keywords.join(','):String(w.keywords||''),content:String(w.content||''),always:!!w.always,date:now()}));
+  const additions=(pack.world||[]).map(w=>({id:uid(),title:String(w.title||'未命名条目'),keywords:Array.isArray(w.keywords)?w.keywords.join(','):String(w.keywords||''),content:String(w.content||''),always:!!w.always,group:String(w.group||'未分组'),enabled:w.enabled!==false,date:now()}));
   state.world.push(...additions);
   if(!persist())throw Error('本机存储空间不足，请先备份并清理空间');
   renderPersona();
@@ -627,7 +629,8 @@ function puToggleModePanel(){const el=document.getElementById('puModePanel');el.
 function puSetChatMode(mode){
  if(!['chat','story'].includes(mode))return;
  puChatOptions.mode=mode;localStorage.setItem(PU_CHAT_OPTIONS,JSON.stringify(puChatOptions));
- puSyncModeUI();renderChat();
+ document.getElementById('puModePanel').hidden=true;puSyncModeUI();
+ if(mode==='story')puOpenStory();else {puOriginalGo('chat');renderChat()}
 }
 function puSetReplyMode(mode){
  if(!['one','multi','auto'].includes(mode))return;
@@ -635,7 +638,7 @@ function puSetReplyMode(mode){
 }
 function puConversationPrompt(){
  if(puChatOptions.mode==='story')return '你正在进行沉浸式长文角色扮演。请根据用户行动推进情节，用连贯的小说段落写角色言行、场景与细节。不要替用户决定行动、心理或台词。保持人设与剧情一致。';
- const quantity=puChatOptions.reply==='one'?'严格只生成1条消息':puChatOptions.reply==='multi'?'生成2到4条连续的独立消息':'根据情境自然生成1到4条独立消息';
+ const quantity=puChatOptions.reply==='one'?'严格只生成1条消息':puChatOptions.reply==='multi'?'生成2到6条独立消息，条数依情境变化，禁止每次固定3条':'根据用户消息的复杂度自然决定1到5条独立消息：普通问候通常1条，简单问答1到2条，复杂解释2到4条，情绪激动时可更多。绝对不要固定每次3条；不要为了凑条数拆分';
  return '你正在模拟真实手机即时聊天。只发送角色本人打出的聊天消息，不写小说旁白、第三人称动作描写、环境描写、舞台提示、角色名前缀或Markdown。每条消息要像真实聊天那样自然、简短，允许断句分开发。'+quantity+'。必须且只能输出JSON字符串数组，例如 ["第一条消息","第二条消息"]，不要代码围栏。';
 }
 function puParseChatReplies(raw){
@@ -649,14 +652,38 @@ function puParseChatReplies(raw){
   const lines=text.split(/\n+/).map(x=>x.replace(/^\s*(?:[-*•]|\d+[.、])\s*/,'').trim()).filter(Boolean);
   parts=lines.length>1?lines:[text];
  }
- const cap=puChatOptions.reply==='one'?1:4;
+ const cap=puChatOptions.reply==='one'?1:puChatOptions.reply==='auto'?5:6;
  return parts.slice(0,cap).map(x=>x.slice(0,900)).filter(Boolean);
 }
 
 function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div><div class="msgtime">${esc(m.date||'')}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
 async function maybeSummarize(){if(!state.settings.summary||state.api.mode!=='remote')return;let cut=Math.max(0,state.messages.length-state.settings.context),from=state.summaryUntil||0;if(cut-from<20)return;let batch=state.messages.slice(from,cut).map(x=>({role:x.role,content:x.content}));try{let summary=await requestModel([{role:'user',content:'已有摘要：'+(state.summaryText||'无')+'\n\n需要归纳的旧聊天：\n'+batch.map(x=>x.role+': '+x.content).join('\n')}],'将旧聊天压缩成简洁、准确的长期剧情摘要，保留关系变化、关键事件、未完成事项；不要编造。只输出摘要。');state.summaryText=summary;state.summaryUntil=cut;persist()}catch(e){console.warn('摘要生成失败',e)}}
 let sending=false;
-async function sendMessage(){let input=$('chatInput'),text=input.value.trim();if(!text||sending)return;input.value='';state.messages.push({id:uid(),role:'user',content:text,date:now()});autoMemory(text);persist();renderChat();sending=true;$('sendBtn').disabled=true;$('typing').classList.add('show');scrollChat();let reply='',error='';let started=Date.now();try{if(state.api.mode==='remote'){await maybeSummarize();let recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt())}else reply=localReply(text)}catch(e){error=e.message;reply=localReply(text)}finally{await new Promise(r=>setTimeout(r,Math.max(0,650-(Date.now()-started))));$('typing').classList.remove('show');if(puChatOptions.mode==='chat'){for(const content of puParseChatReplies(reply))state.messages.push({id:uid(),role:'assistant',content,date:now()})}else state.messages.push({id:uid(),role:'assistant',content:reply,date:now()});persist();renderChat();if(error){$('chatStatus').textContent='接口失败 · 已回退本地';toast('接口未连通，已改用本地回复：'+error)}sending=false;$('sendBtn').disabled=false}}
+async function sendMessage(){
+ const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;
+ input.value='';sending=true;$('sendBtn').disabled=true;
+ state.messages.push({id:uid(),role:'user',content:text,date:now()});autoMemory(text);persist();renderChat();
+ $('typing').classList.add('show');scrollChat();
+ let reply='',error='';
+ try{
+  if(state.api.mode==='remote'){
+   await maybeSummarize();
+   const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
+   reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt());
+  }else reply=localReply(text);
+ }catch(e){error=e.message;reply=localReply(text)}
+ let parts=puParseChatReplies(reply);
+ if(puChatOptions.reply==='one')parts=parts.slice(0,1);
+ if(!parts.length)parts=[reply||'嗯'];
+ for(let i=0;i<parts.length;i++){
+  const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
+  await new Promise(r=>setTimeout(r,delay));
+  state.messages.push({id:uid(),role:'assistant',content:parts[i],date:now()});persist();renderChat();
+  if(i===parts.length-1)$('typing').classList.remove('show');
+ }
+ if(error){$('chatStatus').textContent='接口失败 · 已回退本地';toast('接口未连通，已改用本地回复：'+error)}
+ sending=false;$('sendBtn').disabled=false;
+}
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 /* 模拟通话与本地通话记录：不访问真实电话网络 */
 let callStartTime=0,callInterval=null;function renderCalls(){$('callName').textContent=displayName();$('callAvatar').textContent=initial();$('callLog').innerHTML=state.calls.map(x=>`<div class="card row"><span class="grow">${esc(x.date)}</span><span class="muted">${esc(x.duration)}</span></div>`).join('')||'<div class="empty">暂无通话记录</div>'}function startCall(){if(callStartTime)return;callStartTime=Date.now();$('callState').textContent='模拟通话中';$('callStart').disabled=true;callInterval=setInterval(()=>{$('callTimer').textContent=timeFmt((Date.now()-callStartTime)/1000)},250)}function endCall(){if(!callStartTime){toast('当前没有通话');return}let duration=timeFmt((Date.now()-callStartTime)/1000);clearInterval(callInterval);callInterval=null;callStartTime=0;$('callTimer').textContent='00:00';$('callState').textContent='通话已结束';$('callStart').disabled=false;state.calls.unshift({id:uid(),date:now(),duration});persist();renderCalls()}
@@ -938,6 +965,45 @@ function puRenderMessage(m){let me=m.role==='user',extra='';
  return `<div class="msg ${me?'me':''}"><div class="avatar pu-message-avatar">${puAvatarHtml(m.role)}</div><div class="pu-msg-content">${extra}<div class="msgtime">${esc(m.date||'')}</div></div></div>`
 }
 renderChat=function(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').innerHTML=puAvatarHtml('assistant');$('callAvatar').innerHTML=puAvatarHtml('assistant');$('callName').textContent=n;$('chatList').innerHTML=state.messages.map(puRenderMessage).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';puApplyAvatarShape();scrollChat()};
+
+/* v3.9 world group controls */
+function puWorldGroup(w){return String(w.group||'未分组').trim()||'未分组'}
+function puWorldEnabled(w){return w.enabled!==false&&localStorage.getItem('pu_world_group_off_'+puWorldGroup(w))!=='1'}
+function puWorldGroups(){
+ const groups=[...new Set(state.world.map(puWorldGroup))];
+ const root=document.getElementById('puWorldGroups');if(!root)return;
+ root.innerHTML=groups.map(g=>{
+ const items=state.world.filter(w=>puWorldGroup(w)===g);
+ const allOn=items.every(puWorldEnabled);
+ return `<div class="pu-world-group"><div class="pu-world-group-head"><b>${esc(g)}</b><small>${items.filter(puWorldEnabled).length}/${items.length} 已启用</small></div><div class="pu-world-group-actions"><button onclick="puWorldGroupToggle(decodeURIComponent('${encodeURIComponent(g)}'),true)">全部开启</button><button onclick="puWorldGroupToggle(decodeURIComponent('${encodeURIComponent(g)}'),false)">全部关闭</button><button onclick="puWorldRename(decodeURIComponent('${encodeURIComponent(g)}'))">重命名</button></div></div>`
+ }).join('')||'<p class="muted">导入或新建世界书后，可以按分组管理。</p>';
+}
+function puWorldGroupToggle(group,on){
+ localStorage.setItem('pu_world_group_off_'+group,on?'0':'1');
+ state.world.filter(w=>puWorldGroup(w)===group).forEach(w=>w.enabled=on);
+ persist();renderWorld();toast(on?'分组已全部开启':'分组已全部关闭');
+}
+function puWorldRename(group){
+ const name=prompt('新的分组名称',group);if(!name?.trim()||name===group)return;
+ const wasOff=localStorage.getItem('pu_world_group_off_'+group)==='1';
+ state.world.filter(w=>puWorldGroup(w)===group).forEach(w=>w.group=name.trim());
+ if(wasOff)localStorage.setItem('pu_world_group_off_'+name.trim(),'1');
+ localStorage.removeItem('pu_world_group_off_'+group);persist();renderWorld();
+}
+function puWorldToggle(id){
+ const w=state.world.find(x=>x.id===id);if(!w)return;
+ w.enabled=w.enabled===false;persist();renderWorld();
+}
+renderWorld=function(){
+ puWorldGroups();
+ $('worldList').innerHTML=state.world.map(w=>`<div class="card ${puWorldEnabled(w)?'':'pu-world-off'}"><div class="item-head"><b>${esc(w.title||'无标题')}</b><span class="tag">${esc(puWorldGroup(w))} · ${w.always?'常驻':'关键词'}</span></div><p class="muted">${puWorldEnabled(w)?'已开启':'已关闭'} · 关键词：${esc(w.keywords||'')}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(w.content)}</p><div class="row"><button class="btn alt small" onclick="puWorldToggle('${w.id}')">${w.enabled===false?'开启':'关闭'}</button><button class="btn alt small" onclick="editWorld('${w.id}')">编辑</button><button class="btn danger small" onclick="deleteEntry('world','${w.id}')">删除</button></div></div>`).join('')||'<div class="empty">世界书还是空的</div>';
+};
+matchedWorld=function(messages){
+ const recent=messages.map(m=>m.content).join('\n').toLowerCase();
+ return state.world.filter(w=>puWorldEnabled(w)&&(w.always||String(w.keywords||'').split(/[,，、;；\n]/).some(k=>k.trim()&&recent.includes(k.trim().toLowerCase()))));
+};
+// Keep groups when importing individual entries.
+
 let puExtrasOpen=false;
 function puToggleExtras(force){puExtrasOpen=typeof force==='boolean'?force:!puExtrasOpen;const p=$('puChatExtras');p.hidden=!puExtrasOpen;$('puPlusBtn')?.classList.toggle('selected',puExtrasOpen);if(puExtrasOpen)scrollChat()}
 function puToggleVoice(){toast('语音消息暂未接入录音功能，先保留文字输入')}
@@ -1007,4 +1073,77 @@ $('puCharCarousel').addEventListener('scroll',()=>{clearTimeout(puSwipeDebounce)
  }
  document.addEventListener('click',contactAction,true);
 })();
-</script></body></html>
+
+/* v3.9 separate story reader */
+function puOpenStory(){
+ document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));
+ puRenderStory();
+}
+function puReturnToChat(){puChatOptions.mode='chat';localStorage.setItem(PU_CHAT_OPTIONS,JSON.stringify(puChatOptions));puOriginalGo('chat');puSyncModeUI()}
+function puRenderStory(){
+ const n=document.getElementById('puStoryName');if(n)n.textContent=displayName();
+ const list=document.getElementById('puStoryList');if(!list)return;
+ list.innerHTML=state.messages.map(m=>`<article class="pu-story-page ${m.role==='user'?'user':''}"><div class="pu-story-author">${m.role==='user'?'USER':esc(displayName())} · ${esc(m.date||'')}</div>${esc(m.content||'')}</article>`).join('');
+ const sc=document.getElementById('puStoryScroll');if(sc)sc.scrollTop=sc.scrollHeight;
+}
+async function puSendStory(){
+ const inp=document.getElementById('puStoryInput'),text=inp.value.trim();if(!text||sending)return;
+ inp.value='';sending=true;document.getElementById('puStorySend').disabled=true;
+ state.messages.push({id:uid(),role:'user',content:text,date:now()});persist();puRenderStory();
+ document.getElementById('puStoryTyping').hidden=false;
+ let answer='',err='';
+ try{
+  const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
+  answer=state.api.mode==='remote'?await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt()):localReply(text);
+ }catch(e){err=e.message;answer=localReply(text)}
+ state.messages.push({id:uid(),role:'assistant',content:answer,date:now()});persist();
+ document.getElementById('puStoryTyping').hidden=true;document.getElementById('puStorySend').disabled=false;sending=false;puRenderStory();
+ if(err)toast('接口失败，已使用本地回复：'+err);
+}
+/* v3.9 draggable crop */
+let puCrop={image:null,url:null,x:0,y:0,base:1,pointer:null};
+function puCropClose(){
+ document.getElementById('puCropOverlay').hidden=true;
+ if(puCrop.url)URL.revokeObjectURL(puCrop.url);puCrop.url=null;puCrop.image=null;
+}
+function puCropDraw(){
+ const img=puCrop.image;if(!img)return;
+ const side=document.getElementById('puCropViewport').clientWidth;
+ const zoom=Number(document.getElementById('puCropZoom').value);
+ const scale=puCrop.base*zoom, w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+ puCrop.x=Math.max(side-w,Math.min(0,puCrop.x));puCrop.y=Math.max(side-h,Math.min(0,puCrop.y));
+ const view=document.getElementById('puCropImage');
+ Object.assign(view.style,{width:w+'px',height:h+'px',left:puCrop.x+'px',top:puCrop.y+'px'});
+}
+async function puAvatarUpload(input){
+ const file=input.files?.[0];input.value='';if(!file)return;
+ if(!file.type.startsWith('image/'))return toast('请选择图片');
+ const url=URL.createObjectURL(file),img=new Image();
+ try{img.src=url;await img.decode();puCropClose();puCrop.url=url;puCrop.image=img;
+  const viewport=document.getElementById('puCropViewport'),side=viewport.clientWidth;
+  puCrop.base=Math.max(side/img.naturalWidth,side/img.naturalHeight);
+  puCrop.x=(side-img.naturalWidth*puCrop.base)/2;puCrop.y=(side-img.naturalHeight*puCrop.base)/2;
+  document.getElementById('puCropZoom').value='1';document.getElementById('puCropImage').src=url;
+  document.getElementById('puCropOverlay').hidden=false;
+  requestAnimationFrame(puCropDraw);
+ }catch(e){URL.revokeObjectURL(url);toast('图片读取失败，请换一张')}
+}
+function puCropSave(){
+ const img=puCrop.image;if(!img)return;
+ const side=document.getElementById('puCropViewport').clientWidth,zoom=Number(document.getElementById('puCropZoom').value);
+ const scale=puCrop.base*zoom,canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;
+ const ctx=canvas.getContext('2d');ctx.drawImage(img,puCrop.x*320/side,puCrop.y*320/side,img.naturalWidth*scale*320/side,img.naturalHeight*scale*320/side);
+ const data=canvas.toDataURL('image/jpeg',.83);
+ if(puAvatarTarget==='user'){puUser.avatar=data;localStorage.setItem(PU_USER,JSON.stringify(puUser));puRenderUser()}
+ else {const c=puChars.list.find(x=>x.id===puChars.current);if(!c)return toast('请先选择角色');
+  c.data.persona.avatar=data;state.persona.avatar=data;puStoreChars();puOriginalPersist();puRenderPersonaAvatar();puRenderContacts()}
+ puCropClose();if(document.getElementById('chat').classList.contains('active'))renderChat();toast('头像已保存');
+}
+(function(){
+ const el=document.getElementById('puCropViewport');
+ el.addEventListener('pointerdown',e=>{if(!puCrop.image)return;el.setPointerCapture(e.pointerId);puCrop.pointer={id:e.pointerId,x:e.clientX,y:e.clientY};});
+ el.addEventListener('pointermove',e=>{if(!puCrop.pointer||e.pointerId!==puCrop.pointer.id)return;puCrop.x+=e.clientX-puCrop.pointer.x;puCrop.y+=e.clientY-puCrop.pointer.y;puCrop.pointer.x=e.clientX;puCrop.pointer.y=e.clientY;puCropDraw()});
+ el.addEventListener('pointerup',()=>puCrop.pointer=null);
+ el.addEventListener('pointercancel',()=>puCrop.pointer=null);
+})();
+</script><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><b>调整头像</b><button onclick="puCropClose()" aria-label="关闭">✕</button></div><p>拖动图片调整位置，滑动下方滑块缩放</p><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像裁剪预览"></div><label>图片大小 <input type="range" id="puCropZoom" min="1" max="4" step=".01" value="1" oninput="puCropDraw()"></label><div class="row"><button class="btn alt" onclick="puCropClose()">取消</button><button class="btn" onclick="puCropSave()">使用头像</button></div></div></div></body></html>
