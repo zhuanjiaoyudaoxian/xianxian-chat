@@ -866,4 +866,35 @@ puDrawPin();
 puBeautyTabInit();
 let puSwipeDebounce;
 $('puCharCarousel').addEventListener('scroll',()=>{clearTimeout(puSwipeDebounce);puSwipeDebounce=setTimeout(()=>{const el=$('puCharCarousel'),center=el.scrollLeft+el.clientWidth/2;let best=null,dist=Infinity;for(const card of el.children){const c=card.offsetLeft+card.offsetWidth/2;const d=Math.abs(c-center);if(d<dist){best=card;dist=d}}if(best){const i=Array.from(el.children).indexOf(best);const char=puChars.list[i];if(char){puSelectedChar=char.id;el.querySelectorAll('.pu-char-card').forEach((c,j)=>c.classList.toggle('selected',j===i));$('puCharDots').textContent=(i+1)+' / '+puChars.list.length;const summary=$('puCharSummary');summary.innerHTML=`<div class="pu-stat"><b>${char.data?.memories?.length||0}</b><small>MEMORIES</small></div><div class="pu-stat"><b>${char.data?.messages?.length||0}</b><small>MESSAGES</small></div><div class="pu-stat"><b>${esc((char.data?.persona?.signature||'尚未填写签名').slice(0,60))}</b><small>SIGNATURE</small></div>`}}},100)},{passive:true});
+
+/* contacts v3.5: action dispatch */
+(function(){
+ function contactAction(event){
+  const button=event.target.closest('button');
+  if(!button || !button.closest('#contacts'))return;
+  const area=button.closest('#contacts');
+  let action=null;
+  if(button.matches('[aria-label="添加角色"]'))action='add';
+  else if(button.closest('.pu-char-actions'))action=button.textContent.includes('编辑')?'edit':'chat';
+  else if(button.classList.contains('pu-contact-row'))action='row';
+  else if(button.classList.contains('pu-char-card'))action='select';
+  if(!action)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  try{
+   if(action==='add')puAddChar();
+   else if(action==='edit')puEditSelectedPersona();
+   else if(action==='chat')puOpenChat();
+   else if(action==='row'){
+    const i=[...area.querySelectorAll('.pu-contact-row')].indexOf(button);
+    const c=puChars.list[i];if(c){puSelectedChar=c.id;puOpenChat()}
+   }else if(action==='select'){
+    const id=button.dataset.char;if(id)puSelectChar(id);
+   }
+  }catch(err){
+   console.error('联系人操作失败:',err);
+   toast('操作未成功：'+(err.message||'请刷新页面重试'));
+  }
+ }
+ document.addEventListener('click',contactAction,true);
+})();
 </script></body></html>
