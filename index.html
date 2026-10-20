@@ -450,6 +450,27 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
 .pu-story-screen{background:#f5f0e9!important;color:#38312e}.pu-story-screen .bar{background:#f8f4ef;border-bottom:1px solid #e6ddd4}.pu-story-scroll{padding:15px 17px 25px;overflow-y:auto;flex:1}.pu-story-page{padding:20px 18px;margin:0 0 17px;background:#fffdf9;border:1px solid #e9e1d8;border-radius:9px;box-shadow:0 3px 15px #3c30240a;font-size:14px;line-height:2.05;white-space:pre-wrap;overflow-wrap:anywhere}.pu-story-page.user{background:#f3eae2;border-color:#e7d8ca}.pu-story-author{font-size:11px;color:#9b8c81;margin-bottom:11px;letter-spacing:1px}.pu-story-compose{padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:#f8f4ef;border-top:1px solid #e6ddd4;display:flex;flex-direction:column;gap:9px}.pu-story-compose textarea{width:100%;min-height:75px;max-height:145px;resize:vertical;border:1px solid #dfd4c9;background:#fffdf9;border-radius:12px;padding:11px;font-size:13px}.pu-story-compose .btn{align-self:flex-end}.pu-world-group{border:1px solid #e8dce4;border-radius:13px;padding:12px;margin:10px 0;background:#fff}.pu-world-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.pu-world-group-actions{display:flex;gap:6px;flex-wrap:wrap}.pu-world-group-actions button{font-size:11px;padding:6px 9px;border:1px solid #e5c9d7;border-radius:8px;background:#fff}.pu-world-off{opacity:.48}.pu-world-group small{font-size:11px;color:#888}.pu-crop-overlay{position:fixed;inset:0;background:#0009;z-index:9999;display:grid;place-items:center;padding:18px}.pu-crop-overlay[hidden]{display:none}.pu-crop-dialog{width:min(100%,390px);background:#fff;border-radius:19px;padding:18px;color:#333;display:flex;flex-direction:column;gap:12px}.pu-crop-head{display:flex;justify-content:space-between}.pu-crop-head button{border:0;background:transparent;font-size:19px}.pu-crop-dialog p{font-size:12px;color:#777;margin:0}.pu-crop-viewport{width:min(65vw,260px);height:min(65vw,260px);margin:auto;border-radius:15px;overflow:hidden;position:relative;background:#ddd;touch-action:none;cursor:grab}.pu-crop-viewport img{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none}.pu-crop-dialog label{font-size:12px;display:flex;align-items:center;gap:12px}.pu-crop-dialog input{flex:1}
+</style><style>
+/* v4.0 QQ-style immersive avatar editor */
+#puCropOverlay.pu-crop-overlay{position:fixed;inset:0;z-index:99999;background:#111;color:#fff;display:flex;align-items:stretch;justify-content:center;padding:0}
+#puCropOverlay[hidden]{display:none!important}
+#puCropOverlay .pu-crop-dialog{width:100%;height:100%;max-width:none;border-radius:0;padding:calc(16px + env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom));background:#111;color:white;display:flex;flex-direction:column;gap:0}
+#puCropOverlay .pu-crop-head{padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:17px}
+#puCropOverlay .pu-crop-head button{background:transparent;color:#fff;border:0;font-size:15px}
+#puCropOverlay .pu-crop-help{color:#bcbcbc;text-align:center;font-size:12px;margin:13px 10px}
+#puCropOverlay .pu-crop-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#puCropOverlay .pu-crop-viewport{width:100%;height:100%;max-width:none;border-radius:0;margin:0;position:absolute;inset:0;background:#111;touch-action:none;overflow:hidden}
+#puCropOverlay #puCropImage{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
+#puCropOverlay .pu-crop-mask{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+#puCropOverlay .pu-crop-hole{width:min(84vw,380px);height:min(84vw,380px);max-height:65vh;aspect-ratio:1;border:2px solid #fff;box-shadow:0 0 0 100vmax #0009;position:relative}
+#puCropOverlay .pu-crop-hole:before,#puCropOverlay .pu-crop-hole:after{content:'';position:absolute;inset:33.333% 0;border-top:1px solid #ffffff45;border-bottom:1px solid #ffffff45}
+#puCropOverlay .pu-crop-hole:after{inset:0 33.333%;border:0;border-left:1px solid #ffffff45;border-right:1px solid #ffffff45}
+#puCropOverlay .pu-crop-bottom{padding:16px 24px 0;display:flex;flex-direction:column;gap:16px}
+#puCropOverlay .pu-crop-bottom label{display:flex;gap:12px;align-items:center;font-size:12px;color:#ddd}
+#puCropOverlay .pu-crop-bottom input{flex:1;accent-color:#fff}
+#puCropOverlay .pu-crop-actions{display:flex;justify-content:space-between;gap:14px}
+#puCropOverlay .pu-crop-actions button{flex:1;border:1px solid #666;background:#252525;color:#fff;border-radius:12px;padding:13px}
+#puCropOverlay .pu-crop-actions .pu-crop-confirm{background:#49b87d;color:#fff;border:0;font-weight:700}
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -1100,50 +1121,115 @@ async function puSendStory(){
  document.getElementById('puStoryTyping').hidden=true;document.getElementById('puStorySend').disabled=false;sending=false;puRenderStory();
  if(err)toast('接口失败，已使用本地回复：'+err);
 }
-/* v3.9 draggable crop */
-let puCrop={image:null,url:null,x:0,y:0,base:1,pointer:null};
-function puCropClose(){
- document.getElementById('puCropOverlay').hidden=true;
- if(puCrop.url)URL.revokeObjectURL(puCrop.url);puCrop.url=null;puCrop.image=null;
+/* v4.0 QQ-style photo editor, fixed crop window, pinch zoom, drag */
+let puCrop={image:null,url:null,x:0,y:0,base:1,zoom:1,pointers:new Map(),gesture:null};
+function puCropMetrics(){
+ const stage=document.getElementById('puCropStage').getBoundingClientRect();
+ const hole=document.getElementById('puCropHole').getBoundingClientRect();
+ return {stage,hole,left:hole.left-stage.left,top:hole.top-stage.top,side:hole.width};
+}
+function puCropClamp(){
+ const {left,top,side}=puCropMetrics(),img=puCrop.image;if(!img)return;
+ const scale=puCrop.base*puCrop.zoom,w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+ puCrop.x=Math.min(left,Math.max(left+side-w,puCrop.x));
+ puCrop.y=Math.min(top,Math.max(top+side-h,puCrop.y));
 }
 function puCropDraw(){
  const img=puCrop.image;if(!img)return;
- const side=document.getElementById('puCropViewport').clientWidth;
- const zoom=Number(document.getElementById('puCropZoom').value);
- const scale=puCrop.base*zoom, w=img.naturalWidth*scale,h=img.naturalHeight*scale;
- puCrop.x=Math.max(side-w,Math.min(0,puCrop.x));puCrop.y=Math.max(side-h,Math.min(0,puCrop.y));
- const view=document.getElementById('puCropImage');
- Object.assign(view.style,{width:w+'px',height:h+'px',left:puCrop.x+'px',top:puCrop.y+'px'});
+ puCropClamp();
+ const scale=puCrop.base*puCrop.zoom,view=document.getElementById('puCropImage');
+ Object.assign(view.style,{width:(img.naturalWidth*scale)+'px',height:(img.naturalHeight*scale)+'px',left:puCrop.x+'px',top:puCrop.y+'px'});
+ document.getElementById('puCropZoom').value=String(puCrop.zoom);
+}
+function puCropSetZoom(value,cx,cy){
+ const img=puCrop.image;if(!img)return;
+ const m=puCropMetrics(),pivotX=cx??m.left+m.side/2,pivotY=cy??m.top+m.side/2;
+ const old=puCrop.base*puCrop.zoom;
+ const pointX=(pivotX-puCrop.x)/old,pointY=(pivotY-puCrop.y)/old;
+ puCrop.zoom=Math.max(1,Math.min(5,value));
+ const scale=puCrop.base*puCrop.zoom;
+ puCrop.x=pivotX-pointX*scale;puCrop.y=pivotY-pointY*scale;puCropDraw();
+}
+function puCropZoomChange(){puCropSetZoom(Number(document.getElementById('puCropZoom').value))}
+function puCropReset(){
+ if(!puCrop.image)return;
+ const m=puCropMetrics(),img=puCrop.image;
+ puCrop.zoom=1;puCrop.base=Math.max(m.side/img.naturalWidth,m.side/img.naturalHeight);
+ puCrop.x=m.left+(m.side-img.naturalWidth*puCrop.base)/2;
+ puCrop.y=m.top+(m.side-img.naturalHeight*puCrop.base)/2;
+ puCropDraw();
+}
+function puCropClose(){
+ document.getElementById('puCropOverlay').hidden=true;
+ if(puCrop.url)URL.revokeObjectURL(puCrop.url);
+ puCrop.url=null;puCrop.image=null;puCrop.pointers.clear();puCrop.gesture=null;
 }
 async function puAvatarUpload(input){
  const file=input.files?.[0];input.value='';if(!file)return;
  if(!file.type.startsWith('image/'))return toast('请选择图片');
  const url=URL.createObjectURL(file),img=new Image();
- try{img.src=url;await img.decode();puCropClose();puCrop.url=url;puCrop.image=img;
-  const viewport=document.getElementById('puCropViewport'),side=viewport.clientWidth;
-  puCrop.base=Math.max(side/img.naturalWidth,side/img.naturalHeight);
-  puCrop.x=(side-img.naturalWidth*puCrop.base)/2;puCrop.y=(side-img.naturalHeight*puCrop.base)/2;
-  document.getElementById('puCropZoom').value='1';document.getElementById('puCropImage').src=url;
+ try{
+  img.src=url;await img.decode();puCropClose();
+  puCrop.url=url;puCrop.image=img;puCrop.pointers.clear();
+  document.getElementById('puCropImage').src=url;
   document.getElementById('puCropOverlay').hidden=false;
-  requestAnimationFrame(puCropDraw);
+  requestAnimationFrame(puCropReset);
  }catch(e){URL.revokeObjectURL(url);toast('图片读取失败，请换一张')}
 }
 function puCropSave(){
  const img=puCrop.image;if(!img)return;
- const side=document.getElementById('puCropViewport').clientWidth,zoom=Number(document.getElementById('puCropZoom').value);
- const scale=puCrop.base*zoom,canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;
- const ctx=canvas.getContext('2d');ctx.drawImage(img,puCrop.x*320/side,puCrop.y*320/side,img.naturalWidth*scale*320/side,img.naturalHeight*scale*320/side);
- const data=canvas.toDataURL('image/jpeg',.83);
- if(puAvatarTarget==='user'){puUser.avatar=data;localStorage.setItem(PU_USER,JSON.stringify(puUser));puRenderUser()}
- else {const c=puChars.list.find(x=>x.id===puChars.current);if(!c)return toast('请先选择角色');
-  c.data.persona.avatar=data;state.persona.avatar=data;puStoreChars();puOriginalPersist();puRenderPersonaAvatar();puRenderContacts()}
- puCropClose();if(document.getElementById('chat').classList.contains('active'))renderChat();toast('头像已保存');
+ const m=puCropMetrics(),scale=puCrop.base*puCrop.zoom;
+ const canvas=document.createElement('canvas');canvas.width=400;canvas.height=400;
+ const ctx=canvas.getContext('2d');
+ const sx=(m.left-puCrop.x)/scale,sy=(m.top-puCrop.y)/scale,ss=m.side/scale;
+ ctx.drawImage(img,sx,sy,ss,ss,0,0,400,400);
+ const data=canvas.toDataURL('image/jpeg',.86);
+ if(puAvatarTarget==='user'){
+  puUser.avatar=data;localStorage.setItem(PU_USER,JSON.stringify(puUser));puRenderUser();
+ }else{
+  const c=puChars.list.find(x=>x.id===puChars.current);
+  if(!c){toast('请先选择角色');return}
+  c.data.persona.avatar=data;state.persona.avatar=data;
+  puStoreChars();puOriginalPersist();puRenderPersonaAvatar();puRenderContacts();
+ }
+ puCropClose();
+ if(document.getElementById('chat').classList.contains('active'))renderChat();
+ toast('头像已保存');
 }
-(function(){
- const el=document.getElementById('puCropViewport');
- el.addEventListener('pointerdown',e=>{if(!puCrop.image)return;el.setPointerCapture(e.pointerId);puCrop.pointer={id:e.pointerId,x:e.clientX,y:e.clientY};});
- el.addEventListener('pointermove',e=>{if(!puCrop.pointer||e.pointerId!==puCrop.pointer.id)return;puCrop.x+=e.clientX-puCrop.pointer.x;puCrop.y+=e.clientY-puCrop.pointer.y;puCrop.pointer.x=e.clientX;puCrop.pointer.y=e.clientY;puCropDraw()});
- el.addEventListener('pointerup',()=>puCrop.pointer=null);
- el.addEventListener('pointercancel',()=>puCrop.pointer=null);
-})();
-</script><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><b>调整头像</b><button onclick="puCropClose()" aria-label="关闭">✕</button></div><p>拖动图片调整位置，滑动下方滑块缩放</p><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像裁剪预览"></div><label>图片大小 <input type="range" id="puCropZoom" min="1" max="4" step=".01" value="1" oninput="puCropDraw()"></label><div class="row"><button class="btn alt" onclick="puCropClose()">取消</button><button class="btn" onclick="puCropSave()">使用头像</button></div></div></div></body></html>
+function puCropBind(){
+ const el=document.getElementById('puCropViewport');if(!el)return;
+ const pos=e=>({x:e.clientX,y:e.clientY});
+ el.addEventListener('pointerdown',e=>{
+  if(!puCrop.image)return;e.preventDefault();el.setPointerCapture(e.pointerId);
+  puCrop.pointers.set(e.pointerId,pos(e));
+  const pts=[...puCrop.pointers.values()];
+  if(pts.length===2){
+   const cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;
+   puCrop.gesture={dist:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),zoom:puCrop.zoom,cx,cy};
+  }
+ });
+ el.addEventListener('pointermove',e=>{
+  if(!puCrop.pointers.has(e.pointerId)||!puCrop.image)return;e.preventDefault();
+  const prev=puCrop.pointers.get(e.pointerId);puCrop.pointers.set(e.pointerId,pos(e));
+  const pts=[...puCrop.pointers.values()],m=puCropMetrics();
+  if(pts.length===1){
+   puCrop.x+=e.clientX-prev.x;puCrop.y+=e.clientY-prev.y;puCropDraw();
+  }else if(pts.length===2){
+   const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+   const cx=(pts[0].x+pts[1].x)/2-m.stage.left,cy=(pts[0].y+pts[1].y)/2-m.stage.top;
+   if(puCrop.gesture){
+    const last=puCrop.gesture;
+    puCropSetZoom(puCrop.zoom*(dist/Math.max(1,last.dist)),cx,cy);
+    puCrop.x+=cx-(last.cx-m.stage.left);puCrop.y+=cy-(last.cy-m.stage.top);puCropDraw();
+   }
+   puCrop.gesture={dist,zoom:puCrop.zoom,cx:cx+m.stage.left,cy:cy+m.stage.top};
+  }
+ });
+ const end=e=>{
+  puCrop.pointers.delete(e.pointerId);puCrop.gesture=null;
+ };
+ el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',puCropBind);
+else puCropBind();
+</script><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><button type="button" onclick="puCropClose()">取消</button><b>移动和缩放</b><button type="button" onclick="puCropReset()">重置</button></div><p class="pu-crop-help">单指移动 · 双指捏合缩放 · 选择方框中的区域</p><div class="pu-crop-stage" id="puCropStage"><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像调整预览"></div><div class="pu-crop-mask"><div id="puCropHole" class="pu-crop-hole"></div></div></div><div class="pu-crop-bottom"><label>缩放 <input type="range" id="puCropZoom" min="1" max="5" step=".01" value="1" oninput="puCropZoomChange()"></label><div class="pu-crop-actions"><button type="button" onclick="puCropClose()">返回</button><button type="button" class="pu-crop-confirm" onclick="puCropSave()">完成</button></div></div></div></div></body></html>
