@@ -775,7 +775,41 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 .pu-ins-page .pu-ins-gridhead{border-top:1px solid #e8e6e2!important;padding:13px 8px!important;gap:8px!important}
 .pu-ins-page .pu-ins-grid{gap:3px!important}
 .pu-ins-page .pu-ins-empty{padding:25px 6px!important;margin:0!important;color:#999}
-</style></head>
+</style><style id="pu-contact-dual-fix">
+/* Remove redundant hub contacts heading and reclaim its full height */
+#puFriendsHeader{display:none!important;height:0!important;min-height:0!important;padding:0!important;margin:0!important}
+#puFriendsContent{height:100%;min-height:0;overflow:hidden}
+#puFriendsContent>#contacts{height:100%!important;min-height:0!important}
+#contacts .pu-social-page{height:100%!important;overflow-x:hidden!important;padding-top:8px!important}
+/* True viewport-centred heading regardless of asymmetrical actions */
+#contacts .pu-social-nav{position:relative!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:48px;padding:0 0 12px!important;gap:8px}
+#contacts .pu-social-nav>b{position:absolute!important;left:50%!important;top:calc(50% - 6px)!important;transform:translate(-50%,-50%)!important;max-width:calc(100% - 165px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;pointer-events:none}
+#contacts .pu-social-nav>div{display:flex;gap:8px;align-items:center;margin-left:auto;z-index:1}
+#contacts .pu-social-nav>button{z-index:1}
+#contacts .pu-social-nav button{border:0;background:none}
+#puContactLayoutSheet{position:absolute;inset:0;z-index:60;background:#0005;display:none;align-items:flex-end;justify-content:center}
+#puContactLayoutSheet.open{display:flex}
+#puContactLayoutSheet .sheet{background:white;width:100%;padding:22px 20px calc(24px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;color:#222}
+#puContactLayoutSheet .sheet button{border:1px solid #e7e7e7;background:#f7f7f7;padding:15px;border-radius:13px;width:100%;text-align:left;margin-top:10px;color:#333}
+#puContactLayoutSheet .sheet button.selected{border-color:#222;background:#efefef;font-weight:700}
+#puContactListView{display:none;color:#222;padding:0 4px 40px}
+#contacts.pu-list-mode #puSocialContent{display:none!important}
+#contacts.pu-list-mode #puContactListView{display:block}
+#contacts.pu-list-mode .pu-social-nav>b{font-size:17px}
+.pu-list-title-main{text-align:center;font-size:30px;font-weight:400;margin:10px 0 25px}
+.pu-list-avatars{display:flex;gap:15px;overflow-x:auto;padding:0 5px 22px;scrollbar-width:none}
+.pu-list-avatars button{border:0;background:transparent;min-width:67px;max-width:67px;padding:0;color:#777;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pu-list-avatars .pu-list-pic{width:61px;height:61px;display:grid;place-items:center;border-radius:50%;overflow:hidden;background:#eee;margin-bottom:8px}
+.pu-list-pic img{width:100%;height:100%;object-fit:cover}
+.pu-list-search{border:0!important;background:#f5f5f5!important;border-radius:30px!important;margin:4px 0 22px!important}
+.pu-list-filter{display:flex;gap:18px;align-items:center;border-bottom:1px solid #eee;padding:0 3px 12px;margin-bottom:16px;color:#aaa;font-size:13px}
+.pu-list-filter strong{color:#222;border-bottom:2px solid #222;padding-bottom:10px}
+.pu-list-count{color:#aaa;letter-spacing:2px;font-size:11px;margin-bottom:13px}
+.pu-list-card{width:100%;display:flex;align-items:center;gap:13px;border:0;background:#f6f6f6;border-radius:19px;margin-bottom:10px;padding:15px;text-align:left;color:#222;min-height:80px}
+.pu-list-card .pu-list-pic{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e8e8e8;display:grid;place-items:center}
+.pu-list-card .pu-list-info{flex:1;min-width:0}.pu-list-card .pu-list-info strong{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pu-list-card .pu-list-info small{display:block;color:#999;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
@@ -2082,6 +2116,32 @@ window.puMentionPost=()=>{const v=prompt('提及谁？输入名字',mention);if(
 window.puLocationPost=()=>{const v=prompt('输入位置名称',locationText);if(v!==null)locationText=v.trim()};
 window.puSendPost=async()=>{const text=$p('puPostText').value.trim();if(!text&&!photos.length){toast('请填写内容或添加照片');return}const data={text,category:draft,puImages:photos,puPublic:isPublic,puMention:mention,puLocation:locationText};if(editing)Object.assign(editing,data);else state.moments.unshift({id:uid(),date:now(),liked:false,...data});if(!persist()){if(!editing)state.moments.shift();return}current=draft;puClosePost();await renderMoments();if(typeof puHubRenderMe==='function')puHubRenderMe();toast('动态已发布')};
 window.editMoment=window.puOpenPost;
+})();
+</script>
+<script id="pu-contact-dual-script">
+(function(){
+'use strict';
+const key='pu_contact_layout_v1';
+let mode='profile';try{mode=localStorage.getItem(key)==='list'?'list':'profile'}catch(e){}
+const contacts=document.getElementById('contacts');
+const page=document.getElementById('puSocialPage');
+if(!contacts||!page)return;
+const list=document.createElement('div');list.id='puContactListView';page.appendChild(list);
+const sheet=document.createElement('div');sheet.id='puContactLayoutSheet';sheet.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center"><strong>联系人页面样式</strong><button type="button" data-close style="width:auto;margin:0;padding:6px 10px">关闭 ×</button></div><button type="button" data-mode="profile">角色档案版 · 原有样式</button><button type="button" data-mode="list">Contacts 列表版 · 新增样式</button></div>';
+contacts.appendChild(sheet);
+sheet.addEventListener('click',e=>{if(e.target===sheet||e.target.closest('[data-close]'))sheet.classList.remove('open');const b=e.target.closest('[data-mode]');if(b){mode=b.dataset.mode;try{localStorage.setItem(key,mode)}catch(e){}sheet.classList.remove('open');render()}});
+window.puSocialMenu=function(){sheet.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('selected',b.dataset.mode===mode));sheet.classList.add('open')};
+function render(){contacts.classList.toggle('pu-list-mode',mode==='list');if(mode!=='list')return;
+const originals=[...document.querySelectorAll('#puSocialContent .pu-social-person[data-social-id]')];
+const safe=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rows=originals.map((btn,i)=>({index:i,name:btn.querySelector('small')?.textContent||'联系人',picture:btn.querySelector('.pu-social-mini')?.innerHTML||''}));
+list.innerHTML='<h2 class="pu-list-title-main">Contacts</h2><div class="pu-list-avatars">'+rows.map(r=>'<button type="button" data-char="'+r.index+'"><span class="pu-list-pic">'+r.picture+'</span>'+safe(r.name)+'</button>').join('')+'</div><input class="pu-list-search" placeholder="搜索联系人..." aria-label="搜索联系人"><div class="pu-list-filter"><strong>CHATS</strong><span>FRIENDS</span><span>4EVER</span></div><div class="pu-list-count">'+rows.length+' CONTACTS</div><div id="puListCards">'+rows.map(r=>'<button type="button" class="pu-list-card" data-char="'+r.index+'"><span class="pu-list-pic">'+r.picture+'</span><span class="pu-list-info"><strong>'+safe(r.name)+'</strong><small>查看角色档案</small></span><span style="color:#bbb">›</span></button>').join('')+'</div>';
+list.querySelectorAll('[data-char]').forEach(b=>b.addEventListener('click',()=>{const original=originals[Number(b.dataset.char)];if(original){mode='profile';try{localStorage.setItem(key,mode)}catch(e){}original.click();render()}}));
+list.querySelector('.pu-list-search').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();list.querySelectorAll('[data-char]').forEach(b=>{b.style.display=rows[Number(b.dataset.char)].name.toLowerCase().includes(q)?'':'none'})});
+}
+const old=window.puSocialRender;
+if(typeof old==='function')window.puSocialRender=function(...args){const result=old.apply(this,args);render();return result};
+render();
 })();
 </script>
 </body></html>
