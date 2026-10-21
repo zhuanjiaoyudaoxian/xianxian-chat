@@ -472,6 +472,16 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 .pu46-style-choice[data-style="retro"] .sample{background:#f8f2e8;border-color:#a89a88;border-radius:5px;box-shadow:2px 3px 0 #b8ac9c}
 .pu46-style-choice[data-style="jelly"] .sample{background:#eee6dc;border-color:white;border-radius:16px;box-shadow:inset 2px 3px 5px #fff,0 4px 7px #9a887733}
 #home .bloom-icon{touch-action:pan-y;-webkit-touch-callout:none}
+
+/* 锁屏修复：密码提示与数字键盘保持在正常文档流中，适配 Safari */
+#lock.active{justify-content:flex-start!important;overflow-y:auto!important;overflow-x:hidden!important;min-height:0;padding:clamp(28px,5vh,55px) 16px calc(22px + env(safe-area-inset-bottom))!important}
+#lock .lock-hint{position:static!important;bottom:auto!important;margin:clamp(12px,3vh,26px) 0 10px!important;flex-shrink:0}
+#lock .lock-quote{margin-top:clamp(15px,4vh,35px)!important}
+#lock .pu-pin-dots{flex-shrink:0;margin:4px 0 10px}
+#lock .pu-pin-error{flex-shrink:0}
+#lock .pu-keypad{display:grid!important;visibility:visible!important;opacity:1!important;flex:0 0 auto;margin:6px auto 12px!important;gap:clamp(7px,1.2vh,12px)!important}
+#lock .pu-keypad button{width:clamp(52px,7.2vh,68px)!important;height:clamp(52px,7.2vh,68px)!important;min-width:0;min-height:0}
+@media(max-height:680px){#lock.active{padding-top:18px!important}#lock .lock-time{font-size:clamp(55px,12vh,85px)}#lock .lock-quote{margin-top:10px!important}#lock .lock-hint{margin-top:12px!important}}
 </style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
@@ -618,7 +628,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
-<section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"></div></section>
+<section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
 <section class="screen" id="home">
  <div class="bloom-head"><div><strong>於你而言我是一顆星嗎</strong><small id="homeDate"></small></div><button type="button" class="bloom-more" onclick="bloomOpenApps()" aria-label="打开全部功能">•••</button></div>
  <div class="bloom-pages" id="bloomPages">
