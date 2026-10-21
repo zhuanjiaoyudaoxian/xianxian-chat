@@ -626,14 +626,6 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #home .pu-paper-ticker{border-top:2px solid #817971!important;width:100%;padding-top:7px!important;font-size:9px!important;color:#79716b!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left!important}
 @media(max-height:720px){#home .pu46-new-third{gap:8px;padding-top:5px}#home .pu-cassette{padding:10px}#home .pu-tape-window{height:65px}#home .pu-tape-reel{height:50px;width:50px}#home .pu-paper-story{padding:6px 0}#home .pu-paper-headline{font-size:11px!important}}
 </style>
-<style id="pu-current-time-style">
-.app{position:relative}
-#puCurrentTime{position:absolute;top:8px;left:17px;z-index:1200;color:#33312f;font:600 15px/24px -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;letter-spacing:.15px;pointer-events:none;font-variant-numeric:tabular-nums}
-.app>.screen:not(#lock){padding-top:31px!important;box-sizing:border-box}
-#lock.active~#puCurrentTime{display:none}
-.app:has(#lock.active) #puCurrentTime{display:none}
-</style>
-
 <style id="pu-social-contacts-css">
 #contacts .bar,#contacts>.pu-contacts-body{display:none!important}
 #contacts{background:#fffdfb!important;color:#292929}
@@ -784,7 +776,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 .pu-ins-page .pu-ins-grid{gap:3px!important}
 .pu-ins-page .pu-ins-empty{padding:25px 6px!important;margin:0!important;color:#999}
 </style></head>
-<body><main class="app"><div id="puCurrentTime" aria-label="当前时间"></div>
+<body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
 <section class="screen" id="home">
@@ -1680,13 +1672,6 @@ function puPaperRender(){for(const [key,def] of Object.entries(puPaperDefaults))
 function puPaperEdit(key){const def=puPaperDefaults[key];const value=prompt('编辑报纸文字',bloomMeta['paper_'+key]??def);if(value===null)return;bloomMeta['paper_'+key]=value.trim().slice(0,160);bloomSave();puPaperRender()}
 if(typeof bloomRenderHome==='function')puPaperRender();
 </script>
-<script id="pu-current-time-script">
-(function(){
- function update(){var el=document.getElementById('puCurrentTime');if(!el)return;var d=new Date();el.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
- document.addEventListener('DOMContentLoaded',update);update();setInterval(update,15000);
-})();
-</script>
-
 <script id="pu-social-contacts-script">
 (function(){
 const socialKey='pu_social_profiles_v1';
@@ -1879,7 +1864,7 @@ window.puStickerImport=async(input)=>{try{const files=[...input.files].filter(f=
 })();
 </script><style>
 /* Chat inbox v2 */
-#puHubTrack{width:400%!important;flex:none!important;height:100%;min-height:0}
+#puHubTrack{width:400%!important;flex:0 0 auto!important;height:calc(100% - 66px - env(safe-area-inset-bottom))!important;min-height:0!important}
 #puHubTrack>.pu-hub-pane{width:25%!important;flex:0 0 25%!important;min-width:0!important}
 #puHubFriendsPane{overflow-y:auto;background:#fff}
 #puHubChatPane{position:relative;background:white}
@@ -2040,6 +2025,63 @@ load();closeChat();
  document.getElementById('puMomName').textContent=userName;document.getElementById('puMomSign').textContent=sign;const posts=[...(state.moments||[])].reverse();document.getElementById('puMomCount').textContent=posts.length+' posts';const tiles=document.getElementById('puMomTiles');tiles.replaceChildren();for(let i=0;i<Math.min(posts.length,3);i++){const p=posts[i],btn=document.createElement('button');btn.className='pu-mom-tile';btn.type='button';btn.onclick=()=>{const cards=list.querySelectorAll(':scope > .card');const originalIndex=state.moments.indexOf(p);cards[originalIndex]?.scrollIntoView({behavior:'smooth',block:'center'})};const span=document.createElement('span');span.textContent=(p.text||'图片动态').slice(0,90);btn.appendChild(span);tiles.appendChild(btn)}if(!posts.length){const empty=document.createElement('div');empty.style='grid-column:1/-1;color:#aaa;font-size:12px;padding:8px 0';empty.textContent='发布动态后会自动展示在这里';tiles.appendChild(empty)}try{const photos=await dbAll('photos');const map=new Map(photos.map(p=>[p.id,p]));posts.slice(0,3).forEach((p,i)=>{if(!p.photoId||!map.has(p.photoId))return;const btn=tiles.children[i],img=document.createElement('img'),url=URL.createObjectURL(map.get(p.photoId).blob);img.src=url;img.onload=()=>URL.revokeObjectURL(url);img.onerror=()=>URL.revokeObjectURL(url);btn.replaceChildren(img)})}catch(e){console.warn('动态预览图片加载失败',e)}
  const feed=document.querySelector('.pu-mom-friends');if(feed&&list.parentNode!==feed)feed.appendChild(list);
  };
+})();
+</script>
+<style id="pu-moments-final-style">
+html,body,.app{width:100%;max-width:none!important;height:100%;height:100dvh;margin:0;border-radius:0!important}
+#puHubMomentsPane .pu-mom-hero{height:185px;position:relative;background-position:center;background-size:cover;padding:0}
+#puHubMomentsPane .pu-mom-hero h2,#puHubMomentsPane .pu-mom-hero small{display:none!important}
+.pu-cover-upload{position:absolute;right:12px;bottom:12px;width:36px;height:36px;border:0;border-radius:50%;background:#ffffffdc;color:#333;display:grid;place-items:center;z-index:2}
+#puHubMomentsPane .pu-mom-identity{padding-top:46px}
+#puHubMomentsPane .pu-mom-avatar{left:50%!important;transform:translateX(-50%)!important;top:-40px!important;width:80px;height:80px}
+#puHubMomentsPane .pu-mom-decor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+#puHubMomentsPane .pu-mom-decor button{border:0;background:#f2f2f2;color:#777;padding:13px 1px;font-size:11px;min-width:0}
+#puHubMomentsPane .pu-mom-decor button.selected{background:#242424;color:white}
+.pu-post-overlay{position:fixed;inset:0;z-index:99999;background:#ffffff70;backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:calc(18px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom))}
+.pu-post-overlay.open{display:flex}
+.pu-post-sheet{width:min(100%,580px);height:min(78dvh,740px);background:#fff;border-radius:32px;box-shadow:0 12px 45px #0001;padding:20px 20px 24px;display:flex;flex-direction:column;min-height:0;color:#222}
+.pu-post-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:17px}
+.pu-post-top button{border:0;background:none;padding:8px 0;font-size:16px;color:#888}
+.pu-post-top .pu-post-send{color:#222;display:flex;align-items:center;gap:6px}
+.pu-post-author{display:flex;align-items:center;gap:12px;margin:20px 0 10px}
+.pu-post-author img,.pu-post-author .pu-post-avatar{width:49px;height:49px;border-radius:50%;object-fit:cover;background:#eee;display:grid;place-items:center;overflow:hidden}
+.pu-post-author small{display:block;color:#aaa;font-size:11px;margin-top:5px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#puPostText{border:0!important;background:transparent!important;resize:none;box-shadow:none;flex:1;min-height:100px;font-size:15px;padding:14px 2px;outline:0}
+.pu-post-photos{display:flex;gap:8px;overflow-x:auto;padding:10px 0;flex-shrink:0}
+.pu-post-photo{width:100px;height:100px;position:relative;flex-shrink:0;border-radius:13px;overflow:hidden;background:#f3f3f3}
+.pu-post-photo img{width:100%;height:100%;object-fit:cover}
+.pu-post-photo button{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:#0008;color:white}
+.pu-post-add{width:100px;height:100px;flex-shrink:0;border:0;border-radius:13px;background:#f4f4f4;color:#aaa;font-size:28px}
+.pu-post-category{display:flex;gap:5px;margin:12px 0;flex-shrink:0}
+.pu-post-category button{flex:1;min-width:0;border:0;border-radius:9px;background:#f2f2f2;color:#777;padding:10px 2px;font-size:11px}
+.pu-post-category button.selected{background:#242424;color:white}
+.pu-post-tools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding-top:12px;border-top:1px solid #f2f2f2;flex-shrink:0}
+.pu-post-tools button{border:0;background:none;color:#999;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;padding:5px 0}
+.pu-post-tools svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-height:690px){.pu-post-sheet{height:90dvh;padding:12px 16px}.pu-post-author{margin:8px 0}.pu-post-photo,.pu-post-add{width:76px;height:76px}}
+</style>
+<div class="pu-post-overlay" id="puPostOverlay" aria-hidden="true"><div class="pu-post-sheet" role="dialog" aria-modal="true" aria-label="发布动态"><div class="pu-post-top"><button type="button" onclick="puClosePost()">取消</button><strong>发布动态</strong><button class="pu-post-send" type="button" onclick="puSendPost()">send <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button></div><div class="pu-post-author" id="puPostAuthor"></div><textarea id="puPostText" placeholder="今天想分享什么呢……"></textarea><div class="pu-post-photos" id="puPostPhotos"></div><div class="pu-post-category" id="puPostCategory"></div><div class="pu-post-tools"><button type="button" onclick="puAddPostPhotos()"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="8" cy="10" r="2"/><path d="m3 17 6-5 4 4 3-3 5 4"/></svg>照片</button><button type="button" onclick="document.getElementById('puPostText').focus()"><svg viewBox="0 0 24 24"><path d="m4 20 4-.8L20 7a2 2 0 0 0-3-3L5 16Z"/></svg>文字描述</button><button type="button" onclick="puTogglePostPublic()"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span id="puPublicLabel">公开</span></button><button type="button" onclick="puMentionPost()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M16 9v5a2 2 0 0 0 4 0v-2a8 8 0 1 0-8 8"/><circle cx="12" cy="12" r="3"/></svg>提及</button><button type="button" onclick="puLocationPost()"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>位置</button></div></div></div><input id="puPostFiles" type="file" accept="image/*" multiple hidden><input id="puMomCoverFile" type="file" accept="image/*" hidden>
+<script id="pu-moments-final-behavior">
+(function(){
+const cats=['Document life','Weather','Mood'];let current='Document life',draft='Document life',photos=[],editing=null,isPublic=true,mention='',locationText='';
+const $p=id=>document.getElementById(id);
+function currentKey(){return 'pu_mom_cover_'+(typeof puUser!=='undefined'?(puUser.id||puUser.nickname||puUser.name||'default'):'default')}
+function compress(file,maxW=1300){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{const scale=Math.min(1,maxW/img.width),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.78))};img.src=reader.result};reader.readAsDataURL(file)})}
+window.puPickMomCover=function(){$p('puMomCoverFile').click()};
+$p('puMomCoverFile').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{const url=await compress(file,1100);localStorage.setItem(currentKey(),url);const hero=document.querySelector('#puHubMomentsPane .pu-mom-hero');if(hero)hero.style.backgroundImage=`url("${url}")`;toast('背景图已保存')}catch(err){toast('背景图保存失败，请尝试较小的图片')}e.target.value=''});
+window.puSetMomCategory=function(c){current=c;updateMomFilter()};
+function updateMomFilter(){const bar=document.querySelector('#puHubMomentsPane .pu-mom-decor');if(bar)bar.innerHTML=cats.map(c=>`<button type="button" class="${c===current?'selected':''}" onclick="puSetMomCategory('${c}')">${c}</button>`).join('');const cards=document.querySelectorAll('#puHubMomentsPane #momentList>.card');cards.forEach((card,i)=>{const p=state.moments[i];card.style.display=p&&(p.category||'Document life')===current?'':'none'});const tiles=$p('puMomTiles');if(tiles){const filtered=[...state.moments].filter(p=>(p.category||'Document life')===current).reverse();tiles.replaceChildren();filtered.slice(0,3).forEach(p=>{const btn=document.createElement('button');btn.className='pu-mom-tile';const span=document.createElement('span');span.textContent=(p.text||'图片动态').slice(0,70);btn.appendChild(span);btn.onclick=()=>{current=p.category||'Document life';updateMomFilter();document.querySelectorAll('#puHubMomentsPane #momentList>.card')[state.moments.indexOf(p)]?.scrollIntoView({behavior:'smooth',block:'center'})};tiles.appendChild(btn);if(p.puImages?.length){const img=document.createElement('img');img.src=p.puImages[0];btn.replaceChildren(img)}else if(p.photoId){dbAll('photos').then(all=>{const photo=all.find(x=>x.id===p.photoId);if(photo?.blob){const u=URL.createObjectURL(photo.blob);const img=document.createElement('img');img.src=u;img.onload=()=>URL.revokeObjectURL(u);btn.replaceChildren(img)}}).catch(()=>{})}});if(!filtered.length)tiles.innerHTML='<span style="grid-column:1/-1;color:#aaa;font-size:12px">这个分类还没有动态</span>';const count=$p('puMomCount');if(count)count.textContent=filtered.length+' posts'}}
+const oldRender=window.renderMoments;window.renderMoments=async function(){await oldRender();const hero=document.querySelector('#puHubMomentsPane .pu-mom-hero');if(hero){hero.innerHTML='<button type="button" class="pu-cover-upload" onclick="puPickMomCover()" aria-label="上传动态背景"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h4l2-2h4l2 2h4v12H4Z"/><circle cx="12" cy="13" r="3"/></svg></button>';const saved=localStorage.getItem(currentKey());if(saved)hero.style.backgroundImage=`url("${saved}")`;}const cards=document.querySelectorAll('#puHubMomentsPane #momentList>.card');cards.forEach((card,i)=>{const p=state.moments[i];if(!p)return;if(p.puImages?.length){const photoBox=card.querySelector('.momentPhoto');if(photoBox){photoBox.innerHTML='';p.puImages.forEach(src=>{const img=document.createElement('img');img.src=src;img.style='width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin:5px 0';photoBox.appendChild(img)})}}const edit=card.querySelector('.edit');if(edit)edit.onclick=()=>puOpenPost(p.id)});updateMomFilter()};
+function renderDraft(){const el=$p('puPostPhotos');el.replaceChildren();photos.forEach((src,i)=>{const item=document.createElement('div');item.className='pu-post-photo';const img=document.createElement('img');img.src=src;const x=document.createElement('button');x.textContent='×';x.onclick=()=>{photos.splice(i,1);renderDraft()};item.append(img,x);el.appendChild(item)});const add=document.createElement('button');add.className='pu-post-add';add.textContent='+';add.onclick=puAddPostPhotos;el.appendChild(add);$p('puPostCategory').innerHTML=cats.map(c=>`<button type="button" class="${draft===c?'selected':''}" onclick="puDraftCategory('${c}')">${c}</button>`).join('')}
+window.puDraftCategory=c=>{draft=c;renderDraft()};window.puAddPostPhotos=()=>$p('puPostFiles').click();
+$p('puPostFiles').addEventListener('change',async e=>{for(const file of [...e.target.files].slice(0,9-photos.length)){try{photos.push(await compress(file,900))}catch(err){toast('图片读取失败')}}renderDraft();e.target.value=''});
+window.puOpenPost=function(id){const p=state.moments.find(x=>x.id===id);editing=p||null;draft=p?.category||current;photos=[...(p?.puImages||[])];isPublic=p?.puPublic!==false;mention=p?.puMention||'';locationText=p?.puLocation||'';$p('puPostText').value=p?.text||'';$p('puPublicLabel').textContent=isPublic?'公开':'私密';const name=typeof puUser!=='undefined'?(puUser.name||'User'):'User';const sign=typeof puUser!=='undefined'?(puUser.signature||''):'';const avatar=typeof puUser!=='undefined'&&puUser.avatar?`<img src="${puUser.avatar}" alt="">`:'<span class="pu-post-avatar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>';$p('puPostAuthor').innerHTML=avatar+`<div><strong></strong><small></small></div>`;$p('puPostAuthor').querySelector('strong').textContent=name;$p('puPostAuthor').querySelector('small').textContent=sign;renderDraft();$p('puPostOverlay').classList.add('open');$p('puPostOverlay').setAttribute('aria-hidden','false')};
+window.puClosePost=()=>{$p('puPostOverlay').classList.remove('open');$p('puPostOverlay').setAttribute('aria-hidden','true')};
+window.puTogglePostPublic=()=>{isPublic=!isPublic;$p('puPublicLabel').textContent=isPublic?'公开':'私密'};
+window.puMentionPost=()=>{const v=prompt('提及谁？输入名字',mention);if(v!==null)mention=v.trim()};
+window.puLocationPost=()=>{const v=prompt('输入位置名称',locationText);if(v!==null)locationText=v.trim()};
+window.puSendPost=async()=>{const text=$p('puPostText').value.trim();if(!text&&!photos.length){toast('请填写内容或添加照片');return}const data={text,category:draft,puImages:photos,puPublic:isPublic,puMention:mention,puLocation:locationText};if(editing)Object.assign(editing,data);else state.moments.unshift({id:uid(),date:now(),liked:false,...data});if(!persist()){if(!editing)state.moments.shift();return}current=draft;puClosePost();await renderMoments();if(typeof puHubRenderMe==='function')puHubRenderMe();toast('动态已发布')};
+window.editMoment=window.puOpenPost;
 })();
 </script>
 </body></html>
