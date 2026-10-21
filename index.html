@@ -1167,30 +1167,46 @@ function puParseChatReplies(raw){
 function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
 async function maybeSummarize(){if(!state.settings.summary||state.api.mode!=='remote')return;let cut=Math.max(0,state.messages.length-state.settings.context),from=state.summaryUntil||0;if(cut-from<20)return;let batch=state.messages.slice(from,cut).map(x=>({role:x.role,content:x.content}));try{let summary=await requestModel([{role:'user',content:'已有摘要：'+(state.summaryText||'无')+'\n\n需要归纳的旧聊天：\n'+batch.map(x=>x.role+': '+x.content).join('\n')}],'将旧聊天压缩成简洁、准确的长期剧情摘要，保留关系变化、关键事件、未完成事项；不要编造。只输出摘要。');state.summaryText=summary;state.summaryUntil=cut;persist()}catch(e){console.warn('摘要生成失败',e)}}
 let sending=false;
+// Immediate-chat validation: narration is retried, never silently converted to ellipses.
+function puHasNarration(raw){
+ const value=String(raw||'').trim();
+ return /(?:维持着|走廊上的|声控灯|死寂|光晕|身影|额头抵在|指关节|眼眸|下颌线|窗外的|夜色|月光|缓缓地|他(?:的|在|正|将|把)|她(?:的|在|正|将|把))/.test(value)
+  && !/^(?:你|我|咱们|我们|别|等|好|嗯|不|行|怎么|为什么)/.test(value);
+}
+function puValidImmediate(parts){return parts.length>0&&parts.every(p=>p&&p.length<=120&&!puHasNarration(p))}
+function puWait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function puGenerateImmediate(recent){
+ const instructions=puConversationPrompt()+'\n\n角色背景（仅供理解，不得模仿叙事文风）：\n'+systemPrompt(recent)+'\n\n重要：无论历史对话如何写，都只输出此刻角色亲手发送的聊天文本。不要输出省略号作为格式失败的替代。';
+ let raw=await requestModel(recent,instructions),parts=puParseChatReplies(raw);
+ if(puValidImmediate(parts))return parts;
+ // Re-ask the model rather than discarding its entire answer and showing "……".
+ const repair=[...recent,{role:'assistant',content:raw},{role:'user',content:'你刚才输出了旁白或不符合即时聊天格式。请把你想表达的意思改写成角色本人现在会发给我的手机消息。只输出 JSON 字符串数组，不要动作、环境、心理描写，不要解释，也不要只发省略号。'}];
+ raw=await requestModel(repair,instructions);
+ parts=puParseChatReplies(raw);
+ if(puValidImmediate(parts))return parts;
+ throw Error('AI 连续返回小说旁白，已停止本次回复；请重试或检查人设/世界书里的叙事指令');
+}
 async function sendMessage(){
  const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;
  input.value='';sending=true;$('sendBtn').disabled=true;
  state.messages.push({id:uid(),role:'user',content:text,date:now()});autoMemory(text);persist();renderChat();
  $('typing').classList.add('show');scrollChat();
- let reply='',error='';
+ let parts=[],error='';
  try{
   if(state.api.mode==='remote'){
    await maybeSummarize();
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
-   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。' : systemPrompt(recent)+'\n\n'+puConversationPrompt());
-  }else reply=localReply(text);
- }catch(e){error=e.message;reply=localReply(text)}
- let parts=puParseChatReplies(reply);
- if(puChatOptions.reply==='one')parts=parts.slice(0,1);
- if(!parts.length)parts=[puChatOptions.mode==='chat'?'……':(reply||'嗯')];
- for(let i=0;i<parts.length;i++){
-  const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
-  await new Promise(r=>setTimeout(r,delay));
-  state.messages.push({id:uid(),role:'assistant',content:parts[i],date:now()});persist();renderChat();
-  if(i===parts.length-1)$('typing').classList.remove('show');
- }
- if(error){$('chatStatus').textContent='接口失败 · 已回退本地';toast('接口未连通，已改用本地回复：'+error)}
- sending=false;$('sendBtn').disabled=false;
+   if(puChatOptions.mode==='chat')parts=await puGenerateImmediate(recent);
+   else parts=puParseChatReplies(await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt()));
+  }else parts=puParseChatReplies(localReply(text));
+  if(puChatOptions.reply==='one'&&puChatOptions.mode==='chat')parts=parts.slice(0,1);
+  if(!parts.length)throw Error('没有生成可用的聊天消息');
+  for(let i=0;i<parts.length;i++){
+   await puWait(i===0?650:Math.min(2500,800+parts[i].length*42));
+   state.messages.push({id:uid(),role:'assistant',content:parts[i],date:now()});persist();renderChat();
+  }
+ }catch(e){error=e.message||String(e);toast('回复失败：'+error)}
+ finally{$('typing').classList.remove('show');sending=false;$('sendBtn').disabled=false;scrollChat()}
 }
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 /* 模拟通话与本地通话记录：不访问真实电话网络 */
@@ -2346,6 +2362,11 @@ puRenderMessage=function(m){if(['gift','transfer'].includes(m.puType)&&!m.puStat
 #chatInput{font-size:16px!important}
 #puSocialReply{font-size:16px!important}
 .pu-post-detail{z-index:99999!important}
+
+/* iPhone Safari: avoid reserved space under the composer */
+#puHubChatRoom{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+#puHubChatRoom #chat{flex:1 1 0!important;height:100%!important;min-height:0!important;max-height:100%!important}
+#chat.active .pu-chat-bottom{margin-top:0!important;padding-bottom:env(safe-area-inset-bottom)!important}
 </style>
 <script id="pu-final-social-fixes">
 (function(){
