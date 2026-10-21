@@ -633,6 +633,52 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #lock.active~#puCurrentTime{display:none}
 .app:has(#lock.active) #puCurrentTime{display:none}
 </style>
+
+<style id="pu-social-contacts-css">
+#contacts .bar,#contacts>.pu-contacts-body{display:none!important}
+#contacts{background:#fffdfb!important;color:#292929}
+.pu-social-page{height:100%;overflow-y:auto;padding:8px 18px 70px;box-sizing:border-box}
+.pu-social-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 30px}
+.pu-social-nav button{border:0;background:none;color:inherit;font-size:25px;min-width:38px;min-height:42px}
+.pu-social-nav b{font-size:20px;letter-spacing:-.5px}
+.pu-social-hero{display:flex;align-items:center;gap:18px;margin:0 0 22px}
+.pu-social-avatar{width:106px;height:106px;flex:none;border:2px solid #dedbd7;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#eeeae5;font-size:38px}
+.pu-social-avatar img,.pu-social-mini img{width:100%;height:100%;object-fit:cover}
+.pu-social-identity{min-width:0;flex:1}
+.pu-social-identity h2{margin:0 0 4px;font-size:23px;overflow-wrap:anywhere}
+.pu-social-id{font-size:13px;color:#888;overflow-wrap:anywhere}
+.pu-social-stats{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;font-size:12px}
+.pu-social-stats strong{font-size:14px}
+.pu-social-verified{display:inline-flex;padding:6px 12px;border-radius:30px;background:#f0efed;font-size:12px}
+.pu-social-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 22px}
+.pu-social-actions button{border:0;border-radius:12px;background:#f0efed;padding:13px 4px;color:#292929;font-size:14px;font-weight:650}
+.pu-social-bio{white-space:pre-wrap;font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+.pu-social-tags{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0 25px}
+.pu-social-tags span{background:#f0efed;border-radius:7px;padding:7px 10px;font-size:12px}
+.pu-social-people{display:flex;overflow-x:auto;gap:16px;padding:4px 0 14px;scrollbar-width:none}
+.pu-social-person{border:0;background:none;min-width:62px;max-width:68px;padding:0;color:#777;font-size:11px;display:flex;align-items:center;flex-direction:column;gap:7px}
+.pu-social-mini{height:56px;width:56px;border:2px solid #c8c5c1;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#f1efec;color:#444;font-size:23px}
+.pu-social-person.selected .pu-social-mini{border:3px solid #333}
+.pu-social-person small{max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pu-social-bottom{display:flex;justify-content:flex-end;margin:22px 0 45px}
+.pu-social-bottom button{background:#eee;border:0;border-radius:40px;padding:10px 15px;color:#555}
+.pu-social-backhome{display:block;margin:35px auto;border:0;background:#ecebed;border-radius:30px;padding:13px 22px;font-weight:600}
+.pu-social-overlay{position:fixed;inset:0;z-index:9998;background:#0008;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:12vh 14px 8vh;box-sizing:border-box}
+.pu-social-overlay.open{display:flex}
+.pu-social-dialog{background:#fff;border-radius:24px;width:min(100%,460px);padding:22px 22px 28px;box-sizing:border-box;color:#222}
+.pu-social-dialog h2{text-align:center;font-size:19px;margin:0 0 22px}
+.pu-social-dialog label{display:block;font-size:13px;color:#666;margin:15px 0 7px}
+.pu-social-dialog input,.pu-social-dialog textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:12px;padding:12px;font-size:15px;background:white;color:#222}
+.pu-social-dialog textarea{resize:vertical;min-height:110px}
+.pu-social-dialog .pu-social-modal-actions{display:flex;gap:10px;margin-top:22px}
+.pu-social-dialog .pu-social-modal-actions button{flex:1;border:0;border-radius:12px;padding:12px;background:#eee}
+.pu-social-dialog .pu-social-modal-actions button:last-child{background:#333;color:white}
+.pu-social-switch{position:fixed;inset:0;background:#0008;z-index:9997;display:none;align-items:flex-end}
+.pu-social-switch.open{display:flex}
+.pu-social-switch-inner{background:#fffdfb;border-radius:23px 23px 0 0;padding:20px;width:100%;max-height:70vh;overflow-y:auto}
+.pu-social-switch-row{width:100%;border:0;border-bottom:1px solid #eee;background:transparent;display:flex;align-items:center;gap:13px;padding:12px 0;text-align:left;font-size:15px}
+.pu-social-switch-row .pu-social-mini{width:44px;height:44px}
+</style>
 </head>
 <body><main class="app"><div id="puCurrentTime" aria-label="当前时间"></div>
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -682,8 +728,13 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
  <div class="bloom-dots" id="bloomDots"><button class="on" onclick="bloomPage(0)" aria-label="第一页"></button><button onclick="bloomPage(1)" aria-label="第二页"></button><button onclick="bloomPage(2)" aria-label="第三页"></button></div>
  <div class="bloom-dock" id="bloomDock"></div><input type="file" id="bloomFile" accept="image/*" class="hidden" onchange="bloomFileChosen(this)"><div class="home-widgets hidden" id="homeWidgets"></div><div class="apps hidden" id="appGrid"></div><div class="home-footer hidden" id="footerText"></div>
 </section>
-<section class="screen" id="contacts"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>Memory</h2><button class="iconbtn" onclick="puAddChar()" aria-label="添加角色">＋</button></header><div class="body pu-contacts-body"><div class="pu-char-carousel" id="puCharCarousel" aria-label="左右滑动切换角色"></div><div class="pu-current-char-name" id="puCurrentCharName"></div><div class="pu-char-dots" id="puCharDots"></div><div class="pu-char-actions"><button class="btn alt" type="button" onclick="puEditSelectedPersona()">编辑人设</button><button class="btn" type="button" onclick="puOpenChat()">开始聊天</button><button class="btn alt" type="button" onclick="puDeleteSelectedChar()" title="删除选中角色">删除角色</button></div><div class="pu-char-summary" id="puCharSummary"></div><h3 class="pu-list-title">联系人</h3><div id="puContactList"></div></div></section>
-<section class="screen" id="chat"><header class="bar"><button class="back" onclick="go('contacts')">‹</button><button class="iconbtn pu-svg-btn" onclick="puToggleModePanel()" aria-label="聊天工具箱" title="聊天工具箱"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M10 13v2h4v-2"/></svg></button><div class="avatar" id="chatAvatar">♡</div><h2><span id="chatName">未命名角色</span><small id="chatStatus">在线 · 等你来聊天</small></h2><button class="iconbtn pu-svg-btn" onclick="go('persona')" aria-label="编辑人设"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></button></header><div id="puModePanel" class="pu-mode-panel" hidden><div class="pu-mode-head"><b>聊天工具箱</b><button type="button" onclick="puToggleModePanel()">✕</button></div><label>互动模式</label><div class="pu-mode-options"><button type="button" id="puModeChat" onclick="puSetChatMode('chat')">即时消息</button><button type="button" id="puModeStory" onclick="puSetChatMode('story')">长文互动</button></div><label>即时消息 · 角色回复条数</label><select id="puReplyMode" onchange="puSetReplyMode(this.value)"><option value="one">发一条 · 回一条</option><option value="multi">发一条 · 回多条（2～4条）</option><option value="auto">发一条 · 根据情境决定</option></select><small>即时消息：每条回复独立成气泡，不写长篇旁白。长文互动：支持叙事、动作、环境描写。</small></div><div class="body" id="chatScroll"><div id="chatList"></div><div class="typing" id="typing">正在输入 <span class="dots">● ● ●</span></div></div><div class="pu-chat-bottom"><div class="composer pu-wechat-composer"><button class="pu-chat-tool" type="button" onclick="puToggleVoice()" aria-label="语音模式"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg></button><textarea id="chatInput" rows="1" placeholder="发送消息…"></textarea><button class="pu-chat-tool" type="button" onclick="puToggleEmoji()" aria-label="表情"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14q4 5 8 0"/><path d="M8.5 9h.01M15.5 9h.01"/></svg></button><button class="pu-chat-tool" type="button" onclick="puToggleExtras()" aria-label="更多功能" id="puPlusBtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button class="btn pu-chat-send" id="sendBtn" onclick="sendMessage()">发送</button></div><div id="puChatExtras" class="pu-chat-extras" hidden><button class="pu-extra-item" onclick="puExtraAction('image')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m5 17 5-5 3 3 3-4 3 6"/></svg></span><small>相册</small></button><button class="pu-extra-item" onclick="puExtraAction('camera')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="3"/></svg></span><small>拍摄</small></button><button class="pu-extra-item" onclick="puExtraAction('gift')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M2 7h20v4H2zM12 7v14M12 7C6 7 6 2 9 2c2 0 3 3 3 5zm0 0c6 0 6-5 3-5-2 0-3 3-3 5z"/></svg></span><small>红包</small></button><button class="pu-extra-item" onclick="puExtraAction('transfer')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16m-5-4 5 4-5 4M20 17H4m5-4-5 4 5 4"/></svg></span><small>转账</small></button><button class="pu-extra-item" onclick="puExtraAction('pin')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg></span><small>位置</small></button><button class="pu-extra-item" onclick="puExtraAction('contact')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="9" r="2"/><path d="M8 17c0-4 8-4 8 0"/></svg></span><small>名片</small></button><button class="pu-extra-item" onclick="puExtraAction('file')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><small>文件</small></button><button class="pu-extra-item" onclick="puExtraAction('music')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><small>音乐</small></button></div><input type="file" id="puChatPhoto" accept="image/*" hidden onchange="puChatPhotoChosen(this)"><input type="file" id="puChatCamera" accept="image/*" capture="environment" hidden onchange="puChatPhotoChosen(this)"><input type="file" id="puChatFile" hidden onchange="puChatFileChosen(this)"></div></section>
+<section class="screen" id="contacts">
+<div class="pu-social-page" id="puSocialPage">
+ <div class="pu-social-nav"><button onclick="puOriginalGo('home')" aria-label="返回">←</button><b>charname</b><div><button onclick="puSocialOpenChat()" aria-label="进入聊天">@</button><button onclick="puSocialMenu()" aria-label="更多操作">☰</button></div></div>
+ <div id="puSocialContent"></div>
+</div>
+<header class="bar"><button class="back" onclick="go('home')">‹</button><h2>Memory</h2><button class="iconbtn" onclick="puAddChar()" aria-label="添加角色">＋</button></header><div class="body pu-contacts-body"><div class="pu-char-carousel" id="puCharCarousel" aria-label="左右滑动切换角色"></div><div class="pu-current-char-name" id="puCurrentCharName"></div><div class="pu-char-dots" id="puCharDots"></div><div class="pu-char-actions"><button class="btn alt" type="button" onclick="puEditSelectedPersona()">编辑人设</button><button class="btn" type="button" onclick="puOpenChat()">开始聊天</button><button class="btn alt" type="button" onclick="puDeleteSelectedChar()" title="删除选中角色">删除角色</button></div><div class="pu-char-summary" id="puCharSummary"></div><h3 class="pu-list-title">联系人</h3><div id="puContactList"></div></div></section>
+<section class="screen" id="chat"><header class="bar"><button class="back" onclick="go('contacts')">‹</button><button class="iconbtn pu-svg-btn" onclick="puToggleModePanel()" aria-label="聊天工具箱" title="聊天工具箱"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M10 13v2h4v-2"/></svg></button><div class="avatar" id="chatAvatar">♡</div><h2><span id="chatName">未命名角色</span><small id="chatStatus">在线 · 等你来聊天</small></h2><button class="iconbtn" onclick="puSocialSwitchOpen()" aria-label="切换聊天对象" title="切换聊天对象"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M2 20v-2a7 7 0 0 1 14 0v2M17 5a3 3 0 0 1 0 6M18 14c2 1 4 3 4 6"/></svg></button><button class="iconbtn pu-svg-btn" onclick="go('persona')" aria-label="编辑人设"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></button></header><div id="puModePanel" class="pu-mode-panel" hidden><div class="pu-mode-head"><b>聊天工具箱</b><button type="button" onclick="puToggleModePanel()">✕</button></div><label>互动模式</label><div class="pu-mode-options"><button type="button" id="puModeChat" onclick="puSetChatMode('chat')">即时消息</button><button type="button" id="puModeStory" onclick="puSetChatMode('story')">长文互动</button></div><label>即时消息 · 角色回复条数</label><select id="puReplyMode" onchange="puSetReplyMode(this.value)"><option value="one">发一条 · 回一条</option><option value="multi">发一条 · 回多条（2～4条）</option><option value="auto">发一条 · 根据情境决定</option></select><small>即时消息：每条回复独立成气泡，不写长篇旁白。长文互动：支持叙事、动作、环境描写。</small></div><div class="body" id="chatScroll"><div id="chatList"></div><div class="typing" id="typing">正在输入 <span class="dots">● ● ●</span></div></div><div class="pu-chat-bottom"><div class="composer pu-wechat-composer"><button class="pu-chat-tool" type="button" onclick="puToggleVoice()" aria-label="语音模式"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg></button><textarea id="chatInput" rows="1" placeholder="发送消息…"></textarea><button class="pu-chat-tool" type="button" onclick="puToggleEmoji()" aria-label="表情"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14q4 5 8 0"/><path d="M8.5 9h.01M15.5 9h.01"/></svg></button><button class="pu-chat-tool" type="button" onclick="puToggleExtras()" aria-label="更多功能" id="puPlusBtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button class="btn pu-chat-send" id="sendBtn" onclick="sendMessage()">发送</button></div><div id="puChatExtras" class="pu-chat-extras" hidden><button class="pu-extra-item" onclick="puExtraAction('image')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><path d="m5 17 5-5 3 3 3-4 3 6"/></svg></span><small>相册</small></button><button class="pu-extra-item" onclick="puExtraAction('camera')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="3"/></svg></span><small>拍摄</small></button><button class="pu-extra-item" onclick="puExtraAction('gift')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M2 7h20v4H2zM12 7v14M12 7C6 7 6 2 9 2c2 0 3 3 3 5zm0 0c6 0 6-5 3-5-2 0-3 3-3 5z"/></svg></span><small>红包</small></button><button class="pu-extra-item" onclick="puExtraAction('transfer')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16m-5-4 5 4-5 4M20 17H4m5-4-5 4 5 4"/></svg></span><small>转账</small></button><button class="pu-extra-item" onclick="puExtraAction('pin')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg></span><small>位置</small></button><button class="pu-extra-item" onclick="puExtraAction('contact')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="9" r="2"/><path d="M8 17c0-4 8-4 8 0"/></svg></span><small>名片</small></button><button class="pu-extra-item" onclick="puExtraAction('file')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><small>文件</small></button><button class="pu-extra-item" onclick="puExtraAction('music')"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><small>音乐</small></button></div><input type="file" id="puChatPhoto" accept="image/*" hidden onchange="puChatPhotoChosen(this)"><input type="file" id="puChatCamera" accept="image/*" capture="environment" hidden onchange="puChatPhotoChosen(this)"><input type="file" id="puChatFile" hidden onchange="puChatFileChosen(this)"></div></section>
 <section class="screen" id="moments"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>朋友圈</h2><button class="btn small" onclick="editMoment()">＋ 发动态</button></header><div class="body"><div id="momentList"></div></div></section>
 <section class="screen" id="photos"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>相册</h2><button class="btn small" onclick="document.getElementById('photoFile').click()">＋ 导入</button></header><div class="body"><div class="gallery" id="photoGrid"></div><p class="muted">图片保存在当前浏览器的 IndexedDB 中。</p><input class="hidden" id="photoFile" type="file" accept="image/*" multiple onchange="importMedia('photos',this)"></div></section>
 <section class="screen" id="calls"><header class="bar"><button class="back" onclick="go('home')">‹</button><h2>通话</h2></header><div class="body"><div class="card" style="text-align:center"><div class="avatar big" id="callAvatar">♡</div><h2 id="callName">未命名角色</h2><div class="call-timer" id="callTimer">00:00</div><p class="muted" id="callState">尚未接通 · 仅模拟通话界面</p><div class="row" style="justify-content:center"><button class="btn" id="callStart" onclick="startCall()">接通</button><button class="btn danger" onclick="endCall()">挂断</button></div></div><h3>通话记录</h3><div id="callLog"></div></div></section>
@@ -1531,4 +1582,87 @@ if(typeof bloomRenderHome==='function')puPaperRender();
  document.addEventListener('DOMContentLoaded',update);update();setInterval(update,15000);
 })();
 </script>
+
+<script id="pu-social-contacts-script">
+(function(){
+const socialKey='pu_social_profiles_v1';
+let extras={};try{extras=JSON.parse(localStorage.getItem(socialKey)||'{}')}catch(e){}
+function profile(c){return extras[c.id]||{}}
+function avatar(c){return puCharAvatar(c)}
+function save(){try{localStorage.setItem(socialKey,JSON.stringify(extras))}catch(e){toast('档案存储空间不足')}}
+window.puSocialRender=function(){
+ const el=document.getElementById('puSocialContent');if(!el)return;
+ const c=puChars.list.find(x=>x.id===puSelectedChar)||puChars.list[0];if(!c)return;
+ puSelectedChar=c.id;const p=profile(c),name=puCharName(c);
+ el.innerHTML=`<div class="pu-social-hero"><div class="pu-social-avatar">${avatar(c)}</div><div class="pu-social-identity"><h2>${esc(name)}</h2><div class="pu-social-id">${esc(p.userId||'@'+c.id.replace(/[^a-zA-Z0-9_]/g,'').slice(-16))}</div><div class="pu-social-stats"><span><strong>${Number(p.posts)||0}</strong> 帖子</span><span><strong>${Number(p.followers)||0}</strong> 粉丝</span><span><strong>${Number(p.following)||0}</strong> 关注</span></div>${p.verified?`<span class="pu-social-verified">V　${esc(p.verified)}</span>`:''}</div></div>
+ <div class="pu-social-actions"><button onclick="puSocialEdit()">编辑个人档案</button><button onclick="puSocialShare()">分享个人档案</button></div>
+ <div class="pu-social-bio">${esc(p.bio||c.data?.persona?.signature||'点击编辑个人档案，添加角色简介。')}</div>
+ <div class="pu-social-tags">${(p.tags||'').split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<span># ${esc(t)}</span>`).join('')}</div>
+ <div class="pu-social-people"><button class="pu-social-person" onclick="puAddChar()"><span class="pu-social-mini">＋</span><small>新建</small></button>${puChars.list.map(x=>`<button class="pu-social-person ${x.id===c.id?'selected':''}" data-social-id="${esc(x.id)}" onclick="puSocialSelect(this.dataset.socialId)"><span class="pu-social-mini">${avatar(x)}</span><small>${esc(puCharName(x))}</small></button>`).join('')}</div>
+ <div class="pu-social-bottom"><button onclick="puSocialOpenChat()">▶　${esc(p.song||'Song Title - Artist Name')}</button></div><button class="pu-social-backhome" onclick="puOriginalGo('home')">返回桌面</button>`;
+};
+window.puSocialSelect=function(id){if(sending)return toast('请等待当前回复完成');if(!puChars.list.some(x=>x.id===id))return;puSelectedChar=id;puSocialRender()};
+window.puSocialOpenChat=function(){puOpenChat()};
+window.puSocialMenu=function(){if(confirm('打开角色的完整人设编辑界面？'))puEditSelectedPersona()};
+window.puSocialShare=function(){const c=puChars.list.find(x=>x.id===puSelectedChar);if(!c)return;const p=profile(c);const content=[puCharName(c),p.userId||'',p.bio||c.data?.persona?.signature||'',p.tags||''].filter(Boolean).join('\n');if(navigator.share)navigator.share({title:puCharName(c)+' · 个人档案',text:content}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(content).then(()=>toast('档案文字已复制')).catch(()=>prompt('复制档案文字',content));else prompt('复制档案文字',content)};
+window.puSocialEdit=function(){
+ const c=puChars.list.find(x=>x.id===puSelectedChar);if(!c)return;const p=profile(c);
+ const overlay=document.getElementById('puSocialEditOverlay');overlay.classList.add('open');
+ const fields={name:puCharName(c),userId:p.userId||'',bio:p.bio??c.data?.persona?.signature??'',verified:p.verified||'',tags:p.tags||'',posts:p.posts||0,followers:p.followers||0,following:p.following||0,song:p.song||''};
+ for(const [k,v] of Object.entries(fields)){const e=overlay.querySelector('[name="'+k+'"]');if(e)e.value=v}
+};
+window.puSocialEditClose=function(){document.getElementById('puSocialEditOverlay').classList.remove('open')};
+window.puSocialEditSave=function(){
+ const c=puChars.list.find(x=>x.id===puSelectedChar);if(!c)return;
+ const modal=document.getElementById('puSocialEditOverlay'),get=k=>modal.querySelector('[name="'+k+'"]').value.trim();
+ const name=get('name');if(!name)return toast('请输入角色姓名');
+ if(c.id!==puChars.current&&!puActivateSelectedChar())return;
+ state.persona.name=name;
+ state.persona.signature=get('bio');
+ persist();
+ extras[c.id]={userId:get('userId'),bio:get('bio'),verified:get('verified'),tags:get('tags'),posts:get('posts'),followers:get('followers'),following:get('following'),song:get('song')};save();
+ puSocialEditClose();puSocialRender();toast('个人档案已保存');
+};
+window.puSocialSwitchOpen=function(){
+ const el=document.getElementById('puSocialSwitchList');
+ el.innerHTML=puChars.list.map(c=>`<button class="pu-social-switch-row" data-social-id="${esc(c.id)}" onclick="puSocialSwitchTo(this.dataset.socialId)"><span class="pu-social-mini">${avatar(c)}</span><span>${esc(puCharName(c))}</span>${c.id===puChars.current?' ✓':''}</button>`).join('');
+ document.getElementById('puSocialSwitch').classList.add('open');
+};
+window.puSocialSwitchClose=function(){document.getElementById('puSocialSwitch').classList.remove('open')};
+window.puSocialSwitchTo=function(id){puSocialSwitchClose();puSelectedChar=id;puOpenChat()};
+const oldContacts=puRenderContacts;
+puRenderContacts=function(){puSaveActiveChar();puSocialRender()};
+const oldGo=go;
+go=function(id){
+ if(id==='chat'){puOriginalGo('chat');return}
+ if(id==='contacts'){puOriginalGo('contacts');puSocialRender();return}
+ oldGo(id);
+};
+const oldBloom=bloomIcon;
+bloomIcon=function(id){
+ if(id==='chat'){
+  const markup=oldBloom(id);
+  return markup.replace(/onclick="go\('contacts'\)"/, `onclick="puSocialOpenChat()"`);
+ }
+ return oldBloom(id);
+};
+const originalNavigate=puNavigate;
+puNavigate=function(id){if(id==='contacts'){puOriginalGo('contacts');puSocialRender()}else if(id==='chat')puOriginalGo('chat');else originalNavigate(id)};
+document.addEventListener('DOMContentLoaded',()=>{});
+})();
+</script>
+<div class="pu-social-overlay" id="puSocialEditOverlay" onclick="if(event.target===this)puSocialEditClose()">
+ <div class="pu-social-dialog"><h2>编辑个人档案</h2>
+ <label>姓名</label><input name="name" maxlength="80">
+ <label>用户 ID</label><input name="userId" maxlength="80" placeholder="@character">
+ <label>个人简介</label><textarea name="bio"></textarea>
+ <label>V 认证标签</label><input name="verified" maxlength="70">
+ <label>标签（用逗号分隔）</label><input name="tags" placeholder="音乐人,制作人">
+ <label>帖子 / 粉丝 / 关注</label><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><input name="posts" type="number" min="0" placeholder="帖子"><input name="followers" type="number" min="0" placeholder="粉丝"><input name="following" type="number" min="0" placeholder="关注"></div>
+ <label>音乐标题</label><input name="song" placeholder="Song Title - Artist Name">
+ <p style="color:#888;font-size:12px;margin-top:16px">角色头像与完整人设可在原有人设卡中导入或编辑，保存后这里自动同步。</p>
+ <div class="pu-social-modal-actions"><button onclick="puSocialEditClose()">取消</button><button onclick="puSocialEditSave()">保存档案</button></div>
+ </div>
+</div>
+<div class="pu-social-switch" id="puSocialSwitch" onclick="if(event.target===this)puSocialSwitchClose()"><div class="pu-social-switch-inner"><div style="display:flex;justify-content:space-between;align-items:center"><b>切换聊天对象</b><button onclick="puSocialSwitchClose()" style="border:0;background:none;font-size:24px">×</button></div><div id="puSocialSwitchList"></div><button onclick="puSocialSwitchClose();go('contacts')" style="margin:14px 0;border:0;background:#eee;border-radius:12px;padding:12px;width:100%">打开联系人主页</button></div></div>
 </body></html>
