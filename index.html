@@ -617,7 +617,74 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 .pu47-preview .pu47-face b{font-size:25px}
 .pu47-tools{display:flex;gap:9px;margin-bottom:15px}.pu47-tools button{flex:1;border:1px solid #e6e0d9;background:#f8f6f3;color:#514d48;border-radius:12px;padding:11px 6px;font-size:12px}
 .pu47-hint{font-size:12px;color:#9a9189;margin:0 0 12px}
-</style></head>
+</style>
+<style>
+/* v4.8 — third-page default widgets: layout only; original copy and functionality retained */
+#home .bloom-page-three .bloom-cover{
+  height:clamp(205px,33vh,290px);min-height:0;flex:0 0 auto;
+  margin-top:clamp(3px,.8vh,8px);border-radius:clamp(23px,5vw,33px);
+  background:var(--bloom-panel);border:1px solid var(--bloom-border);
+  overflow:hidden;position:relative;display:flex;flex-direction:column;
+}
+#home .bloom-page-three .bloom-cover-picture{height:53%;flex:0 0 53%;width:100%;}
+#home .bloom-page-three .bloom-cover-img{height:100%;width:100%;}
+#home .bloom-page-three .bloom-cover-avatar{
+  width:clamp(62px,10vh,83px);height:clamp(62px,10vh,83px);
+  top:calc(53% - clamp(31px,5vh,41.5px));left:50%;transform:translateX(-50%);
+  border:4px solid #fffdfa;border-radius:50%;z-index:2;
+}
+#home .bloom-page-three .bloom-cover-identity{
+  flex:1;min-height:0;padding:clamp(35px,5.7vh,49px) 12px 8px;
+  display:flex;flex-direction:column;justify-content:center;gap:clamp(2px,.5vh,6px);
+}
+#home .bloom-page-three .bloom-cover-identity strong{font-size:clamp(14px,2.2vh,18px);line-height:1.25;}
+#home .bloom-page-three .bloom-cover-identity span{font-size:clamp(10px,1.6vh,13px);line-height:1.3;}
+#home .bloom-page-three .bloom-us{
+  flex:1 1 0;min-height:0;margin-top:clamp(7px,1.2vh,13px);
+  padding:clamp(10px,1.8vh,17px) clamp(12px,3vw,22px) clamp(9px,1.5vh,15px);
+  border-radius:clamp(23px,5vw,33px);background:var(--bloom-panel);
+  border:1px solid var(--bloom-border);display:flex;flex-direction:column;gap:0;
+}
+#home .bloom-page-three .bloom-us-title{display:none!important;}
+#home .bloom-page-three .bloom-circles{
+  display:flex;align-items:center;justify-content:space-evenly;gap:clamp(16px,5vw,38px);
+  margin:clamp(5px,1vh,11px) 0 clamp(6px,1.1vh,11px);flex:0 0 auto;
+}
+#home .bloom-page-three .bloom-circles button{
+  width:clamp(79px,13vh,117px);height:clamp(79px,13vh,117px);
+  border-radius:50%;border:2px solid var(--bloom-accent);flex:0 0 auto;
+}
+#home .bloom-page-three .bloom-us>p{
+  margin:clamp(2px,.5vh,5px) 0 clamp(8px,1.5vh,14px);
+  font-size:clamp(11px,1.8vh,15px);flex:0 0 auto;
+}
+#home .bloom-page-three .bloom-large-player{
+  margin-top:auto;min-height:0;flex:1 1 auto;
+  padding:clamp(10px,1.6vh,16px) clamp(10px,2.5vw,17px);
+  gap:clamp(5px,1vh,10px);border-radius:clamp(17px,4vw,25px);
+  background:linear-gradient(130deg,#f3f0eb,var(--bloom-icon));
+  display:flex;flex-direction:column;justify-content:space-evenly;
+}
+#home .bloom-page-three .bloom-large-player strong{font-size:clamp(13px,2vh,18px);}
+#home .bloom-page-three .bloom-large-player small{font-size:clamp(8px,1.25vh,11px);}
+#home .bloom-page-three .bloom-large-player .bloom-controls{width:100%;}
+#home .bloom-page-three .bloom-large-player .bloom-controls button{min-height:26px;}
+@media(max-height:740px){
+ #home .bloom-page-three .bloom-cover{height:clamp(155px,29vh,215px)}
+ #home .bloom-page-three .bloom-cover-avatar{width:clamp(54px,9vh,67px);height:clamp(54px,9vh,67px);top:calc(53% - clamp(27px,4.5vh,33.5px))}
+ #home .bloom-page-three .bloom-cover-identity{padding-top:clamp(29px,4.8vh,37px)}
+ #home .bloom-page-three .bloom-circles button{width:clamp(65px,11vh,83px);height:clamp(65px,11vh,83px)}
+ #home .bloom-page-three .bloom-us{padding:7px 12px}
+ #home .bloom-page-three .bloom-us>p{margin:2px 0 6px}
+ #home .bloom-page-three .bloom-large-player{padding:7px 10px;gap:3px}
+}
+@media(max-height:600px){
+ #home .bloom-page-three .bloom-cover{height:145px}
+ #home .bloom-page-three .bloom-circles button{width:58px;height:58px}
+ #home .bloom-page-three .bloom-us>p{margin:1px 0 4px}
+}
+</style>
+</head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"></div></section>
@@ -653,7 +720,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
     <div class="pu44-clock-hidden" id="homeTime"></div><div class="pu44-clock-hidden" id="bloomBigDate"></div>
   </div>
   <div class="bloom-page bloom-page-two"><div class="bloom-grid bloom-grid-second" id="bloomGrid2"></div><div class="bloom-collage"><button class="bloom-polaroid collage-a" onclick="bloomPick('polaroid2')"><div class="bloom-img" id="bloomImg_polaroid2">＋<small>导入图片</small></div><em>see you tomorrow</em></button><button class="bloom-polaroid collage-b" onclick="bloomPick('polaroid3')"><div class="bloom-img" id="bloomImg_polaroid3">＋<small>导入图片</small></div><em>dear you</em></button><button class="bloom-polaroid collage-c" onclick="bloomPick('polaroid4')"><div class="bloom-img" id="bloomImg_polaroid4">＋<small>导入图片</small></div><em>my melody</em></button></div><button class="bloom-quote" onclick="bloomEditText('quote')"><span id="bloomQuoteText">人的心臟都在左邊，要怎樣擁抱才能心心相印</span></button></div>
-  <div class="bloom-page bloom-page-three"><div class="bloom-cover"><button class="bloom-cover-picture" onclick="bloomPick('cover')" aria-label="修改名片背景"><div id="bloomImg_cover" class="bloom-cover-img">＋<small>导入名片背景</small></div></button><button class="bloom-cover-avatar" onclick="bloomPick('myavatar')" id="bloomImg_myavatar">＋<small>头像</small></button><button class="bloom-cover-identity" onclick="bloomEditText('profile')"><strong id="bloomCoverName">我的名片</strong><span id="bloomCoverQuote">点击编辑个性签名</span></button></div><div class="bloom-us"><div class="bloom-us-title"><span>I</span><span>U</span></div><div class="bloom-circles"><button onclick="bloomPick('us1')" id="bloomImg_us1">＋<small>导入图片</small></button><button onclick="bloomPick('us2')" id="bloomImg_us2">＋<small>导入图片</small></button></div><p>a little piece of us</p><div class="bloom-large-player"><strong data-bloom-song>暂无播放歌曲</strong><small>‧˚₊世界の片隅で私に属するあなたを見つける‧₊˚</small><input aria-label="播放进度" class="bloom-seek" type="range" min="0" max="100" value="0" oninput="seekMusic(this.value)"><div class="bloom-controls"><button onclick="bloomToggleRepeat()" data-bloom-repeat aria-label="循环播放"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg></button><button onclick="skipMusic(-1)" aria-label="上一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6Z"/></svg></button><button onclick="toggleMusic()" data-bloom-play aria-label="播放暂停"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5.5 19 12 9 18.5Z"/></svg></button><button onclick="skipMusic(1)" aria-label="下一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M6 6l9 6-9 6Z"/></svg></button><button onclick="go('music')" aria-label="打开音乐列表"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg></button></div></div></div></div>
+  <div class="bloom-page bloom-page-three"><div class="bloom-cover"><button class="bloom-cover-picture" onclick="bloomPick('cover')" aria-label="修改名片背景"><div id="bloomImg_cover" class="bloom-cover-img">＋<small>导入名片背景</small></div></button><button class="bloom-cover-avatar" onclick="bloomPick('myavatar')" id="bloomImg_myavatar">＋<small>头像</small></button><button class="bloom-cover-identity" onclick="bloomEditText('profile')"><strong id="bloomCoverName">我的名片</strong><span id="bloomCoverQuote">点击编辑个性签名</span></button></div><div class="bloom-us"><div class="bloom-circles"><button onclick="bloomPick('us1')" id="bloomImg_us1">＋<small>导入图片</small></button><button onclick="bloomPick('us2')" id="bloomImg_us2">＋<small>导入图片</small></button></div><p>a little piece of us</p><div class="bloom-large-player"><strong data-bloom-song>暂无播放歌曲</strong><small>‧˚₊世界の片隅で私に属するあなたを見つける‧₊˚</small><input aria-label="播放进度" class="bloom-seek" type="range" min="0" max="100" value="0" oninput="seekMusic(this.value)"><div class="bloom-controls"><button onclick="bloomToggleRepeat()" data-bloom-repeat aria-label="循环播放"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg></button><button onclick="skipMusic(-1)" aria-label="上一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6Z"/></svg></button><button onclick="toggleMusic()" data-bloom-play aria-label="播放暂停"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5.5 19 12 9 18.5Z"/></svg></button><button onclick="skipMusic(1)" aria-label="下一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M6 6l9 6-9 6Z"/></svg></button><button onclick="go('music')" aria-label="打开音乐列表"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg></button></div></div></div></div>
  </div>
  <div id="bloomAppDrawer" class="bloom-app-drawer" aria-hidden="true"><div class="bloom-app-drawer-inner"><button class="bloom-drawer-close" onclick="bloomCloseApps()">关闭 ×</button><h3>全部应用</h3><div id="bloomAllApps"></div></div></div>
  <div class="bloom-dots" id="bloomDots"><button class="on" onclick="bloomPage(0)" aria-label="第一页"></button><button onclick="bloomPage(1)" aria-label="第二页"></button><button onclick="bloomPage(2)" aria-label="第三页"></button></div>
