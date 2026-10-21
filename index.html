@@ -712,7 +712,17 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 .pu-social-dialog .pu-social-modal-actions button{font-size:13px!important}
 @media(max-width:365px){#contacts .pu-social-avatar{width:83px!important;height:83px!important}#contacts .pu-social-hero{gap:10px!important}#contacts .pu-social-stats{gap:7px!important}}
 </style>
-</head>
+<style id="pu-verified-tags-fix">
+#contacts .pu-social-verified{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:5px 11px 5px 7px!important;line-height:1.2!important;white-space:normal!important}
+#contacts .pu-verified-svg{width:17px;height:17px;flex:0 0 17px;display:block}
+#contacts .pu-social-tags{display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;gap:7px!important}
+#contacts .pu-social-tags span{display:inline-flex!important;white-space:nowrap;max-width:100%;overflow-wrap:anywhere;white-space:normal}
+.pu-tag-edit-list{display:flex;flex-direction:column;gap:8px}
+.pu-tag-edit-row{display:flex;align-items:center;gap:8px}
+.pu-social-dialog .pu-tag-edit-row input{flex:1;min-width:0;margin:0}
+.pu-tag-edit-row button{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border:1px solid #dedede;border-radius:11px;background:#f6f6f6;color:#555}
+.pu-tag-add{margin-top:10px;padding:10px 13px;display:inline-flex;align-items:center;gap:7px;border:1px solid #dedede;border-radius:11px;background:#f2f2f2;color:#333;font-size:13px}
+</style></head>
 <body><main class="app"><div id="puCurrentTime" aria-label="当前时间"></div>
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
@@ -1622,15 +1632,24 @@ const socialKey='pu_social_profiles_v1';
 let extras={};try{extras=JSON.parse(localStorage.getItem(socialKey)||'{}')}catch(e){}
 function profile(c){return extras[c.id]||{}}
 function avatar(c){return puCharAvatar(c)}
+function puSocialTags(value){return (Array.isArray(value)?value:String(value||'').split(/[,，、;；\n]+/)).map(x=>String(x).trim().replace(/^#+\s*/, '')).filter(Boolean)}
+let puTagDraft=[];
+function puRenderTagDraft(){
+ const host=document.getElementById('puSocialTagItems');if(!host)return;
+ host.innerHTML=puTagDraft.map((tag,i)=>`<div class="pu-tag-edit-row"><input type="text" aria-label="第${i+1}个标签" data-pu-tag-index="${i}" maxlength="35" value="${esc(tag).replace(/"/g,'&quot;')}"><button type="button" data-pu-tag-delete="${i}" aria-label="删除第${i+1}个标签"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 7h14M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></svg></button></div>`).join('');
+}
+function puCollectTagDraft(){document.querySelectorAll('#puSocialTagItems [data-pu-tag-index]').forEach(input=>{puTagDraft[Number(input.dataset.puTagIndex)]=input.value})}
+window.puSocialAddTag=function(){puCollectTagDraft();puTagDraft.push('');puRenderTagDraft();const all=document.querySelectorAll('#puSocialTagItems input');if(all.length)all[all.length-1].focus()};
+document.addEventListener('click',function(e){const button=e.target.closest('[data-pu-tag-delete]');if(!button)return;puCollectTagDraft();puTagDraft.splice(Number(button.dataset.puTagDelete),1);puRenderTagDraft()});
 function save(){try{localStorage.setItem(socialKey,JSON.stringify(extras))}catch(e){toast('档案存储空间不足')}}
 window.puSocialRender=function(){
  const el=document.getElementById('puSocialContent');if(!el)return;
  const c=puChars.list.find(x=>x.id===puSelectedChar)||puChars.list[0];if(!c)return;
  puSelectedChar=c.id;const p=profile(c),name=puCharName(c);
- el.innerHTML=`<div class="pu-social-hero"><div class="pu-social-avatar">${avatar(c)}</div><div class="pu-social-identity"><h2>${esc(name)}</h2><div class="pu-social-id">${esc(p.userId||'@'+c.id.replace(/[^a-zA-Z0-9_]/g,'').slice(-16))}</div><div class="pu-social-stats"><span><strong>${Number(p.posts)||0}</strong> 帖子</span><span><strong>${Number(p.followers)||0}</strong> 粉丝</span><span><strong>${Number(p.following)||0}</strong> 关注</span></div>${p.verified?`<span class="pu-social-verified">V　${esc(p.verified)}</span>`:''}</div></div>
+ el.innerHTML=`<div class="pu-social-hero"><div class="pu-social-avatar">${avatar(c)}</div><div class="pu-social-identity"><h2>${esc(name)}</h2><div class="pu-social-id">${esc(p.userId||'@'+c.id.replace(/[^a-zA-Z0-9_]/g,'').slice(-16))}</div><div class="pu-social-stats"><span><strong>${Number(p.posts)||0}</strong> 帖子</span><span><strong>${Number(p.followers)||0}</strong> 粉丝</span><span><strong>${Number(p.following)||0}</strong> 关注</span></div>${p.verified?`<span class="pu-social-verified"><svg class="pu-verified-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#252525"/><path d="M6.9 7.5L12 17l5.1-9.5" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${esc(p.verified)}</span>`:''}</div></div>
  <div class="pu-social-actions"><button onclick="puSocialEdit()">编辑个人档案</button><button onclick="puSocialShare()">分享个人档案</button></div>
  <div class="pu-social-bio">${esc(p.bio||c.data?.persona?.signature||'点击编辑个人档案，添加角色简介。')}</div>
- <div class="pu-social-tags">${(p.tags||'').split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<span># ${esc(t)}</span>`).join('')}</div>
+ <div class="pu-social-tags">${puSocialTags(p.tags).map(t=>`<span># ${esc(t)}</span>`).join('')}</div>
  <div class="pu-social-people"><button class="pu-social-person" onclick="puAddChar()"><span class="pu-social-mini">＋</span><small>新建</small></button>${puChars.list.map(x=>`<button class="pu-social-person ${x.id===c.id?'selected':''}" data-social-id="${esc(x.id)}" onclick="puSocialSelect(this.dataset.socialId)"><span class="pu-social-mini">${avatar(x)}</span><small>${esc(puCharName(x))}</small></button>`).join('')}</div>
  <div class="pu-social-bottom"><button onclick="puSocialOpenChat()">▶　${esc(p.song||'Song Title - Artist Name')}</button></div><button class="pu-social-backhome" onclick="puOriginalGo('home')">返回桌面</button>`;
 };
@@ -1641,7 +1660,7 @@ window.puSocialShare=function(){const c=puChars.list.find(x=>x.id===puSelectedCh
 window.puSocialEdit=function(){
  const c=puChars.list.find(x=>x.id===puSelectedChar);if(!c)return;const p=profile(c);
  const overlay=document.getElementById('puSocialEditOverlay');overlay.classList.add('open');
- const fields={name:puCharName(c),userId:p.userId||'',bio:p.bio??c.data?.persona?.signature??'',verified:p.verified||'',tags:p.tags||'',posts:p.posts||0,followers:p.followers||0,following:p.following||0,song:p.song||''};
+ const fields={name:puCharName(c),userId:p.userId||'',bio:p.bio??c.data?.persona?.signature??'',verified:p.verified||'',posts:p.posts||0,followers:p.followers||0,following:p.following||0,song:p.song||''};
  for(const [k,v] of Object.entries(fields)){const e=overlay.querySelector('[name="'+k+'"]');if(e)e.value=v}
 };
 window.puSocialEditClose=function(){document.getElementById('puSocialEditOverlay').classList.remove('open')};
@@ -1653,7 +1672,7 @@ window.puSocialEditSave=function(){
  state.persona.name=name;
  state.persona.signature=get('bio');
  persist();
- extras[c.id]={userId:get('userId'),bio:get('bio'),verified:get('verified'),tags:get('tags'),posts:get('posts'),followers:get('followers'),following:get('following'),song:get('song')};save();
+ puCollectTagDraft();extras[c.id]={userId:get('userId'),bio:get('bio'),verified:get('verified'),tags:puSocialTags(puTagDraft).join(','),posts:get('posts'),followers:get('followers'),following:get('following'),song:get('song')};save();
  puSocialEditClose();puSocialRender();toast('个人档案已保存');
 };
 window.puSocialSwitchOpen=function(){
@@ -1690,7 +1709,7 @@ document.addEventListener('DOMContentLoaded',()=>{});
  <label>用户 ID</label><input name="userId" maxlength="80" placeholder="@character">
  <label>个人简介</label><textarea name="bio"></textarea>
  <label>V 认证标签</label><input name="verified" maxlength="70">
- <label>标签（用逗号分隔）</label><input name="tags" placeholder="音乐人,制作人">
+ <label>人物标签</label><div id="puSocialTagItems" class="pu-tag-edit-list"></div><button type="button" class="pu-tag-add" onclick="puSocialAddTag()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> 添加标签</button>
  <label>帖子 / 粉丝 / 关注</label><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><input name="posts" type="number" min="0" placeholder="帖子"><input name="followers" type="number" min="0" placeholder="粉丝"><input name="following" type="number" min="0" placeholder="关注"></div>
  <label>音乐标题</label><input name="song" placeholder="Song Title - Artist Name">
  <p style="color:#888;font-size:12px;margin-top:16px">角色头像与完整人设可在原有人设卡中导入或编辑，保存后这里自动同步。</p>
