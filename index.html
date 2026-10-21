@@ -678,7 +678,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #contacts .pu-social-nav{padding:8px 0 29px!important}
 #contacts .pu-social-nav b{font-size:17px!important;font-weight:750!important;letter-spacing:-.3px}
 #contacts .pu-social-nav button{font-size:23px!important;padding:0!important;min-width:32px!important}
-#contacts .pu-social-hero{gap:15px!important;margin-bottom:22px!important}
+#contacts .pu-social-hero{gap:15px!important;margin-bottom:22px!important;align-items:flex-start!important}
 #contacts .pu-social-avatar{width:94px!important;height:94px!important;border:2px solid #d3d3d3!important;background:#f4f4f4!important}
 #contacts .pu-social-identity h2{font-size:19px!important;font-weight:750!important;margin-bottom:3px!important}
 #contacts .pu-social-id{font-size:12px!important;color:#898989!important}
@@ -706,7 +706,8 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 </style>
 <style id="pu-verified-tags-fix">
 #contacts .pu-social-verified{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:5px 11px 5px 7px!important;line-height:1.2!important;white-space:normal!important}
-#contacts .pu-verified-svg{width:17px;height:17px;flex:0 0 17px;display:block}
+#contacts .pu-verified-svg{width:15px;height:15px;flex:0 0 15px;display:block}
+#contacts .pu-social-verified{width:max-content!important;max-width:100%!important;gap:5px!important;padding:4px 9px 4px 6px!important;font-size:11px!important;overflow-wrap:anywhere!important}
 #contacts .pu-social-tags{display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;gap:7px!important}
 #contacts .pu-social-tags span{display:inline-flex!important;white-space:nowrap;max-width:100%;overflow-wrap:anywhere;white-space:normal}
 .pu-tag-edit-list{display:flex;flex-direction:column;gap:8px}
@@ -1727,11 +1728,13 @@ window.puSocialEditSave=function(){
  const c=puChars.list.find(x=>x.id===puSelectedChar);if(!c)return;
  const modal=document.getElementById('puSocialEditOverlay'),get=k=>modal.querySelector('[name="'+k+'"]').value.trim();
  const name=get('name');if(!name)return toast('请输入角色姓名');
+ const verified=get('verified');const verifiedLength=Array.from(verified).length;
+ if(verified && (verifiedLength<3 || verifiedLength>10))return toast('V 认证文字须为 3～10 个字');
  if(c.id!==puChars.current&&!puActivateSelectedChar())return;
  state.persona.name=name;
  state.persona.signature=get('bio');
  persist();
- puCollectTagDraft();extras[c.id]={userId:get('userId'),bio:get('bio'),verified:get('verified'),tags:puSocialTags(puTagDraft).join(','),posts:get('posts'),followers:get('followers'),following:get('following'),song:get('song')};save();
+ puCollectTagDraft();extras[c.id]={userId:get('userId'),bio:get('bio'),verified:verified,tags:puSocialTags(puTagDraft).join(','),posts:get('posts'),followers:get('followers'),following:get('following'),song:get('song')};save();
  puSocialEditClose();puSocialRender();toast('个人档案已保存');
 };
 window.puSocialSwitchOpen=function(){
@@ -1767,7 +1770,7 @@ document.addEventListener('DOMContentLoaded',()=>{});
  <label>姓名</label><input name="name" maxlength="80">
  <label>用户 ID</label><input name="userId" maxlength="80" placeholder="@character">
  <label>个人简介</label><textarea name="bio"></textarea>
- <label>V 认证标签</label><input name="verified" maxlength="70">
+ <label>V 认证标签（3～10 字，可留空）</label><input name="verified" maxlength="10" placeholder="请输入 3～10 个字">
  <label>人物标签</label><div id="puSocialTagItems" class="pu-tag-edit-list"></div><button type="button" class="pu-tag-add" onclick="puSocialAddTag()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> 添加标签</button>
  <label>帖子 / 粉丝 / 关注</label><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><input name="posts" type="number" min="0" placeholder="帖子"><input name="followers" type="number" min="0" placeholder="粉丝"><input name="following" type="number" min="0" placeholder="关注"></div>
  <label>音乐标题</label><input name="song" placeholder="Song Title - Artist Name">
@@ -1944,23 +1947,25 @@ const groupRoom=document.createElement('div');groupRoom.id='puGroupRoom';groupRo
 const oldTab=window.puHubTab;
 window.puHubTab=function(n){n=Math.max(0,Math.min(3,n));hub.style.transform=`translateX(-${n*25}%)`;Array.from(nav.children).forEach((b,i)=>{b.classList.toggle('active',i===n);b.setAttribute('aria-selected',i===n?'true':'false')});if(n===0){if(!insideChat&&!room)drawInbox()}if(n===1)drawFriends();if(n===2)renderMoments();if(n===3)puHubRenderMe()};
 function openMain(tab){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id==='puHub'));puHubTab(tab)}
-function closeChat(){insideChat=false;$id('chat').classList.remove('pu-inbox-visible');$id('chat').classList.add('pu-inbox-hidden');drawInbox()}
+function closeChat(){insideChat=false;$id('chat').classList.remove('active');$id('chat').classList.remove('pu-inbox-visible');$id('chat').classList.add('pu-inbox-hidden');drawInbox()}
 window.puGroupClose=function(){room=null;groupRoom.classList.remove('open');drawInbox()};
 function avatarHTML(c){try{return puCharAvatar(c)||svg('user')}catch(e){return svg('user')}}
 function entries(){let list=puChars.list.map(c=>({id:c.id,name:puCharName(c),char:c,group:false,last:c.data?.messages?.at(-1)?.content||'暂无消息',date:c.data?.messages?.at(-1)?.date||''}));list.push(...groups.map(g=>({id:g.id,name:g.name,group:true,last:g.messages.at(-1)?.text||'暂无消息',date:g.messages.at(-1)?.date||''})));return list}
-function openEntry(id,isGroup){if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}room=null;groupRoom.classList.remove('open');puSelectedChar=id;if(!puActivateSelectedChar())return;insideChat=true;$id('chat').classList.remove('pu-inbox-hidden');$id('chat').classList.add('pu-inbox-visible');renderChat();}
+function openEntry(id,isGroup){if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}room=null;groupRoom.classList.remove('open');puSelectedChar=id;if(!puActivateSelectedChar()){toast('暂时无法进入聊天，请稍后重试');return;}insideChat=true;$id('chat').classList.add('active');$id('chat').classList.remove('pu-inbox-hidden');$id('chat').classList.add('pu-inbox-visible');renderChat();}
 window.puInboxOpen=(id,g)=>openEntry(id,g);
 window.puInboxPin=(id)=>{pins[id]=!pins[id];save();drawInbox()};
 window.puInboxFilter=(f)=>{filter=f;drawInbox()};
 window.puInboxSearch=()=>{let q=prompt('搜索联系人或群聊名称');if(q===null)return;drawInbox(q)};
 // Delegated listeners survive list re-renders; tapping the avatar, preview, or whitespace opens the same room.
 inbox.addEventListener('click',function(event){
+ if(event.target.closest('.pu-inbox-item[onclick]'))return;
  if(event.target.closest('.pu-inbox-more'))return;
  const item=event.target.closest('.pu-inbox-item[data-chat-id]');
  if(!item||!inbox.contains(item))return;
  openEntry(item.dataset.chatId,item.dataset.isGroup==='true');
 });
 inbox.addEventListener('keydown',function(event){
+ if(event.target.closest('.pu-inbox-item[onkeydown]'))return;
  if(event.key!=='Enter'&&event.key!==' ')return;
  if(event.target.closest('.pu-inbox-more'))return;
  const item=event.target.closest('.pu-inbox-item[data-chat-id]');
@@ -1969,7 +1974,7 @@ inbox.addEventListener('keydown',function(event){
 });
 function drawInbox(search=''){
  load();const all=entries().filter(e=>(filter==='Group'?e.group:filter==='Friends'?!e.group:true)&&e.name.toLowerCase().includes(search.toLowerCase()));const pinned=all.filter(e=>pins[e.id]);const normal=all.filter(e=>!pins[e.id]);
- const render=e=>`<div class="pu-inbox-item" role="button" tabindex="0" data-chat-id="${escapeHTML(e.id)}" data-is-group="${e.group}" aria-label="打开与${escapeHTML(e.name)}的聊天"><span class="pu-inbox-avatar">${e.group?svg('users'):avatarHTML(e.char)}</span><div class="pu-inbox-info"><b>${escapeHTML(e.name)}</b><small>${escapeHTML(e.last)}</small></div><button class="pu-inbox-more" onclick="event.stopPropagation();puInboxPin('${escapeHTML(e.id)}')" aria-label="${pins[e.id]?'取消置顶':'置顶'}" title="${pins[e.id]?'取消置顶':'置顶'}">${svg('pin')}</button></div>`;
+ const render=e=>`<div class="pu-inbox-item" role="button" tabindex="0" data-chat-id="${escapeHTML(e.id)}" data-is-group="${e.group}" onclick="puInboxOpen(this.dataset.chatId,this.dataset.isGroup==='true')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();puInboxOpen(this.dataset.chatId,this.dataset.isGroup==='true')}" aria-label="打开与${escapeHTML(e.name)}的聊天"><span class="pu-inbox-avatar">${e.group?svg('users'):avatarHTML(e.char)}</span><div class="pu-inbox-info"><b>${escapeHTML(e.name)}</b><small>${escapeHTML(e.last)}</small></div><button class="pu-inbox-more" onclick="event.stopPropagation();puInboxPin('${escapeHTML(e.id)}')" aria-label="${pins[e.id]?'取消置顶':'置顶'}" title="${pins[e.id]?'取消置顶':'置顶'}">${svg('pin')}</button></div>`;
  const profileName=escapeHTML(puUser.name||puUser.nickname||'User');
  inbox.innerHTML=`<div class="pu-inbox-title"><button onclick="go('home')" aria-label="返回桌面">${svg('back')}</button><b>Chat</b><span style="width:26px"></span></div><div class="pu-inbox-profile"><span class="pu-inbox-photo" style="display:grid;place-items:center">${svg('user')}</span><div style="flex:1"><b>${profileName}</b><small>${escapeHTML(puUser.signature||'')}</small></div><button onclick="puHubTab(3)">•••</button></div><div class="pu-inbox-filters">${['Chats','Group','Friends'].map(f=>`<button class="${filter===f?'active':''}" onclick="puInboxFilter('${f}')">${f}</button>`).join('')}<button onclick="puGroupCreatorOpen()">+Add</button><button onclick="puInboxSearch()">${svg('search')}</button></div>${pinned.length?`<div class="pu-inbox-section">${svg('pin')} 置顶</div>${pinned.map(render).join('')}`:''}<div class="pu-inbox-section" style="margin-top:12px">${filter==='Group'?'群聊':filter==='Friends'?'联系人':'最近聊天'}</div>${normal.map(render).join('')||'<p style="color:#aaa;text-align:center;padding:28px 0;font-size:13px">暂无聊天，点击 +Add 创建群聊</p>'}`;
 }
