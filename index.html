@@ -482,6 +482,14 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 #lock .pu-keypad{display:grid!important;visibility:visible!important;opacity:1!important;flex:0 0 auto;margin:6px auto 12px!important;gap:clamp(7px,1.2vh,12px)!important}
 #lock .pu-keypad button{width:clamp(52px,7.2vh,68px)!important;height:clamp(52px,7.2vh,68px)!important;min-width:0;min-height:0}
 @media(max-height:680px){#lock.active{padding-top:18px!important}#lock .lock-time{font-size:clamp(55px,12vh,85px)}#lock .lock-quote{margin-top:10px!important}#lock .lock-hint{margin-top:12px!important}}
+
+/* Conversation navigation repair: entire recent-chat row is interactive. */
+#puInbox[hidden]{display:none!important}
+#puHubChatPane .pu-inbox-item{position:relative;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#puHubChatPane .pu-inbox-item>*{pointer-events:none}
+#puHubChatPane .pu-inbox-item>.pu-inbox-more{pointer-events:auto;position:relative;z-index:2}
+#puHubChatPane #chat.pu-inbox-visible{display:flex!important;visibility:visible!important;pointer-events:auto!important;z-index:20!important}
+
 </style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
@@ -1947,25 +1955,43 @@ const groupRoom=document.createElement('div');groupRoom.id='puGroupRoom';groupRo
 const oldTab=window.puHubTab;
 window.puHubTab=function(n){n=Math.max(0,Math.min(3,n));hub.style.transform=`translateX(-${n*25}%)`;Array.from(nav.children).forEach((b,i)=>{b.classList.toggle('active',i===n);b.setAttribute('aria-selected',i===n?'true':'false')});if(n===0){if(!insideChat&&!room)drawInbox()}if(n===1)drawFriends();if(n===2)renderMoments();if(n===3)puHubRenderMe()};
 function openMain(tab){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id==='puHub'));puHubTab(tab)}
-function closeChat(){insideChat=false;$id('chat').classList.remove('active');$id('chat').classList.remove('pu-inbox-visible');$id('chat').classList.add('pu-inbox-hidden');drawInbox()}
+function closeChat(){insideChat=false;const chat=$id('chat');chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index');inbox.hidden=false;$id('puHubNav').style.removeProperty('visibility');chatPane.style.removeProperty('z-index');drawInbox()}
 window.puGroupClose=function(){room=null;groupRoom.classList.remove('open');drawInbox()};
 function avatarHTML(c){try{return puCharAvatar(c)||svg('user')}catch(e){return svg('user')}}
 function entries(){let list=puChars.list.map(c=>({id:c.id,name:puCharName(c),char:c,group:false,last:c.data?.messages?.at(-1)?.content||'暂无消息',date:c.data?.messages?.at(-1)?.date||''}));list.push(...groups.map(g=>({id:g.id,name:g.name,group:true,last:g.messages.at(-1)?.text||'暂无消息',date:g.messages.at(-1)?.date||''})));return list}
-function openEntry(id,isGroup){if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}room=null;groupRoom.classList.remove('open');puSelectedChar=id;if(!puActivateSelectedChar()){toast('暂时无法进入聊天，请稍后重试');return;}insideChat=true;$id('chat').classList.add('active');$id('chat').classList.remove('pu-inbox-hidden');$id('chat').classList.add('pu-inbox-visible');renderChat();}
+function openEntry(id,isGroup){
+ if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}
+ const target=puChars.list.find(c=>String(c.id)===String(id));
+ if(!target){toast('找不到这个角色，请重新打开聊天列表');return}
+ room=null;groupRoom.classList.remove('open');
+ puSelectedChar=target.id;
+ try{
+  if(!puActivateSelectedChar())return;
+  insideChat=true;
+  const chat=$id('chat');
+  chat.classList.remove('pu-inbox-hidden');
+  chat.classList.add('active','pu-inbox-visible');
+  inbox.hidden=true;
+  $id('puHubNav').style.visibility='hidden';
+  chatPane.style.zIndex='6';
+  chat.style.display='flex';
+  chat.style.pointerEvents='auto';
+  chat.style.zIndex='20';
+  renderChat();
+ }catch(err){console.error('打开私聊失败',err);toast('进入聊天失败：'+(err?.message||'请重试'))}
+}
 window.puInboxOpen=(id,g)=>openEntry(id,g);
 window.puInboxPin=(id)=>{pins[id]=!pins[id];save();drawInbox()};
 window.puInboxFilter=(f)=>{filter=f;drawInbox()};
 window.puInboxSearch=()=>{let q=prompt('搜索联系人或群聊名称');if(q===null)return;drawInbox(q)};
 // Delegated listeners survive list re-renders; tapping the avatar, preview, or whitespace opens the same room.
 inbox.addEventListener('click',function(event){
- if(event.target.closest('.pu-inbox-item[onclick]'))return;
  if(event.target.closest('.pu-inbox-more'))return;
  const item=event.target.closest('.pu-inbox-item[data-chat-id]');
  if(!item||!inbox.contains(item))return;
  openEntry(item.dataset.chatId,item.dataset.isGroup==='true');
 });
 inbox.addEventListener('keydown',function(event){
- if(event.target.closest('.pu-inbox-item[onkeydown]'))return;
  if(event.key!=='Enter'&&event.key!==' ')return;
  if(event.target.closest('.pu-inbox-more'))return;
  const item=event.target.closest('.pu-inbox-item[data-chat-id]');
@@ -1973,8 +1999,9 @@ inbox.addEventListener('keydown',function(event){
  event.preventDefault();openEntry(item.dataset.chatId,item.dataset.isGroup==='true');
 });
 function drawInbox(search=''){
+ if(!insideChat&&!room)inbox.hidden=false;
  load();const all=entries().filter(e=>(filter==='Group'?e.group:filter==='Friends'?!e.group:true)&&e.name.toLowerCase().includes(search.toLowerCase()));const pinned=all.filter(e=>pins[e.id]);const normal=all.filter(e=>!pins[e.id]);
- const render=e=>`<div class="pu-inbox-item" role="button" tabindex="0" data-chat-id="${escapeHTML(e.id)}" data-is-group="${e.group}" onclick="puInboxOpen(this.dataset.chatId,this.dataset.isGroup==='true')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();puInboxOpen(this.dataset.chatId,this.dataset.isGroup==='true')}" aria-label="打开与${escapeHTML(e.name)}的聊天"><span class="pu-inbox-avatar">${e.group?svg('users'):avatarHTML(e.char)}</span><div class="pu-inbox-info"><b>${escapeHTML(e.name)}</b><small>${escapeHTML(e.last)}</small></div><button class="pu-inbox-more" onclick="event.stopPropagation();puInboxPin('${escapeHTML(e.id)}')" aria-label="${pins[e.id]?'取消置顶':'置顶'}" title="${pins[e.id]?'取消置顶':'置顶'}">${svg('pin')}</button></div>`;
+ const render=e=>`<div class="pu-inbox-item" role="button" tabindex="0" data-chat-id="${escapeHTML(e.id)}" data-is-group="${e.group}" aria-label="打开与${escapeHTML(e.name)}的聊天"><span class="pu-inbox-avatar">${e.group?svg('users'):avatarHTML(e.char)}</span><div class="pu-inbox-info"><b>${escapeHTML(e.name)}</b><small>${escapeHTML(e.last)}</small></div><button class="pu-inbox-more" onclick="event.stopPropagation();puInboxPin('${escapeHTML(e.id)}')" aria-label="${pins[e.id]?'取消置顶':'置顶'}" title="${pins[e.id]?'取消置顶':'置顶'}">${svg('pin')}</button></div>`;
  const profileName=escapeHTML(puUser.name||puUser.nickname||'User');
  inbox.innerHTML=`<div class="pu-inbox-title"><button onclick="go('home')" aria-label="返回桌面">${svg('back')}</button><b>Chat</b><span style="width:26px"></span></div><div class="pu-inbox-profile"><span class="pu-inbox-photo" style="display:grid;place-items:center">${svg('user')}</span><div style="flex:1"><b>${profileName}</b><small>${escapeHTML(puUser.signature||'')}</small></div><button onclick="puHubTab(3)">•••</button></div><div class="pu-inbox-filters">${['Chats','Group','Friends'].map(f=>`<button class="${filter===f?'active':''}" onclick="puInboxFilter('${f}')">${f}</button>`).join('')}<button onclick="puGroupCreatorOpen()">+Add</button><button onclick="puInboxSearch()">${svg('search')}</button></div>${pinned.length?`<div class="pu-inbox-section">${svg('pin')} 置顶</div>${pinned.map(render).join('')}`:''}<div class="pu-inbox-section" style="margin-top:12px">${filter==='Group'?'群聊':filter==='Friends'?'联系人':'最近聊天'}</div>${normal.map(render).join('')||'<p style="color:#aaa;text-align:center;padding:28px 0;font-size:13px">暂无聊天，点击 +Add 创建群聊</p>'}`;
 }
