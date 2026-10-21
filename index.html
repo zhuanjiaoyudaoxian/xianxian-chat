@@ -721,6 +721,54 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 <!-- 复用编辑弹窗：用于记忆、备忘、世界书和动态 -->
 <div id="editor" class="viewer" style="background:#fff8f7f5;align-items:flex-start;overflow-y:auto"><div class="card" style="width:100%;margin:30px auto;max-width:520px"><div class="row"><h3 id="editorTitle" class="grow">编辑</h3><button class="iconbtn" onclick="closeEditor()">×</button></div><div id="editorFields"></div><div class="row wrap"><button class="btn" onclick="saveEditor()">保存</button><button class="btn alt" onclick="closeEditor()">取消</button></div></div></div>
 <div id="imageViewer" class="viewer" onclick="this.classList.remove('show')"><button class="iconbtn">×</button><img id="largeImage" alt="图片预览"></div><div id="toast" class="toast"></div></main>
+
+<style id="pu-unlock-emergency-css">
+#lock.active{display:flex!important;justify-content:flex-start!important;overflow-y:auto!important;padding-top:max(12px,env(safe-area-inset-top))!important;gap:0!important}
+#lock .lock-time{font-size:clamp(62px,11vh,96px)!important;margin:2px 0 8px!important;flex-shrink:0}
+#lock .lock-date{flex-shrink:0}
+#lock .lock-quote{margin-top:clamp(10px,2vh,20px)!important;flex-shrink:0}
+#lock .lock-hint{position:static!important;margin:clamp(12px,2vh,20px) 0 8px!important;flex-shrink:0}
+#lock .pu-pin-dots{margin:3px 0 7px!important;flex-shrink:0}
+#lock .pu-pin-error{min-height:19px!important;flex-shrink:0}
+#lock #puKeypad{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:clamp(6px,1vh,11px)!important;margin:4px auto 10px!important;width:min(252px,78vw)!important;flex-shrink:0!important;visibility:visible!important;opacity:1!important}
+#lock #puKeypad button{display:block!important;pointer-events:auto!important;touch-action:manipulation!important;width:clamp(47px,7vh,62px)!important;height:clamp(47px,7vh,62px)!important;border-radius:50%!important;font-size:23px!important;opacity:1!important}
+@media(max-height:650px){#lock .lock-time{font-size:57px!important}#lock .lock-quote{margin-top:5px!important}#lock .lock-hint{margin-top:7px!important}#lock #puKeypad button{width:45px!important;height:45px!important}}
+</style>
+<script id="pu-unlock-emergency-js">
+(function(){
+  var pin='';
+  function node(id){return document.getElementById(id);}
+  function dots(){var el=node('puPinDots');if(el)Array.prototype.forEach.call(el.querySelectorAll('i'),function(d,i){d.classList.toggle('filled',i<pin.length);});}
+  function unlock(){
+    var lock=node('lock'),home=node('home');
+    if(typeof window.go==='function'){try{window.go('home');return;}catch(e){console.error(e);}}
+    if(lock)lock.classList.remove('active');
+    if(home)home.classList.add('active');
+    try{if(typeof window.bloomRenderHome==='function')window.bloomRenderHome();else if(typeof window.renderHome==='function')window.renderHome();}catch(e){console.error(e);}
+  }
+  function press(key){
+    if(key==='back'){pin=pin.slice(0,-1);dots();return;}
+    if(!/^[0-9]$/.test(key))return;
+    pin=(pin+key).slice(0,4);dots();
+    if(pin.length===4){
+      var expected='0129';
+      try{expected=localStorage.getItem('pocket_pass_v29')||'0129';}catch(e){}
+      if(pin===expected){pin='';var error=node('puPinError');if(error)error.textContent='';unlock();}
+      else{var error=node('puPinError');if(error)error.textContent='密码不正确，请重试';pin='';dots();}
+    }
+  }
+  // Capture the click before older inline handlers, so a broken application
+  // initialization cannot make the numeric keypad unresponsive.
+  document.addEventListener('click',function(event){
+    var target=event.target.closest&&event.target.closest('#puKeypad button');
+    if(!target)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    var key=target.getAttribute('aria-label');
+    press(key==='删除'?'back':key);
+  },true);
+  window.addEventListener('DOMContentLoaded',function(){dots();});
+})();
+</script>
 <script>
 'use strict';
 /* 安全读取和写入：存储失败时返回默认值，避免整页白屏 */
