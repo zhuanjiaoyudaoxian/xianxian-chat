@@ -1146,7 +1146,7 @@ function puSetReplyMode(mode){
 function puConversationPrompt(){
  if(puChatOptions.mode==='story')return '你正在进行沉浸式长文角色扮演。请根据用户行动推进情节，用连贯的小说段落写角色言行、场景与细节。不要替用户决定行动、心理或台词。保持人设与剧情一致。';
  const quantity=puChatOptions.reply==='one'?'严格只生成1条消息':puChatOptions.reply==='multi'?'生成2到6条独立消息，条数依情境变化，禁止每次固定3条':'根据用户消息的复杂度自然决定1到5条独立消息：普通问候通常1条，简单问答1到2条，复杂解释2到4条，情绪激动时可更多。绝对不要固定每次3条；不要为了凑条数拆分';
- return '你正在模拟真实手机即时聊天。只发送角色本人打出的聊天消息，不写小说旁白、第三人称动作描写、环境描写、舞台提示、角色名前缀或Markdown。每条消息要像真实聊天那样自然、简短，允许断句分开发。'+quantity+'。必须且只能输出JSON字符串数组，例如 ["第一条消息","第二条消息"]，不要代码围栏。';
+ return '你正在模拟真实手机即时聊天。只发送角色本人打出的聊天消息，不写小说旁白、第三人称动作描写、环境描写、舞台提示、角色名前缀或Markdown。每条消息要像真实聊天那样自然、简短，允许断句分开发。'+quantity+'。每条通常5到50字，除非用户明确要求详细说明，否则单条不超过80字。禁止叙事长文、括号动作、心理活动和整段场景描写。必须且只能输出JSON字符串数组，例如 ["第一条消息","第二条消息"]，不要代码围栏。';
 }
 function puParseChatReplies(raw){
  let text=String(raw||'').trim(),parts;
@@ -1160,7 +1160,18 @@ function puParseChatReplies(raw){
   parts=lines.length>1?lines:[text];
  }
  const cap=puChatOptions.reply==='one'?1:puChatOptions.reply==='auto'?5:6;
- return parts.slice(0,cap).map(x=>x.slice(0,900)).filter(Boolean);
+ if(puChatOptions.mode==='chat'){
+  const chunks=[];
+  for(const p of parts){
+   const clean=p.replace(/^（[^）]{0,60}）\s*/,'').replace(/^\*[^*]{0,60}\*\s*/,'').trim();
+   if(!clean)continue;
+   if(clean.length<=90){chunks.push(clean);continue;}
+   const sentences=clean.match(/[^。！？!?\n]{1,75}[。！？!?]?/g)||[clean];
+   for(const sentence of sentences){if(sentence.trim())chunks.push(sentence.trim())}
+  }
+  parts=chunks;
+ }
+ return parts.slice(0,cap).map(x=>x.slice(0,puChatOptions.mode==='chat'?110:900)).filter(Boolean);
 }
 
 function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div><div class="msgtime">${esc(m.date||'')}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
@@ -1494,7 +1505,7 @@ function puApplyAvatarShape(){document.documentElement.dataset.chatAvatarShape=p
 function puAvatarHtml(role){const isMe=role==='user',data=isMe?puUser.avatar:state.persona.avatar;const name=isMe?(puUser.name||'我'):displayName();return data?`<img src="${data}" alt="${esc(name)}的头像">`:`<span>${esc((name||'我').slice(0,1))}</span>`}
 function puRenderMessage(m){let me=m.role==='user',extra='';
  if(m.puType==='photo'&&m.puImage)extra=`<img class="pu-chat-photo" src="${m.puImage}" alt="聊天照片">`;
- else if(['gift','transfer'].includes(m.puType))extra=`<div class="pu-money-card"><span>${m.puType==='gift'?'红包':'转账'}</span><strong>¥${esc(String(m.puAmount||'0.00'))}</strong><small>${esc(m.puNote||'虚拟互动 · 非真实支付')}</small></div>`;
+ else if(['gift','transfer'].includes(m.puType))extra=`<div class="pu-money-card pu-money-interactive" role="button" tabindex="0" onclick="puMoneyOpen(\'${m.id}\')"><span>${m.puType==='gift'?'红包':'转账'}</span><strong>¥${esc(String(m.puAmount||'0.00'))}</strong><small>${esc(m.puNote||'恭喜发财，大吉大利')}</small><small>${esc(puMoneyStatusLabel(m))}</small></div>`;
  else if(m.puType==='file')extra=`<div class="pu-attachment"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg> ${esc(m.puFileName||'文件')}</div>`;
  else extra=`<div class="bubble">${esc(m.content||'')}</div>`;
  return `<div class="msg ${me?'me':''}"><div class="avatar pu-message-avatar">${puAvatarHtml(m.role)}</div><div class="pu-msg-content">${extra}<div class="msgtime">${esc(m.date||'')}</div></div></div>`
@@ -1544,12 +1555,7 @@ function puToggleExtras(force){puExtrasOpen=typeof force==='boolean'?force:!puEx
 function puToggleVoice(){toast('语音消息暂未接入录音功能，先保留文字输入')}
 function puToggleEmoji(){toast('表情面板稍后完善；可以直接使用手机键盘输入表情')}
 function puExtraAction(type){if(['image','camera','file'].includes(type)){$(type==='image'?'puChatPhoto':type==='camera'?'puChatCamera':'puChatFile').click();return}
- if(type==='gift'||type==='transfer'){
-  const raw=prompt(type==='gift'?'虚拟红包金额（元）':'虚拟转账金额（元）','5.20');if(raw===null)return;
-  const num=Number(raw);if(!Number.isFinite(num)||num<=0||num>99999.99)return toast('请输入有效金额（0.01～99999.99）');
-  const note=prompt('附言（可以留空）','')||'';
-  puAddRichMessage({puType:type,puAmount:num.toFixed(2),puNote:note.slice(0,100),content:`[虚拟${type==='gift'?'红包':'转账'} ¥${num.toFixed(2)}]${note?' '+note:''}`});return;
- }
+ if(type==='gift'||type==='transfer'){puMoneyCompose(type);return;}
  if(type==='pin'){const place=prompt('发送位置名称（虚拟聊天内容）','');if(place)puAddRichMessage({content:'[位置] '+place.slice(0,120)});return}
  if(type==='contact'){const name=prompt('分享名片名称','');if(name)puAddRichMessage({content:'[名片] '+name.slice(0,120)});return}
  if(type==='music'){const song=prompt('分享歌曲名称','');if(song)puAddRichMessage({content:'[音乐] '+song.slice(0,120)});return}
@@ -1559,7 +1565,7 @@ async function puChatPhotoChosen(input){const f=input.files?.[0];input.value='';
 }
 function puChatFileChosen(input){const f=input.files?.[0];input.value='';if(f)puAddRichMessage({puType:'file',puFileName:f.name.slice(0,100),content:'[文件] '+f.name.slice(0,100)})}
 async function puAddRichMessage(info){if(sending)return toast('请等待角色回复完成');state.messages.push({id:uid(),role:'user',date:now(),...info});try{persist()}catch(e){state.messages.pop();toast('本机存储空间不足，请换张小图或先备份聊天');return}renderChat();puToggleExtras(false);await puReplyToRichMessage(info.content)}
-async function puReplyToRichMessage(content){if(sending)return;sending=true;$('sendBtn').disabled=true;$('typing').classList.add('show');scrollChat();let reply='',error='';try{if(state.api.mode==='remote'){await maybeSummarize();const recent=state.messages.slice(-state.settings.context).map(m=>({role:m.role,content:m.content}));reply=await requestModel(recent)}else reply=localReply(content)}catch(e){error=e.message;reply=localReply(content)}finally{$('typing').classList.remove('show');state.messages.push({id:uid(),role:'assistant',content:reply,date:now()});persist();renderChat();sending=false;$('sendBtn').disabled=false;if(error)toast('接口未连通，已回退本地回复：'+error)}}
+async function puReplyToRichMessage(content){if(sending)return;sending=true;$('sendBtn').disabled=true;$('typing').classList.add('show');scrollChat();let reply='',error='';try{if(state.api.mode==='remote'){await maybeSummarize();const recent=state.messages.slice(-state.settings.context).map(m=>({role:m.role,content:m.content}));reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt())}else reply=localReply(content)}catch(e){error=e.message;reply=localReply(content)}finally{$('typing').classList.remove('show');for(const part of puParseChatReplies(reply)){state.messages.push({id:uid(),role:'assistant',content:part,date:now()})}persist();renderChat();sending=false;$('sendBtn').disabled=false;if(error)toast('接口未连通，已回退本地回复：'+error)}}
 puApplyAvatarShape();
 const puOldBloomIcon=bloomIcon;
 bloomIcon=function(id){if(id==='chat'){let item=appItems.find(a=>a[0]===id),i=diySaved.icons[id]||{},url=diyAssetUrl(i.asset);return `<button class="bloom-icon" onclick="go('contacts')"><span class="bloom-icon-symbol">${url?'<img alt="" src="'+url+'">':(id==='calls'?'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.1 10a16 16 0 0 0 6 6l1.5-1.9a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.6 2.9Z"/></svg>':item[1])}</span><span>聊天</span></button>`}return puOldBloomIcon(id)};
@@ -1953,7 +1959,7 @@ puHubTab(0);
 #puWalletOverlay[hidden]{display:none!important}#puWalletOverlay{position:fixed;inset:0;z-index:99996;background:#0008;display:flex;align-items:flex-end;justify-content:center}
 .pu-wallet-sheet{background:#f8f7f5;width:100%;max-width:640px;border-radius:25px 25px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));max-height:85dvh;overflow:auto;color:#252525}
 .pu-wallet-head{display:flex;justify-content:space-between;align-items:center}.pu-wallet-head button{border:0;background:none;font-size:24px;color:#333}.pu-wallet-card{background:#fff;border-radius:20px;padding:25px 20px;margin:22px 0}.pu-wallet-balance{font-size:32px;font-weight:750;margin-top:13px}.pu-wallet-record{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee;font-size:13px}
-</style><div id="puWalletOverlay" hidden><div class="pu-wallet-sheet"><div class="pu-wallet-head"><b>我的钱包</b><button onclick="puWalletClose()" aria-label="关闭钱包"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5 19 19M19 5 5 19"/></svg></button></div><div class="pu-wallet-card"><small>可用余额</small><div class="pu-wallet-balance">¥ 5,200.00</div><p style="color:#999;font-size:12px">仅供口袋宇宙内部使用，不涉及真实支付</p></div><b>账单明细</b><div class="pu-wallet-records"></div></div></div>
+</style><div id="puWalletOverlay" hidden><div class="pu-wallet-sheet"><div class="pu-wallet-head"><b>我的钱包</b><button onclick="puWalletClose()" aria-label="关闭钱包"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5 19 19M19 5 5 19"/></svg></button></div><div class="pu-wallet-card"><small>可用余额</small><div class="pu-wallet-balance">¥ 5,200.00</div></div><b>账单明细</b><div class="pu-wallet-records"></div></div></div>
 <style>
 #puHubChatPane #chat>.bar>.back::before,#puHubChatPane #chat>.bar>.back::after{content:none!important;display:none!important}
 #puHubChatPane #chat>.bar>.back{font-size:0!important}
@@ -2317,4 +2323,28 @@ window.puReturnToInbox=function(){if(typeof window.puInboxClose==='function')win
 function init(){fill(applied);renderPresets();try{apply(applied)}catch(e){notice('保存的 CSS 无效，已使用默认外观');apply(defaults)}for(const id of ['puAdvFont','puAdvRadius'])$(id)?.addEventListener('input',()=>{const k=id==='puAdvFont'?'puAdvFontVal':'puAdvRadiusVal';$(k).textContent=$(id).value+'px'});$('puAdvImage')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;if(!/^image\/(png|jpeg|webp)$/.test(f.type)||f.size>900000){notice('请选择小于 900KB 的 PNG、JPG 或 WebP 图片');return}const rd=new FileReader();rd.onload=()=>{applied.image=rd.result;notice('图片已载入，点击预览或保存应用')};rd.readAsDataURL(f)});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
-</script></body></html>
+</script><style>
+.pu-money-interactive{cursor:pointer;min-width:175px}.pu-money-interactive small{display:block;margin-top:5px}.pu-money-overlay[hidden]{display:none!important}.pu-money-overlay{position:fixed;inset:0;z-index:9999;background:#0008;display:flex;align-items:center;justify-content:center;padding:18px}.pu-money-sheet{background:#fff;border-radius:22px;padding:22px;width:min(100%,390px);color:#222;box-shadow:0 20px 60px #0003}.pu-money-sheet h3{margin:0 0 20px;font-size:19px;text-align:center}.pu-money-sheet label{display:block;font-size:13px;margin:12px 0 6px}.pu-money-sheet input{font-size:16px}.pu-money-sheet .pu-money-actions{display:flex;gap:10px;margin-top:20px}.pu-money-sheet .pu-money-actions button{flex:1;min-height:44px;border:0;border-radius:12px;background:#eee;color:#333}.pu-money-sheet .pu-money-actions button:last-child{background:#333;color:#fff}.pu-money-sheet p{white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+<div class="pu-money-overlay" id="puMoneyOverlay" hidden><div class="pu-money-sheet" id="puMoneySheet"></div></div>
+<script>
+/* Pocket Universe: persistent two-way gift/transfer transaction ledger. */
+const PU_MONEY_KEY='pu_wallet_shared_v2';
+function puMoneyWallet(){let w;try{w=JSON.parse(localStorage.getItem(PU_MONEY_KEY)||'null')}catch(e){};if(!w||typeof w!=='object')w={balance:5200,records:[]};w.balance=Number(w.balance)||0;if(!Array.isArray(w.records))w.records=[];return w}
+function puMoneySave(w){localStorage.setItem(PU_MONEY_KEY,JSON.stringify(w))}
+function puMoneyStatusLabel(m){return ({pending:'待领取',received:'已领取',returned:'已退还',expired:'已过期'})[m.puStatus]||'待领取'}
+function puMoneyFind(id){return state.messages.find(m=>m.id===id)}
+function puMoneyClose(){document.getElementById('puMoneyOverlay').hidden=true}
+function puMoneyDialog(html){document.getElementById('puMoneySheet').innerHTML=html;document.getElementById('puMoneyOverlay').hidden=false}
+function puMoneyCompose(type){puToggleExtras(false);const label=type==='gift'?'红包':'转账';puMoneyDialog(`<h3>发送${label}</h3><label>金额（元）</label><input id="puMoneyAmount" inputmode="decimal" type="number" min="0.01" max="99999.99" step="0.01" placeholder="0.00"><label>${type==='gift'?'祝福语':'转账备注'}</label><input id="puMoneyNote" maxlength="100" placeholder="${type==='gift'?'恭喜发财，大吉大利':'转账'}"><div class="pu-money-actions"><button onclick="puMoneyClose()">取消</button><button onclick="puMoneySend('${type}')">发送</button></div>`)}
+async function puMoneySend(type){if(sending)return toast('请等待回复完成');const raw=document.getElementById('puMoneyAmount').value;const amount=Number(raw);if(!raw||!Number.isFinite(amount)||amount<.01||amount>99999.99||Math.round(amount*100)!==amount*100)return toast('请输入0.01～99999.99元的有效金额');const w=puMoneyWallet();if(amount>w.balance)return toast('余额不足');const note=document.getElementById('puMoneyNote').value.trim().slice(0,100);w.balance=Math.round((w.balance-amount)*100)/100;const id=uid();w.records.push({id,amount:-amount,note:'发送'+(type==='gift'?'红包':'转账'),date:now()});try{puMoneySave(w)}catch(e){return toast('钱包保存失败')};const m={id,role:'user',date:now(),puType:type,puAmount:amount.toFixed(2),puNote:note,puStatus:'pending',content:`[${type==='gift'?'红包':'转账'} ¥${amount.toFixed(2)}] ${note}`};state.messages.push(m);persist();renderChat();puMoneyClose();await puReplyToRichMessage(m.content+'。你可以根据人设决定接受或退还，不必机械接受。')}
+function puMoneyOpen(id){const m=puMoneyFind(id);if(!m||!['gift','transfer'].includes(m.puType))return;const incoming=m.role==='assistant';const status=puMoneyStatusLabel(m);const action=m.puStatus==='pending'&&incoming?`<button onclick="puMoneyResolve('${m.id}','returned')">退还</button><button onclick="puMoneyResolve('${m.id}','received')">${m.puType==='gift'?'拆红包':'确认收款'}</button>`:`<button onclick="puMoneyClose()">关闭</button>`;puMoneyDialog(`<h3>${m.puType==='gift'?'红包':'转账'}</h3><p style="text-align:center;font-size:30px;font-weight:bold">¥${esc(String(m.puAmount))}</p><p style="text-align:center">${esc(m.puNote||'')}</p><p style="text-align:center;color:#888">${status}</p><div class="pu-money-actions">${action}</div>`)}
+function puMoneyResolve(id,status){const m=puMoneyFind(id);if(!m||m.puStatus!=='pending')return;const amount=Number(m.puAmount);if(!Number.isFinite(amount)||amount<=0)return;const w=puMoneyWallet();if((m.role==='assistant'&&status==='received')||(m.role==='user'&&status==='returned')){w.balance=Math.round((w.balance+amount)*100)/100;w.records.push({id:uid(),amount,note:(status==='returned'?'退还':'收到')+(m.puType==='gift'?'红包':'转账'),date:now()});try{puMoneySave(w)}catch(e){return toast('钱包保存失败')}}m.puStatus=status;persist();renderChat();puMoneyClose()}
+/* AI characters can initiate transactions after an ordinary response, when suitable to the scene. */
+const puMoneyBaseSend=sendMessage;
+sendMessage=async function(){const count=state.messages.length;await puMoneyBaseSend();if(state.api.mode!=='remote'||puChatOptions.mode!=='chat'||state.messages.length<=count)return;const recent=state.messages.slice(-8).map(m=>`${m.role==='user'?'User':'Char'}: ${m.content}`).join('\n');try{const ans=await requestModel([{role:'user',content:recent}],'你是角色的财务行动判断器。结合对话和角色人设，通常不要发钱。只有明确合乎剧情和经济状况时才主动发红包或转账。仅返回JSON对象，例如 {"type":"none"} 或 {"type":"gift","amount":5.2,"note":"喝奶茶"}。禁止其他文本。');const obj=JSON.parse(ans.replace(/^```(?:json)?\s*|\s*```$/g,''));if(!['gift','transfer'].includes(obj.type))return;const amount=Number(obj.amount);if(!Number.isFinite(amount)||amount<.01||amount>2000)return;const lastMoney=state.messages.slice(-25).some(m=>m.role==='assistant'&&m.puType);if(lastMoney)return;state.messages.push({id:uid(),role:'assistant',date:now(),puType:obj.type,puAmount:amount.toFixed(2),puNote:String(obj.note||'').slice(0,100),puStatus:'pending',content:`[${obj.type==='gift'?'红包':'转账'} ¥${amount.toFixed(2)}]`});persist();renderChat()}catch(e){/* No monetary action if model declines or fails */}}
+/* Existing incoming gifts from AI and old messages get status support. */
+const puMoneyOldRender=puRenderMessage;
+puRenderMessage=function(m){if(['gift','transfer'].includes(m.puType)&&!m.puStatus)m.puStatus='pending';return puMoneyOldRender(m)};
+</script>
+</body></html>
