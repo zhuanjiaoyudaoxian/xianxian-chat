@@ -1877,4 +1877,169 @@ window.puStickerManagerOpen=async()=>{const el=document.getElementById('puSticke
 async function draw(){const host=document.getElementById('puStickerList');host.replaceChildren();try{for(const x of await all()){const div=document.createElement('div');div.style='position:relative;background:#eee;border-radius:12px;overflow:hidden;aspect-ratio:1';const img=document.createElement('img');img.src=URL.createObjectURL(x.file);img.style='width:100%;height:100%;object-fit:contain';img.onload=()=>URL.revokeObjectURL(img.src);const btn=document.createElement('button');btn.textContent='删除';btn.style='position:absolute;bottom:4px;right:4px;border:0;border-radius:7px;padding:5px;background:#fff';btn.onclick=async()=>{const d=await db();await new Promise((resolve,reject)=>{const t=d.transaction('stickers','readwrite');t.objectStore('stickers').delete(x.id);t.oncomplete=resolve;t.onerror=reject});draw()};div.append(img,btn);host.append(div)}}catch(e){host.textContent='表情包读取失败'}}
 window.puStickerImport=async(input)=>{try{const files=[...input.files].filter(f=>f.type.startsWith('image/'));const d=await db();await new Promise((res,rej)=>{const t=d.transaction('stickers','readwrite');for(const f of files)t.objectStore('stickers').put({id:'s_'+Date.now()+'_'+Math.random().toString(36).slice(2),file:f});t.oncomplete=res;t.onerror=rej});await draw()}catch(e){alert('导入失败，请检查浏览器存储空间')}finally{input.value=''}};
 })();
-</script></body></html>
+</script><style>
+/* Chat inbox v2 */
+#puHubTrack{width:400%!important;flex:none!important;height:100%;min-height:0}
+#puHubTrack>.pu-hub-pane{width:25%!important;flex:0 0 25%!important;min-width:0!important}
+#puHubFriendsPane{overflow-y:auto;background:#fff}
+#puHubChatPane{position:relative;background:white}
+#puInbox{height:100%;overflow:auto;background:#fff;color:#252525;padding:14px 12px 26px;box-sizing:border-box}
+.pu-inbox-title{display:flex;align-items:center;justify-content:space-between;height:48px;font-size:20px}
+.pu-inbox-title button,.pu-inbox-profile button{background:none;border:0;color:#333}
+.pu-inbox-profile{display:flex;align-items:center;gap:12px;padding:13px 5px 20px;border-bottom:1px solid #eee}
+.pu-inbox-profile .pu-inbox-photo{width:46px;height:46px;border-radius:50%;object-fit:cover;background:#eee}
+.pu-inbox-profile b{font-size:17px}.pu-inbox-profile small{color:#999;display:block;margin-top:3px;font-size:11px}
+.pu-inbox-filters{display:flex;align-items:center;gap:3px;padding:5px;margin:16px 0 22px;background:#f5f5f5;border-radius:32px}
+.pu-inbox-filters button{border:0;background:none;color:#8e8e8e;border-radius:26px;flex:1;padding:11px 1px;font-size:12px}
+.pu-inbox-filters button.active{background:#fff;color:#242424;font-weight:650}
+.pu-inbox-section{font-size:12px;color:#aaa;padding:4px 5px 9px}
+.pu-inbox-item{display:flex;align-items:center;gap:11px;min-height:62px;padding:7px 11px;background:#f6f6f6;border-bottom:1px solid #ededed;box-sizing:border-box}
+.pu-inbox-item:first-child{border-radius:16px 16px 0 0}.pu-inbox-item:last-child{border-radius:0 0 16px 16px;border:0}.pu-inbox-item:only-child{border-radius:16px}
+.pu-inbox-item .pu-inbox-avatar{width:42px;height:42px;border-radius:50%;background:#e7e7e7;display:grid;place-items:center;overflow:hidden;flex:none}
+.pu-inbox-avatar img{width:100%;height:100%;object-fit:cover}
+.pu-inbox-item .pu-inbox-info{flex:1;min-width:0;cursor:pointer}
+.pu-inbox-info b,.pu-inbox-info small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pu-inbox-info b{font-size:14px;font-weight:600}.pu-inbox-info small{color:#aaa;font-size:12px;margin-top:4px}
+.pu-inbox-item .pu-inbox-more{background:transparent;border:0;color:#999;padding:9px 3px;font-size:20px}
+#puHubChatPane #chat.pu-inbox-hidden{display:none!important}
+#puHubChatPane #chat.pu-inbox-visible{display:flex!important;position:absolute!important;inset:0;z-index:4;background:#fff;width:100%;height:100%;flex-direction:column}
+#puHubChatPane #chat.pu-inbox-visible>.bar{flex-shrink:0}
+#puGroupRoom{display:none;position:absolute;inset:0;background:white;z-index:5;flex-direction:column;color:#222}
+#puGroupRoom.open{display:flex}
+#puGroupRoom .pu-group-messages{flex:1;overflow:auto;padding:16px;background:#fafafa}
+.pu-group-message{margin:10px 0;max-width:83%;padding:10px 12px;border-radius:13px;background:#eee;font-size:13px;white-space:pre-wrap}
+.pu-group-message.me{background:#e7efe8;margin-left:auto}.pu-group-message small{display:block;color:#888;margin-bottom:4px}
+.pu-group-compose{display:flex;gap:8px;padding:10px}.pu-group-compose input{flex:1;min-width:0;padding:10px;border:1px solid #eee;border-radius:12px}
+.pu-group-compose button,.pu-group-head button{border:0;background:#eee;border-radius:10px;padding:9px 12px}
+.pu-group-head{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid #eee}
+#puGroupCreator[hidden],#puStickerUrlImport[hidden]{display:none!important}
+#puGroupCreator{position:fixed;inset:0;background:#0008;z-index:99998;display:flex;align-items:flex-end}
+.pu-group-sheet{background:#fff;color:#333;width:100%;border-radius:22px 22px 0 0;padding:22px 18px 30px;max-height:80vh;overflow:auto}
+.pu-group-sheet input[type=text]{padding:12px;width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;margin:12px 0}
+.pu-group-choice{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #eee}
+.pu-group-primary{background:#333!important;color:white!important;border:0;border-radius:12px;padding:12px 16px;margin-top:15px}
+#puWorldGroups{display:none!important}
+#worldList .pu-world-line{border-bottom:1px solid #e8e8e8;padding:15px 4px;display:flex;align-items:center;gap:12px;color:#292929}
+#worldList .pu-world-line button{background:none;border:0;text-align:left;flex:1;color:inherit;font-size:14px}
+#worldList .pu-world-detail{padding:16px 4px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7}
+#puStickerUrlImport{margin-top:15px}#puStickerUrlImport textarea{width:100%;height:140px;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:12px}
+</style>
+<div id="puGroupCreator" hidden><div class="pu-group-sheet"><div style="display:flex;justify-content:space-between;align-items:center"><b>创建群聊</b><button onclick="puGroupCreatorClose()">关闭</button></div><input id="puGroupName" type="text" placeholder="群聊名称（选填）"><div id="puGroupChoices"></div><button class="pu-group-primary" onclick="puGroupCreate()">创建群聊</button></div></div>
+<script>
+(function(){
+const $id=id=>document.getElementById(id);
+const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const svg=(name)=>{const paths={back:'<path d="m15 18-6-6 6-6"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M2 20v-2a7 7 0 0 1 14 0v2M17 5a3 3 0 0 1 0 6M18 14c2 1 4 3 4 6"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/>',pin:'<path d="m16 3 5 5-3 1-4 5-1 5-3-3-5 5 5-5-3-3 5-1 5-4z"/>',grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'};return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.user}</svg>`};
+let groups=[],pins={},filter='Chats',room=null,insideChat=false;
+function accountKey(){try{return 'pu_chat_v2_'+(typeof accounts!=='undefined'&&accounts.find(a=>a.profile?.name===puUser.name)?.id||puUser.name||'default')}catch(e){return 'pu_chat_v2_default'}}
+function load(){try{let o=JSON.parse(localStorage.getItem(accountKey())||'{}');groups=o.groups||[];pins=o.pins||{}}catch(e){groups=[];pins={}}}
+function save(){try{localStorage.setItem(accountKey(),JSON.stringify({groups,pins}))}catch(e){toast('聊天列表保存失败')}}
+const hub=$id('puHubTrack'),chatPane=$id('puHubChatPane');
+const friends=document.createElement('div');friends.id='puHubFriendsPane';friends.className='pu-hub-pane';friends.innerHTML='<div id="puFriendsHeader" style="padding:20px 16px;font-weight:600;color:#333">联系人</div><div id="puFriendsContent"></div>';
+hub.insertBefore(friends,$id('puHubMomentsPane'));
+const nav=$id('puHubNav');const friendsBtn=document.createElement('button');friendsBtn.type='button';friendsBtn.dataset.hubTab='friends';friendsBtn.innerHTML=svg('users')+'<span>联系人</span>';friendsBtn.onclick=()=>puHubTab(1);nav.insertBefore(friendsBtn,nav.children[1]);
+nav.children[2].onclick=()=>puHubTab(2);nav.children[3].onclick=()=>puHubTab(3);
+const inbox=document.createElement('div');inbox.id='puInbox';chatPane.insertBefore(inbox,$id('chat'));$id('chat').classList.add('pu-inbox-hidden');
+const groupRoom=document.createElement('div');groupRoom.id='puGroupRoom';groupRoom.innerHTML=`<div class="pu-group-head"><button onclick="puGroupClose()">${svg('back')}</button><b id="puGroupRoomName" style="flex:1"></b><button onclick="puGroupEdit()">成员</button></div><div class="pu-group-messages" id="puGroupMessages"></div><div class="pu-group-compose"><input id="puGroupInput" placeholder="发送群聊消息…"><button id="puGroupSend" onclick="puGroupSend()">发送</button></div>`;chatPane.appendChild(groupRoom);
+const oldTab=window.puHubTab;
+window.puHubTab=function(n){n=Math.max(0,Math.min(3,n));hub.style.transform=`translateX(-${n*25}%)`;Array.from(nav.children).forEach((b,i)=>{b.classList.toggle('active',i===n);b.setAttribute('aria-selected',i===n?'true':'false')});if(n===0){if(!insideChat&&!room)drawInbox()}if(n===1)drawFriends();if(n===2)renderMoments();if(n===3)puHubRenderMe()};
+function openMain(tab){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id==='puHub'));puHubTab(tab)}
+function closeChat(){insideChat=false;$id('chat').classList.remove('pu-inbox-visible');$id('chat').classList.add('pu-inbox-hidden');drawInbox()}
+window.puGroupClose=function(){room=null;groupRoom.classList.remove('open');drawInbox()};
+function avatarHTML(c){try{return puCharAvatar(c)||svg('user')}catch(e){return svg('user')}}
+function entries(){let list=puChars.list.map(c=>({id:c.id,name:puCharName(c),char:c,group:false,last:c.data?.messages?.at(-1)?.content||'暂无消息',date:c.data?.messages?.at(-1)?.date||''}));list.push(...groups.map(g=>({id:g.id,name:g.name,group:true,last:g.messages.at(-1)?.text||'暂无消息',date:g.messages.at(-1)?.date||''})));return list}
+function openEntry(id,isGroup){if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}room=null;groupRoom.classList.remove('open');puSelectedChar=id;if(!puActivateSelectedChar())return;insideChat=true;$id('chat').classList.remove('pu-inbox-hidden');$id('chat').classList.add('pu-inbox-visible');renderChat();}
+window.puInboxOpen=(id,g)=>openEntry(id,g);
+window.puInboxPin=(id)=>{pins[id]=!pins[id];save();drawInbox()};
+window.puInboxFilter=(f)=>{filter=f;drawInbox()};
+window.puInboxSearch=()=>{let q=prompt('搜索联系人或群聊名称');if(q===null)return;drawInbox(q)};
+function drawInbox(search=''){
+ load();const all=entries().filter(e=>(filter==='Group'?e.group:filter==='Friends'?!e.group:true)&&e.name.toLowerCase().includes(search.toLowerCase()));const pinned=all.filter(e=>pins[e.id]);const normal=all.filter(e=>!pins[e.id]);
+ const render=e=>`<div class="pu-inbox-item"><span class="pu-inbox-avatar">${e.group?svg('users'):avatarHTML(e.char)}</span><div class="pu-inbox-info" onclick="puInboxOpen('${escapeHTML(e.id)}',${e.group})"><b>${escapeHTML(e.name)}</b><small>${escapeHTML(e.last)}</small></div><button class="pu-inbox-more" onclick="puInboxPin('${escapeHTML(e.id)}')" aria-label="${pins[e.id]?'取消置顶':'置顶'}" title="${pins[e.id]?'取消置顶':'置顶'}">${svg('pin')}</button></div>`;
+ const profileName=escapeHTML(puUser.name||puUser.nickname||'User');
+ inbox.innerHTML=`<div class="pu-inbox-title"><button onclick="go('home')" aria-label="返回桌面">${svg('back')}</button><b>Chat</b><span style="width:26px"></span></div><div class="pu-inbox-profile"><span class="pu-inbox-photo" style="display:grid;place-items:center">${svg('user')}</span><div style="flex:1"><b>${profileName}</b><small>${escapeHTML(puUser.signature||'')}</small></div><button onclick="puHubTab(3)">•••</button></div><div class="pu-inbox-filters">${['Chats','Group','Friends'].map(f=>`<button class="${filter===f?'active':''}" onclick="puInboxFilter('${f}')">${f}</button>`).join('')}<button onclick="puGroupCreatorOpen()">+Add</button><button onclick="puInboxSearch()">${svg('search')}</button></div>${pinned.length?`<div class="pu-inbox-section">${svg('pin')} 置顶</div>${pinned.map(render).join('')}`:''}<div class="pu-inbox-section" style="margin-top:12px">${filter==='Group'?'群聊':filter==='Friends'?'联系人':'最近聊天'}</div>${normal.map(render).join('')||'<p style="color:#aaa;text-align:center;padding:28px 0;font-size:13px">暂无聊天，点击 +Add 创建群聊</p>'}`;
+}
+function drawFriends(){const host=$id('puFriendsContent');const contact=$id('contacts');if(!host.contains(contact))host.appendChild(contact);contact.style.display='block';contact.classList.add('active');puSocialRender();const back=contact.querySelector('.pu-social-nav button');if(back){back.onclick=()=>puHubTab(0);back.setAttribute('onclick','puHubTab(0)')}}
+window.puGroupCreatorOpen=()=>{const choices=$id('puGroupChoices');choices.innerHTML=puChars.list.map(c=>`<label class="pu-group-choice"><input type="checkbox" value="${escapeHTML(c.id)}"><span>${escapeHTML(puCharName(c))}</span></label>`).join('');$id('puGroupName').value='';$id('puGroupCreator').hidden=false};
+window.puGroupCreatorClose=()=>{$id('puGroupCreator').hidden=true};
+window.puGroupCreate=()=>{const members=[...$id('puGroupChoices').querySelectorAll('input:checked')].map(x=>x.value);if(members.length<2)return toast('请至少选择两位联系人');const g={id:'grp_'+Date.now(),name:$id('puGroupName').value.trim()||'新的群聊',members,messages:[]};groups.push(g);save();puGroupCreatorClose();filter='Chats';openEntry(g.id,true)};
+function drawRoom(){if(!room)return;$id('puGroupRoomName').textContent=room.name+' ('+(room.members.length+1)+')';$id('puGroupMessages').innerHTML=room.messages.map(m=>`<div class="pu-group-message ${m.who==='user'?'me':''}"><small>${escapeHTML(m.name)}</small>${escapeHTML(m.text)}</div>`).join('');$id('puGroupMessages').scrollTop=$id('puGroupMessages').scrollHeight}
+window.puGroupEdit=()=>{if(!room)return;const names=room.members.map(id=>puChars.list.find(c=>c.id===id)).filter(Boolean).map(puCharName).join('、');let result=prompt('群成员：'+names+'\n输入新群名（取消则不修改）',room.name);if(result!==null&&result.trim()){room.name=result.trim();save();drawRoom()}};
+window.puGroupSend=async()=>{if(!room)return;const input=$id('puGroupInput'),text=input.value.trim();if(!text)return;input.value='';const g=room;g.messages.push({who:'user',name:puUser.name||'User',text,date:new Date().toISOString()});save();drawRoom();const button=$id('puGroupSend');button.disabled=true;
+ try{const members=g.members.map(id=>puChars.list.find(c=>c.id===id)).filter(Boolean);const recent=g.messages.slice(-16).map(m=>`${m.name}: ${m.text}`).join('\n');let output='';if(state.api.mode==='remote'){const promptText=`你在多人群聊中。角色列表：${members.map(c=>puCharName(c)+'：'+JSON.stringify(c.data?.persona||{}).slice(0,1400)).join('\n')}。根据人物性格自然选择1至2位角色回应。每行格式：角色名：回复内容。不要替用户发言。\n群聊记录：\n${recent}`;output=await requestModel([{role:'user',content:promptText}],'你正在模拟多角色群聊，请严格区分角色身份。')}else output=members.slice(0,2).map(c=>`${puCharName(c)}：${localReply(text)}`).join('\n');
+ let count=0;for(const line of output.split(/\n+/)){const m=line.match(/^([^：:]{1,35})[：:]\s*(.+)$/);if(!m)continue;const c=members.find(x=>puCharName(x)===m[1].trim());if(!c)continue;g.messages.push({who:c.id,name:puCharName(c),text:m[2],date:new Date().toISOString()});count++;}if(!count)g.messages.push({who:members[0]?.id||'char',name:members[0]?puCharName(members[0]):'Char',text:output,date:new Date().toISOString()});save();drawRoom()}catch(e){toast('群聊回复失败：'+e.message)}finally{button.disabled=false}};
+const oldGo=go;go=function(id){if(id==='chat'||id==='puHub'){insideChat=false;room=null;groupRoom.classList.remove('open');closeChat();return openMain(0)}if(id==='contacts')return openMain(1);if(id==='moments')return openMain(2);if(id==='profile')return openMain(3);return oldGo(id)};
+const oldOpen=window.puSocialOpenChat;window.puSocialOpenChat=function(){openMain(0);openEntry(puSelectedChar,false)};
+const chatBack=$id('chat').querySelector('.bar .back');if(chatBack){chatBack.onclick=closeChat;chatBack.innerHTML=svg('back')}
+const chatContacts=$id('chat').querySelector('[aria-label="切换聊天对象"]');if(chatContacts)chatContacts.onclick=()=>puHubTab(1);
+const originalOpenChat=puOpenChat;puOpenChat=function(){openMain(0);openEntry(puSelectedChar,false)};
+// Keep legacy world-book data and editor; collapse imported entries until opened.
+window.renderWorld=function(){const el=$id('worldList');el.innerHTML=state.world.map(w=>`<div class="pu-world-line"><span>${svg('grid')}</span><button onclick="puWorldToggle('${escapeHTML(w.id)}')">${escapeHTML(w.title||'未命名世界书')}</button><button onclick="editWorld('${escapeHTML(w.id)}')" aria-label="编辑">${svg('user')}</button></div><div id="pu-world-${escapeHTML(w.id)}" class="pu-world-detail" hidden>${escapeHTML(w.content||'')}<div style="margin-top:15px"><button class="btn danger small" onclick="deleteEntry('world','${escapeHTML(w.id)}')">删除</button></div></div>`).join('')||'<p style="color:#aaa">暂无世界书</p>'};
+window.puWorldToggle=id=>{const el=$id('pu-world-'+id);if(el)el.hidden=!el.hidden};
+const world=$id('world');if(world){const head=world.querySelector('.bar h2');if(head)head.textContent='世界书 · World Library';const body=world.querySelector('.body');body.style.background='#fafaf9';body.style.color='#333';const p=body.querySelector('p.muted');if(p)p.textContent='WORLD LIBRARY / 点击名称查看完整设定';}
+// Hide standalone persona app on desktop, retain persona editor from Char profile.
+const originalIcon=bloomIcon;bloomIcon=function(id){if(id==='persona')return '';return originalIcon(id)};
+// Sticker URL bulk import; metadata names allow Char to select without visual recognition.
+const stickerOverlay=$id('puStickerOverlay');const fileBtn=stickerOverlay?.querySelector('button[onclick*="puStickerFile"]');if(fileBtn){const urlBtn=document.createElement('button');urlBtn.textContent='批量导入链接';urlBtn.style.cssText='margin-left:8px;padding:12px;border:1px solid #aaa;border-radius:10px;background:white;color:#333';urlBtn.onclick=()=>{$id('puStickerUrlImport').hidden=false};fileBtn.after(urlBtn);const form=document.createElement('div');form.id='puStickerUrlImport';form.hidden=true;form.innerHTML='<textarea id="puStickerUrlText" placeholder="强颜欢笑：https://example.com/a.gif\n委屈：https://example.com/b.gif"></textarea><button class="pu-group-primary" onclick="puStickerUrlsSave()">确认导入</button>';urlBtn.after(form)}
+const stickerKey='pu_sticker_urls_v1';const getUrls=()=>{try{return JSON.parse(localStorage.getItem(stickerKey)||'[]')}catch(e){return []}};
+window.puStickerUrlsSave=()=>{const raw=$id('puStickerUrlText').value;const found=[];for(const line of raw.split(/\n/)){const match=line.match(/(https?:\/\/[^\s，,<>"']+)/i);if(!match)continue;const url=match[1].replace(/[。；;]+$/,'');if(!/^https?:\/\//.test(url))continue;const name=line.slice(0,match.index).replace(/[：:\s-]+$/g,'').trim()||'未命名表情';found.push({id:'url_'+Date.now()+'_'+found.length,name,url})}if(!found.length)return toast('没有识别到有效的图片链接');const current=getUrls();const known=new Set(current.map(x=>x.url));for(const f of found)if(!known.has(f.url))current.push(f);try{localStorage.setItem(stickerKey,JSON.stringify(current));$id('puStickerUrlImport').hidden=true;$id('puStickerUrlText').value='';toast('成功导入 '+found.length+' 条表情包链接');puStickerManagerOpen()}catch(e){toast('保存失败：浏览器存储空间不足')}};
+function urlGallery(){let grid=$id('puStickerUrlGrid');if(!grid){grid=document.createElement('div');grid.id='puStickerUrlGrid';grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px';$id('puStickerList').after(grid)}grid.innerHTML=getUrls().map(x=>`<div style="min-width:0;background:#eee;padding:5px"><img loading="lazy" src="${escapeHTML(x.url)}" style="width:100%;height:75px;object-fit:contain"><small style="display:block;overflow:hidden;text-overflow:ellipsis">${escapeHTML(x.name)}</small><button onclick="puStickerUrlDelete('${escapeHTML(x.id)}')">删除</button></div>`).join('')}
+window.puStickerUrlDelete=id=>{localStorage.setItem(stickerKey,JSON.stringify(getUrls().filter(x=>x.id!==id)));urlGallery()};const oldStickerOpen=puStickerManagerOpen;window.puStickerManagerOpen=async()=>{await oldStickerOpen();urlGallery()};
+// Optional Char sticker choice is explicitly constrained to known names and IDs.
+const oldSend=sendMessage;sendMessage=async function(){const before=state.messages.length;await oldSend();const list=getUrls();if(!list.length||state.messages.length===before||state.api.mode!=='remote')return;try{const available=list.slice(0,70).map(x=>`${x.id}=${x.name}`).join('\n');const last=state.messages.slice(-5).map(x=>`${x.role}: ${x.content}`).join('\n');const answer=await requestModel([{role:'user',content:`对话：\n${last}\n可用表情包：\n${available}\n你可以选择不发送表情包。只有非常自然合适时才选择一个。只返回ID或NONE。`}],'你是表情包选择器。只能返回给定ID或NONE，不要输出其他内容。');const found=list.find(x=>x.id===answer.trim());if(found){state.messages.push({id:uid(),role:'assistant',content:`[表情包] ${found.name}`,stickerUrl:found.url,date:now()});persist();renderChat()}}catch(e){/* Sticker suggestions never interrupt ordinary chat */}};
+const oldRenderChat=renderChat;renderChat=function(){oldRenderChat();const list=$id('chatList');if(!list)return;const stickerMessages=state.messages.filter(m=>m.stickerUrl);if(!stickerMessages.length)return;const children=[...list.children];for(let i=0;i<state.messages.length&&i<children.length;i++){const m=state.messages[i];if(!m.stickerUrl)continue;const target=children[i];const img=document.createElement('img');img.src=m.stickerUrl;img.alt=m.content||'表情包';img.style.cssText='max-width:145px;max-height:145px;object-fit:contain;display:block';target.replaceChildren(img)}};
+// Ensure the inbox, rather than the conversation, is the first screen.
+load();closeChat();
+})();
+</script><style id="pu-20261022-style">
+/* Instagram-style User profile, without a cover */
+#puHubMePane .pu-ins-page{background:#fff!important}
+#puHubMePane .pu-me-cover{display:none!important}
+#puHubMePane .pu-ins-body{padding:12px 16px 24px!important}
+#puHubMePane .pu-ins-stats{margin:0!important;min-height:86px!important;grid-template-columns:92px repeat(3,minmax(0,1fr))!important;gap:6px!important;align-items:center!important}
+#puHubMePane .pu-ins-stats>div{padding:0!important}
+#puHubMePane .pu-me-avatar{width:80px!important;height:80px!important;align-self:center!important;transform:none!important;margin:0!important;position:static!important;border:2px solid #f3f3f3!important}
+#puHubMePane .pu-ins-actions{display:flex!important;justify-content:center!important;align-items:center!important;gap:12px!important;margin:16px 0 19px!important}
+#puHubMePane .pu-ins-actions button{flex:0 1 132px!important;width:132px!important;max-width:calc(50% - 6px)!important;height:35px!important;min-height:35px!important;box-sizing:border-box!important;padding:0 8px!important;border-radius:6px!important;font-size:12px!important;font-weight:600!important}
+#puHubMePane .pu-ins-actions button:first-child{background:#222!important;color:#fff!important}
+#puHubMePane .pu-ins-actions button:last-child{background:#efefef!important;color:#303030!important}
+#puHubMePane .pu-ins-gridhead{padding:12px!important}
+/* Moments visual: banner, centered overlapping avatar and editorial feed */
+#puHubMomentsPane #moments{background:#fff!important;color:#292929!important}
+#puHubMomentsPane #moments>.bar{display:none!important}
+#puHubMomentsPane #moments>.body{padding:0!important;background:#fff!important}
+.pu-mom-hero{height:176px;background:linear-gradient(135deg,#e9edf1,#dfe5ec 55%,#f4f5f5);background-size:cover;background-position:center;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:25px 12px 0;box-sizing:border-box}
+.pu-mom-hero h2{font-size:28px;letter-spacing:5px;font-weight:400;color:#444c58;margin:0}
+.pu-mom-hero small{font-size:9px;letter-spacing:3px;color:#818994;margin-top:7px}
+.pu-mom-identity{position:relative;text-align:center;padding:44px 12px 18px}
+.pu-mom-avatar{position:absolute;left:50%;top:-39px;transform:translateX(-50%);width:78px;height:78px;box-sizing:border-box;border:4px solid #fff;border-radius:50%;overflow:hidden;background:#e8e8e8;display:flex;align-items:center;justify-content:center;padding:0;color:#888}
+.pu-mom-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.pu-mom-identity strong{font-size:17px;font-weight:600;display:block}
+.pu-mom-identity p{font-size:12px;color:#999;font-style:italic;margin:6px 0 0;white-space:pre-wrap}
+.pu-mom-decor{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e9e9e9}
+.pu-mom-decor span{background:#f4f4f4;text-align:center;padding:13px 2px;font-size:11px;color:#626262}
+.pu-mom-section{padding:22px 14px 12px}
+.pu-mom-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;font-size:15px;font-weight:600}
+.pu-mom-section-head small{font-size:11px;color:#999;font-weight:400}
+.pu-mom-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pu-mom-tile{aspect-ratio:1;background:#f0f0f0;border:0;border-radius:3px;overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;color:#888}
+.pu-mom-tile img{width:100%;height:100%;object-fit:cover}
+.pu-mom-tile span{font-size:11px;line-height:1.4;padding:7px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;white-space:pre-wrap;overflow-wrap:anywhere}
+.pu-mom-friends{padding:8px 14px 16px}
+.pu-mom-friends-head{display:flex;align-items:center;justify-content:space-between;margin:9px 0 14px;font-weight:600;font-size:15px}
+.pu-mom-friends-head button{width:29px;height:29px;border:1px solid #ddd;background:#fff;border-radius:50%;font-size:20px;color:#333}
+#puHubMomentsPane #momentList>.card{border:0!important;border-bottom:1px solid #eee!important;border-radius:0!important;box-shadow:none!important;padding:15px 2px!important;margin:0!important;background:#fff!important}
+</style>
+<script id="pu-20261022-behavior">
+(function(){
+ const oldMe=window.puHubRenderMe;
+ window.puHubRenderMe=async function(){await oldMe();const pane=document.getElementById('puHubMePane');if(!pane)return;const cover=pane.querySelector('.pu-me-cover');if(cover)cover.remove();const actions=pane.querySelector('.pu-ins-actions');if(actions){actions.innerHTML='<button type="button" onclick="puEditUser()">Edit</button><button type="button" onclick="document.getElementById(\'puInsGrid\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})">Posts</button>';}const head=pane.querySelector('.pu-ins-gridhead span');if(head)head.textContent='';};
+ const oldMoments=window.renderMoments;
+ window.renderMoments=async function(){await oldMoments();const list=document.getElementById('momentList');if(!list)return;let wrapper=document.getElementById('puMomentsLayout');if(!wrapper){wrapper=document.createElement('div');wrapper.id='puMomentsLayout';list.parentNode.insertBefore(wrapper,list);wrapper.appendChild(list);}let head=document.getElementById('puMomentsHead');if(!head){head=document.createElement('div');head.id='puMomentsHead';wrapper.insertBefore(head,list)}const userName=typeof puUser!=='undefined'?(puUser.name||'User'):'User';const sign=typeof puUser!=='undefined'?(puUser.signature||'Before the first snow falls'):'';const avatar=typeof puUser!=='undefined'&&puUser.avatar?`<img src="${puUser.avatar}" alt="User头像">`:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>';
+ head.innerHTML=`<div class="pu-mom-hero"><h2>MOMENTS</h2><small>YOUR LITTLE MOMENTS</small></div><div class="pu-mom-identity"><button type="button" class="pu-mom-avatar" onclick="puHubTab(3)" aria-label="我的主页">${avatar}</button><strong id="puMomName"></strong><p id="puMomSign"></p></div><div class="pu-mom-decor"><span>Document life</span><span>Weather</span><span>Mood</span></div><div class="pu-mom-section"><div class="pu-mom-section-head"><span>social media</span><small id="puMomCount"></small></div><div class="pu-mom-tiles" id="puMomTiles"></div></div><div class="pu-mom-friends"><div class="pu-mom-friends-head"><span>Friends</span><button type="button" onclick="editMoment()" aria-label="发布动态">+</button></div></div>`;
+ document.getElementById('puMomName').textContent=userName;document.getElementById('puMomSign').textContent=sign;const posts=[...(state.moments||[])].reverse();document.getElementById('puMomCount').textContent=posts.length+' posts';const tiles=document.getElementById('puMomTiles');tiles.replaceChildren();for(let i=0;i<Math.min(posts.length,3);i++){const p=posts[i],btn=document.createElement('button');btn.className='pu-mom-tile';btn.type='button';btn.onclick=()=>{const cards=list.querySelectorAll(':scope > .card');const originalIndex=state.moments.indexOf(p);cards[originalIndex]?.scrollIntoView({behavior:'smooth',block:'center'})};const span=document.createElement('span');span.textContent=(p.text||'图片动态').slice(0,90);btn.appendChild(span);tiles.appendChild(btn)}if(!posts.length){const empty=document.createElement('div');empty.style='grid-column:1/-1;color:#aaa;font-size:12px;padding:8px 0';empty.textContent='发布动态后会自动展示在这里';tiles.appendChild(empty)}try{const photos=await dbAll('photos');const map=new Map(photos.map(p=>[p.id,p]));posts.slice(0,3).forEach((p,i)=>{if(!p.photoId||!map.has(p.photoId))return;const btn=tiles.children[i],img=document.createElement('img'),url=URL.createObjectURL(map.get(p.photoId).blob);img.src=url;img.onload=()=>URL.revokeObjectURL(url);img.onerror=()=>URL.revokeObjectURL(url);btn.replaceChildren(img)})}catch(e){console.warn('动态预览图片加载失败',e)}
+ const feed=document.querySelector('.pu-mom-friends');if(feed&&list.parentNode!==feed)feed.appendChild(list);
+ };
+})();
+</script>
+</body></html>
