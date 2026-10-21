@@ -1149,32 +1149,22 @@ function puConversationPrompt(){
  return '你正在模拟真实手机即时聊天。只发送角色本人打出的聊天消息，不写小说旁白、第三人称动作描写、环境描写、舞台提示、角色名前缀或Markdown。每条消息要像真实聊天那样自然、简短，允许断句分开发。'+quantity+'。每条通常5到50字，除非用户明确要求详细说明，否则单条不超过80字。禁止叙事长文、括号动作、心理活动和整段场景描写。必须且只能输出JSON字符串数组，例如 ["第一条消息","第二条消息"]，不要代码围栏。';
 }
 function puParseChatReplies(raw){
- let text=String(raw||'').trim(),parts;
- try{
-  const cleaned=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
-  const obj=JSON.parse(cleaned);
-  if(Array.isArray(obj))parts=obj.filter(x=>typeof x==='string').map(x=>x.trim()).filter(Boolean);
- }catch(e){}
- if(!parts){
-  const lines=text.split(/\n+/).map(x=>x.replace(/^\s*(?:[-*•]|\d+[.、])\s*/,'').trim()).filter(Boolean);
-  parts=lines.length>1?lines:[text];
+ const text=String(raw||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+ let parts=[];
+ try{const obj=JSON.parse(text);if(Array.isArray(obj))parts=obj.filter(x=>typeof x==='string');else if(obj&&Array.isArray(obj.messages))parts=obj.messages.filter(x=>typeof x==='string')}catch(e){}
+ if(!parts.length)parts=[text];
+ if(puChatOptions.mode==='story')return parts;
+ const narration=/^(?:[“"'「]?\s*)?(?:[^，。！？\n]{0,14}(?:维持着|指尖|额头|身影|眼眸|脸庞|走廊|声控灯|黑夜|月光|夜色|窗外|空气中|沉默在|死寂|灯光|光晕|呼吸|抬起|垂下|低头|转身|看着|缓缓|忽然|仿佛|似乎|泛着|蔓延|吞没|映出|勾勒|修长的|漆黑的|他的|她的|他|她)[^\n]{7,})/;
+ const out=[];
+ for(let p of parts){p=String(p).trim().replace(/^[\s\-*•\d.、]+/,'');if(!p)continue;
+  if(narration.test(p)||/^(?:\*|（|\()[^\n]{3,}(?:\*|）|\))$/.test(p))continue;
+  if(p.length>120)continue;
+  out.push(p);
  }
  const cap=puChatOptions.reply==='one'?1:puChatOptions.reply==='auto'?5:6;
- if(puChatOptions.mode==='chat'){
-  const chunks=[];
-  for(const p of parts){
-   const clean=p.replace(/^（[^）]{0,60}）\s*/,'').replace(/^\*[^*]{0,60}\*\s*/,'').trim();
-   if(!clean)continue;
-   if(clean.length<=90){chunks.push(clean);continue;}
-   const sentences=clean.match(/[^。！？!?\n]{1,75}[。！？!?]?/g)||[clean];
-   for(const sentence of sentences){if(sentence.trim())chunks.push(sentence.trim())}
-  }
-  parts=chunks;
- }
- return parts.slice(0,cap).map(x=>x.slice(0,puChatOptions.mode==='chat'?110:900)).filter(Boolean);
+ return out.slice(0,cap);
 }
-
-function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div><div class="msgtime">${esc(m.date||'')}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
+function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
 async function maybeSummarize(){if(!state.settings.summary||state.api.mode!=='remote')return;let cut=Math.max(0,state.messages.length-state.settings.context),from=state.summaryUntil||0;if(cut-from<20)return;let batch=state.messages.slice(from,cut).map(x=>({role:x.role,content:x.content}));try{let summary=await requestModel([{role:'user',content:'已有摘要：'+(state.summaryText||'无')+'\n\n需要归纳的旧聊天：\n'+batch.map(x=>x.role+': '+x.content).join('\n')}],'将旧聊天压缩成简洁、准确的长期剧情摘要，保留关系变化、关键事件、未完成事项；不要编造。只输出摘要。');state.summaryText=summary;state.summaryUntil=cut;persist()}catch(e){console.warn('摘要生成失败',e)}}
 let sending=false;
 async function sendMessage(){
@@ -1187,12 +1177,12 @@ async function sendMessage(){
   if(state.api.mode==='remote'){
    await maybeSummarize();
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
-   reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt());
+   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。' : systemPrompt(recent)+'\n\n'+puConversationPrompt());
   }else reply=localReply(text);
  }catch(e){error=e.message;reply=localReply(text)}
  let parts=puParseChatReplies(reply);
  if(puChatOptions.reply==='one')parts=parts.slice(0,1);
- if(!parts.length)parts=[reply||'嗯'];
+ if(!parts.length)parts=[puChatOptions.mode==='chat'?'……':(reply||'嗯')];
  for(let i=0;i<parts.length;i++){
   const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
   await new Promise(r=>setTimeout(r,delay));
@@ -1508,7 +1498,7 @@ function puRenderMessage(m){let me=m.role==='user',extra='';
  else if(['gift','transfer'].includes(m.puType))extra=`<div class="pu-money-card pu-money-interactive" role="button" tabindex="0" onclick="puMoneyOpen(\'${m.id}\')"><span>${m.puType==='gift'?'红包':'转账'}</span><strong>¥${esc(String(m.puAmount||'0.00'))}</strong><small>${esc(m.puNote||'恭喜发财，大吉大利')}</small><small>${esc(puMoneyStatusLabel(m))}</small></div>`;
  else if(m.puType==='file')extra=`<div class="pu-attachment"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg> ${esc(m.puFileName||'文件')}</div>`;
  else extra=`<div class="bubble">${esc(m.content||'')}</div>`;
- return `<div class="msg ${me?'me':''}"><div class="avatar pu-message-avatar">${puAvatarHtml(m.role)}</div><div class="pu-msg-content">${extra}<div class="msgtime">${esc(m.date||'')}</div></div></div>`
+ return `<div class="msg ${me?'me':''}"><div class="avatar pu-message-avatar">${puAvatarHtml(m.role)}</div><div class="pu-msg-content">${extra}</div></div>`
 }
 renderChat=function(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').innerHTML=puAvatarHtml('assistant');$('callAvatar').innerHTML=puAvatarHtml('assistant');$('callName').textContent=n;$('chatList').innerHTML=state.messages.map(puRenderMessage).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';puApplyAvatarShape();scrollChat()};
 
@@ -2346,5 +2336,59 @@ sendMessage=async function(){const count=state.messages.length;await puMoneyBase
 /* Existing incoming gifts from AI and old messages get status support. */
 const puMoneyOldRender=puRenderMessage;
 puRenderMessage=function(m){if(['gift','transfer'].includes(m.puType)&&!m.puStatus)m.puStatus='pending';return puMoneyOldRender(m)};
+</script>
+
+<style id="pu-final-fixes">
+#puHubChatRoom,#chat{min-height:0!important}
+#chat.active{height:100dvh!important;max-height:100dvh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+#chat.active .body#chatScroll{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding-bottom:12px!important}
+#chat.active .pu-chat-bottom{flex:0 0 auto!important;position:relative!important;bottom:auto!important;margin-top:auto!important;padding-bottom:max(8px,env(safe-area-inset-bottom))!important}
+#chatInput{font-size:16px!important}
+#puSocialReply{font-size:16px!important}
+.pu-post-detail{z-index:99999!important}
+</style>
+<script id="pu-final-social-fixes">
+(function(){
+'use strict';
+// A tile in My must open its original post ID, not switch to the Moments tab.
+window.puHubOpenPost=function(index){const p=[...(state.moments||[])].reverse()[index];if(p&&typeof puOpenSocialDetail==='function')puOpenSocialDetail(p.id)};
+// Comments must be generated immediately after publishing, rather than waiting for a 20-minute random poll.
+const queue=new Set();
+async function reactToNewPost(post){
+ if(!post||post.puPublic===false||state.api?.mode!=='remote'||!state.api?.key||queue.has(post.id))return;
+ queue.add(post.id);
+ try{
+  const characters=(puChars?.list||[]).map(c=>({id:c.id,name:typeof puCharName==='function'?puCharName(c):c.name,persona:c.data?.persona||{}}));
+  const prompt='用户刚发布动态：'+JSON.stringify({text:post.text,location:post.puLocation,mention:post.puMention})+'\n角色与关系：'+JSON.stringify(characters).slice(0,11000)+'\n请返回JSON对象：{"interactions":[{"type":"comment或like","actorId":"passerby或已有角色id","name":"名字","text":"评论文字"}]}。生成0到4条自然的互动，至少考虑一位有真实语气的路人（公开动态时）；遵守角色关系，仇敌不友好点赞；路人不知道隐私；评论不要千篇一律。';
+  const raw=await requestModel([{role:'user',content:prompt}],'你是朋友圈互动引擎，只返回有效JSON对象。不得代替User发言。');
+  const found=String(raw).match(/\{[\s\S]*\}/);if(!found)return;
+  const obj=JSON.parse(found[0]);if(!Array.isArray(obj.interactions))return;
+  for(const item of obj.interactions.slice(0,4)){
+   const live=state.moments.find(x=>x.id===post.id);if(!live)return;
+   live.puComments=Array.isArray(live.puComments)?live.puComments:[];
+   live.puLikes=Array.isArray(live.puLikes)?live.puLikes:[];
+   const actor=(puChars?.list||[]).find(c=>String(c.id)===String(item.actorId));
+   if(!actor&&item.actorId!=='passerby')continue;
+   const who=actor?(typeof puCharName==='function'?puCharName(actor):actor.name):String(item.name||'路人').slice(0,18);
+   const actorKey=actor?'char:'+actor.id:'passerby:'+who;
+   if(item.type==='comment'&&typeof item.text==='string'&&item.text.trim()){
+    if(!live.puComments.some(c=>c.actor===actorKey&&c.text===item.text))live.puComments.push({id:uid(),actor:actorKey,name:who,text:item.text.trim().slice(0,180),date:now()});
+   }else if(item.type==='like'&&!live.puLikes.some(x=>x.id===actorKey))live.puLikes.push({id:actorKey,name:who});
+   persist();
+   if(typeof renderMoments==='function')renderMoments();
+   if(document.getElementById('puSocialDetail')?.classList.contains('open')&&document.querySelector('#puSocialDetailBody [data-post="'+post.id+'"]'))puOpenSocialDetail(post.id);
+   await new Promise(r=>setTimeout(r,1300+Math.min(2000,(item.text||'').length*50)));
+  }
+ }catch(e){console.warn('发布后互动生成失败',e)}finally{queue.delete(post.id)}
+}
+const original=window.puSendPost;
+window.puSendPost=async function(){
+ const before=new Set((state.moments||[]).map(x=>x.id));
+ await original();
+ const fresh=(state.moments||[]).find(x=>!before.has(x.id));
+ if(fresh)reactToNewPost(fresh);
+};
+// Restore the detail when the source is My; keep the My tab and its scroll position.
+})();
 </script>
 </body></html>
