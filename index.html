@@ -446,7 +446,33 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 #diy .bloom-theme-settings p{display:none!important}
 #diy .diy-hint{font-size:11px!important;line-height:1.45!important}
 
-.pu-persona-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px 0 14px;scrollbar-width:none}.pu-persona-tabs button{flex:0 0 auto;border:1px solid #e7e7eb;background:#f6f6f8;color:#75757d;padding:9px 11px;border-radius:13px;font-size:11px}.pu-persona-tabs button.active{background:#e8e8ec;color:#303037;border-color:#d8d8df;font-weight:650}#puPersonaStory textarea,#puPersonaFirst textarea{width:100%;min-height:260px;line-height:1.7;font-size:12px}.pu-world-preview{padding:12px;background:#f7f7f9;border-radius:12px;margin:8px 0}.pu-world-preview b{font-size:13px}.pu-world-preview small{display:block;color:#999;font-size:10px;margin:4px 0}.pu-world-preview p{font-size:11px;color:#666;white-space:pre-wrap;overflow-wrap:anywhere}.pu-import-report{background:#edf3ee;color:#536d59;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;margin:12px 0}</style><style>
+.pu-persona-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px 0 14px;scrollbar-width:none}.pu-persona-tabs button{flex:0 0 auto;border:1px solid #e7e7eb;background:#f6f6f8;color:#75757d;padding:9px 11px;border-radius:13px;font-size:11px}.pu-persona-tabs button.active{background:#e8e8ec;color:#303037;border-color:#d8d8df;font-weight:650}#puPersonaStory textarea,#puPersonaFirst textarea{width:100%;min-height:260px;line-height:1.7;font-size:12px}.pu-world-preview{padding:12px;background:#f7f7f9;border-radius:12px;margin:8px 0}.pu-world-preview b{font-size:13px}.pu-world-preview small{display:block;color:#999;font-size:10px;margin:4px 0}.pu-world-preview p{font-size:11px;color:#666;white-space:pre-wrap;overflow-wrap:anywhere}.pu-import-report{background:#edf3ee;color:#536d59;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;margin:12px 0}
+
+/* v4.6 Icon style switcher: decorative only, no layout or sizing changes */
+#home[data-icon-style="minimal"] .bloom-icon-symbol{background:#f9f8f6!important;border:1px solid #e3dfda!important;box-shadow:none!important;color:#34312e!important}
+#home[data-icon-style="cream"] .bloom-icon-symbol{background:#fffdfa!important;border:1px solid #e8e1d8!important;box-shadow:0 4px 9px #786f601b,inset 0 2px 3px #fff!important;color:#625e59!important}
+#home[data-icon-style="glass"] .bloom-icon-symbol{background:#ffffffa8!important;border:1px solid #ffffff!important;box-shadow:0 5px 13px #77777722,inset 0 1px 2px #fff!important;backdrop-filter:blur(9px);color:#57534e!important}
+#home[data-icon-style="draw"] .bloom-icon-symbol{background:#fffefa!important;border:1px solid #d5cfc6!important;box-shadow:none!important;color:#494642!important}
+#home[data-icon-style="retro"] .bloom-icon-symbol{background:#f8f2e8!important;border:1px solid #a89a88!important;box-shadow:2px 3px 0 #b8ac9c!important;color:#5e5145!important}
+#home[data-icon-style="jelly"] .bloom-icon-symbol{background:#eee6dc!important;border:1px solid #fff!important;box-shadow:inset 2px 3px 5px #fff,0 5px 8px #9a887733!important;color:#5c5550!important}
+#home[data-icon-style="draw"] .bloom-icon-symbol{border-radius:12px!important}
+#home[data-icon-style="retro"] .bloom-icon-symbol{border-radius:9px!important}
+#home[data-icon-style="jelly"] .bloom-icon-symbol{border-radius:23px!important}
+#home[data-icon-style="glass"] .bloom-icon-symbol{border-radius:20px!important}
+#home[data-icon-style="cream"] .bloom-icon-symbol{border-radius:18px!important}
+#home[data-icon-style="minimal"] .bloom-icon-symbol{border-radius:16px!important}
+#home .bloom-icon-symbol img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.pu46-icon-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.pu46-style-choice{background:#faf8f6;border:1px solid #e3dfda;color:#383532;border-radius:13px;min-height:85px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;font-size:11px}
+.pu46-style-choice.selected{border:2px solid #6e665f;background:#f2ede7;font-weight:700}
+.pu46-style-choice .sample{width:35px;height:35px;display:grid;place-items:center;background:#f9f8f6;border:1px solid #e3dfda;border-radius:12px;color:#34312e}
+.pu46-style-choice[data-style="cream"] .sample{background:#fffdfa;box-shadow:0 4px 9px #786f601b,inset 0 2px 3px #fff;border-radius:12px}
+.pu46-style-choice[data-style="glass"] .sample{background:#ffffff99;box-shadow:0 5px 13px #7773;border-color:#fff;border-radius:14px}
+.pu46-style-choice[data-style="draw"] .sample{background:#fffefa;border-color:#bdb6ab;border-radius:8px}
+.pu46-style-choice[data-style="retro"] .sample{background:#f8f2e8;border-color:#a89a88;border-radius:5px;box-shadow:2px 3px 0 #b8ac9c}
+.pu46-style-choice[data-style="jelly"] .sample{background:#eee6dc;border-color:white;border-radius:16px;box-shadow:inset 2px 3px 5px #fff,0 4px 7px #9a887733}
+#home .bloom-icon{touch-action:pan-y;-webkit-touch-callout:none}
+</style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
 .pu-story-screen{background:#f5f0e9!important;color:#38312e}.pu-story-screen .bar{background:#f8f4ef;border-bottom:1px solid #e6ddd4}.pu-story-scroll{padding:15px 17px 25px;overflow-y:auto;flex:1}.pu-story-page{padding:20px 18px;margin:0 0 17px;background:#fffdf9;border:1px solid #e9e1d8;border-radius:9px;box-shadow:0 3px 15px #3c30240a;font-size:14px;line-height:2.05;white-space:pre-wrap;overflow-wrap:anywhere}.pu-story-page.user{background:#f3eae2;border-color:#e7d8ca}.pu-story-author{font-size:11px;color:#9b8c81;margin-bottom:11px;letter-spacing:1px}.pu-story-compose{padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:#f8f4ef;border-top:1px solid #e6ddd4;display:flex;flex-direction:column;gap:9px}.pu-story-compose textarea{width:100%;min-height:75px;max-height:145px;resize:vertical;border:1px solid #dfd4c9;background:#fffdf9;border-radius:12px;padding:11px;font-size:13px}.pu-story-compose .btn{align-self:flex-end}.pu-world-group{border:1px solid #e8dce4;border-radius:13px;padding:12px;margin:10px 0;background:#fff}.pu-world-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.pu-world-group-actions{display:flex;gap:6px;flex-wrap:wrap}.pu-world-group-actions button{font-size:11px;padding:6px 9px;border:1px solid #e5c9d7;border-radius:8px;background:#fff}.pu-world-off{opacity:.48}.pu-world-group small{font-size:11px;color:#888}.pu-crop-overlay{position:fixed;inset:0;background:#0009;z-index:9999;display:grid;place-items:center;padding:18px}.pu-crop-overlay[hidden]{display:none}.pu-crop-dialog{width:min(100%,390px);background:#fff;border-radius:19px;padding:18px;color:#333;display:flex;flex-direction:column;gap:12px}.pu-crop-head{display:flex;justify-content:space-between}.pu-crop-head button{border:0;background:transparent;font-size:19px}.pu-crop-dialog p{font-size:12px;color:#777;margin:0}.pu-crop-viewport{width:min(65vw,260px);height:min(65vw,260px);margin:auto;border-radius:15px;overflow:hidden;position:relative;background:#ddd;touch-action:none;cursor:grab}.pu-crop-viewport img{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none}.pu-crop-dialog label{font-size:12px;display:flex;align-items:center;gap:12px}.pu-crop-dialog input{flex:1}
@@ -556,6 +582,41 @@ html:not([data-pu-mode="dark"]) .pu-char-picture{background:linear-gradient(145d
 html:not([data-pu-mode="dark"]) .pu-contact-avatar{background:#f0ece6}
 html:not([data-pu-mode="dark"]) .pu-char-summary{background:#f3f0eb!important}
 html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532!important}
+</style><style>
+/* v4.7 widget edit mode */
+#home.pu47-edit .pu47-slot{animation:pu47wig .22s ease-in-out infinite alternate;outline:1px dashed #aaa8;outline-offset:2px;cursor:pointer!important}
+#home.pu47-edit .bloom-icon{animation:pu47wig .23s ease-in-out infinite alternate-reverse}
+@keyframes pu47wig{from{transform:rotate(-.65deg)}to{transform:rotate(.65deg)}}
+#home.pu47-edit .pu47-slot:before{content:'↻';position:absolute;top:-7px;right:-6px;z-index:15;background:#f8f6f3;color:#5e5a56;border:1px solid #ddd7d0;border-radius:50%;width:23px;height:23px;display:grid;place-items:center;font-size:16px;box-shadow:0 2px 5px #0001;pointer-events:none}
+#pu47Done{display:none;position:absolute;right:58px;top:calc(14px + env(safe-area-inset-top));z-index:20;border:0;background:#3c3835;color:white;border-radius:20px;padding:7px 13px;font-size:12px}
+#home.pu47-edit #pu47Done{display:block}
+.pu47-slot{position:relative;isolation:isolate;touch-action:pan-x pan-y}
+.pu47-slot.pu47-replaced>*:not(.pu47-face){visibility:hidden!important;pointer-events:none!important}
+.pu47-face{position:absolute;inset:0;z-index:3;overflow:hidden;border-radius:inherit;background:#faf8f5;color:#4a4641;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:5px;text-align:center;font-size:clamp(9px,1.3vh,13px);line-height:1.4;box-shadow:inset 0 0 0 1px #e7e2dc}
+.pu47-face img{max-width:100%;max-height:64%;object-fit:cover;border-radius:8px}
+.pu47-face b{font-family:Georgia,serif;font-weight:400;font-size:clamp(16px,3.2vh,30px)}
+.pu47-face small{font-size:9px;color:#8c8580}
+.pu47-face .pu47-image{width:100%;height:65%;object-fit:cover;border-radius:7px}
+.pu47-face .pu47-tiles{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:100%;height:72%}
+.pu47-face .pu47-tiles span{background:#e5e0da;border-radius:4px;display:grid;place-items:center;overflow:hidden}
+.pu47-face .pu47-tiles img{width:100%;height:100%;max-height:none;object-fit:cover}
+.pu47-face .pu47-line{height:3px;background:#c9c1b9;border-radius:5px;width:65%}
+.pu47-face.pu47-dark{background:#36332f;color:#faf7f2}.pu47-face.pu47-dark small{color:#ddd4ca}
+.pu47-sheet{position:fixed;inset:0;z-index:300;display:none;align-items:flex-end;justify-content:center;background:#302c285e;backdrop-filter:blur(6px)}
+.pu47-sheet.open{display:flex}
+.pu47-panel{width:min(640px,100%);height:min(82dvh,760px);background:#fffdfb;color:#393632;border-radius:32px 32px 0 0;display:flex;flex-direction:column;box-shadow:0 -12px 35px #0002;padding-bottom:env(safe-area-inset-bottom)}
+.pu47-handle{height:5px;width:48px;border-radius:6px;background:#e2dfdb;margin:10px auto 15px}
+.pu47-head{display:flex;align-items:center;justify-content:space-between;padding:0 22px 17px;border-bottom:1px solid #eeeae6}
+.pu47-head strong{font-size:18px}.pu47-head button{border:0;background:#f1efec;border-radius:50%;height:32px;width:32px;font-size:20px;color:#666}
+.pu47-scroll{overflow:auto;padding:17px 20px 30px;overscroll-behavior:contain}
+.pu47-section{margin:10px 0 25px}.pu47-section h4{font-size:14px;color:#817b75;margin:0 0 14px;font-weight:500}
+.pu47-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pu47-choice{background:transparent;border:0;text-align:center;padding:0;color:#625e59;font-size:11px;min-width:0}
+.pu47-preview{height:112px;border-radius:17px;overflow:hidden;position:relative;margin-bottom:7px;box-shadow:0 3px 12px #4c453312}
+.pu47-preview .pu47-face{position:absolute;inset:0;font-size:11px;pointer-events:none}
+.pu47-preview .pu47-face b{font-size:25px}
+.pu47-tools{display:flex;gap:9px;margin-bottom:15px}.pu47-tools button{flex:1;border:1px solid #e6e0d9;background:#f8f6f3;color:#514d48;border-radius:12px;padding:11px 6px;font-size:12px}
+.pu47-hint{font-size:12px;color:#9a9189;margin:0 0 12px}
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -624,7 +685,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 <p class="diy-hint">修改会先实时预览，点击底部「保存美化」才会永久保存。取消可撤销本次更改。</p>
 <div class="diy-panel" data-panel="chat"><div class="card"><h3>聊天气泡 · 点击预览选择编辑哪一边</h3><div id="diyChatPreview" class="diy-preview"><div class="sample other" data-side="other" onclick="diySide('other')">今天想和你说件事。♡<br>等你很久了。</div><div class="sample me" data-side="me" onclick="diySide('me')">什么事呀？</div></div><div class="row wrap" style="margin-top:12px"><button class="btn alt small" onclick="diySide('other')">编辑角色气泡</button><button class="btn alt small" onclick="diySide('me')">编辑我的气泡</button></div><p class="diy-hint" id="diySideLabel"></p><label class="label">气泡模式</label><select id="diyBubbleMode" onchange="diyChangeBubble()"><option value="solid">纯色气泡</option><option value="image">图片气泡（九宫格拉伸）</option></select><div class="diy-image-actions"><button class="btn alt small" onclick="diyPick('bubble')">上传气泡图片</button><button class="btn alt small" onclick="diyRemoveAsset('bubble')">删除当前气泡图片</button></div><p class="diy-asset-status" id="diyBubbleStatus"></p><div class="diy-swatch"><label class="grow">纯色气泡底色</label><input type="color" id="diyBubbleColor" oninput="diyChangeBubble()"></div><div class="diy-swatch"><label class="grow">文字颜色</label><input type="color" id="diyBubbleText" oninput="diyChangeBubble()"></div><label class="label">九宫格切片边距（图片模式） <span id="diySliceLabel"></span></label><input type="range" id="diySlice" min="5" max="45" value="24" oninput="diyChangeBubble()"><p class="diy-hint">图片气泡会按九宫格切片拉伸。建议使用带透明背景、四角装饰不复杂的 PNG 图片；不同素材可能需要调整切片值。</p><label class="label">气泡内边距（px）</label><input type="range" id="diyPadding" min="8" max="26" value="13" oninput="diyChangeBubble()"></div><div class="card"><h3>高级排版</h3><label class="label">气泡字体大小 <span id="diyFontLabel"></span></label><input type="range" id="diyFont" min="12" max="21" value="14" oninput="diyChangeGeneral()"><label class="label">气泡圆角 <span id="diyRadiusLabel"></span></label><input type="range" id="diyRadius" min="0" max="30" value="17" oninput="diyChangeGeneral()"><div class="row"><button class="btn alt small" onclick="diyTab('wall')">去设置聊天壁纸 →</button><button class="btn alt small" onclick="go('chat')">查看真实聊天</button></div></div></div>
 <div class="diy-panel" data-panel="wall"><div class="card"><h3>三套独立壁纸</h3><label class="label">选择要编辑的位置</label><select id="diyWallTarget" onchange="diyShowWall()"><option value="lock">锁屏壁纸</option><option value="home">桌面壁纸</option><option value="chat">聊天壁纸</option></select><div class="diy-preview" id="diyWallPreview" style="margin:12px 0;min-height:200px;display:grid;place-items:center"><b id="diyWallPreviewText">♡ Pocket Universe ♡</b></div><div class="diy-image-actions"><button class="btn alt small" onclick="diyPick('wall')">从相册上传壁纸</button><button class="btn alt small" onclick="diyRemoveAsset('wall')">移除壁纸</button></div><p class="diy-asset-status" id="diyWallStatus"></p><label class="label">图片显示方式</label><select id="diyWallFit" onchange="diyChangeWall()"><option value="cover">铺满（可能裁切）</option><option value="contain">完整显示</option><option value="repeat">平铺</option></select><label class="label">背景遮罩透明度 <span id="diyWallShadeLabel"></span></label><input type="range" id="diyWallShade" min="0" max="75" value="0" oninput="diyChangeWall()"></div></div>
-<div class="diy-panel" data-panel="icons"><div class="card"><h3>桌面图标</h3><p class="diy-hint">点击某个 App，再上传它自己的图标。上下箭头可以调整顺序；所有功能入口都会保留。</p><label class="label">选择 App</label><select id="diyIconTarget" onchange="diyShowIcon()"></select><div class="diy-image-actions"><button class="btn alt small" onclick="diyPick('icon')">上传图标</button><button class="btn alt small" onclick="diyRemoveAsset('icon')">恢复默认图标</button></div><p class="diy-asset-status" id="diyIconStatus"></p><label class="label">桌面显示名称</label><input id="diyIconName" oninput="diyChangeIconName()" maxlength="18"><label class="label">每行图标数量</label><select id="diyColumns" onchange="diyChangeLayout()"><option value="3">3 列</option><option value="4">4 列</option><option value="5">5 列</option></select><label class="label">图标尺寸 <span id="diyIconSizeLabel"></span></label><input type="range" id="diyIconSize" min="42" max="80" value="65" oninput="diyChangeLayout()"><label class="label">图标间距 <span id="diyGapLabel"></span></label><input type="range" id="diyGap" min="8" max="35" value="18" oninput="diyChangeLayout()"></div><div class="card"><h3>排列顺序</h3><div id="diyOrder"></div></div></div>
+<div class="diy-panel" data-panel="icons"><div class="card" id="pu46IconStyles"><h3>应用图标 · 六种风格</h3><p class="diy-hint">默认「极简线条」。点击切换，桌面即时生效；长按桌面图标可直接选择自己的图片。</p><div class="pu46-icon-options" id="pu46IconOptions"></div></div><div class="card"><h3>桌面图标</h3><p class="diy-hint">点击某个 App，再上传它自己的图标。上下箭头可以调整顺序；所有功能入口都会保留。</p><label class="label">选择 App</label><select id="diyIconTarget" onchange="diyShowIcon()"></select><div class="diy-image-actions"><button class="btn alt small" onclick="diyPick('icon')">上传图标</button><button class="btn alt small" onclick="diyRemoveAsset('icon')">恢复默认图标</button></div><p class="diy-asset-status" id="diyIconStatus"></p><label class="label">桌面显示名称</label><input id="diyIconName" oninput="diyChangeIconName()" maxlength="18"><label class="label">每行图标数量</label><select id="diyColumns" onchange="diyChangeLayout()"><option value="3">3 列</option><option value="4">4 列</option><option value="5">5 列</option></select><label class="label">图标尺寸 <span id="diyIconSizeLabel"></span></label><input type="range" id="diyIconSize" min="42" max="80" value="65" oninput="diyChangeLayout()"><label class="label">图标间距 <span id="diyGapLabel"></span></label><input type="range" id="diyGap" min="8" max="35" value="18" oninput="diyChangeLayout()"></div><div class="card"><h3>排列顺序</h3><div id="diyOrder"></div></div></div>
 <div class="diy-panel" data-panel="widgets"><div class="card"><h3>桌面小组件</h3><p class="diy-hint">第一版采用稳定网格排版，之后可升级自由拖动与多页桌面。</p><label class="diy-toggle"><input type="checkbox" id="diyWidgetPhoto" onchange="diyChangeWidgets()"> 显示照片组件</label><div class="diy-image-actions"><button class="btn alt small" onclick="diyPick('widget')">上传组件照片</button><button class="btn alt small" onclick="diyRemoveAsset('widget')">移除组件照片</button></div><p class="diy-asset-status" id="diyWidgetStatus"></p><label class="diy-toggle"><input type="checkbox" id="diyWidgetClock" onchange="diyChangeWidgets()"> 显示时钟与日期</label><label class="diy-toggle"><input type="checkbox" id="diyWidgetQuote" onchange="diyChangeWidgets()"> 显示角色语录</label><label class="label">语录内容</label><textarea id="diyQuote" rows="2" oninput="diyChangeWidgets()" placeholder="写一句你喜欢的角色台词"></textarea><div class="diy-image-actions"><button class="btn alt small" onclick="diyUseLastQuote()">使用最近一条角色回复</button></div><label class="label">桌面组件预览</label><div id="diyWidgetPreview" class="home-widgets" style="padding:0"></div></div></div>
 <div class="diy-panel" data-panel="theme"><div class="card"><h3>韩系手账 · 全局主题</h3><p class="diy-hint">这是默认主题的底色。自定义壁纸和气泡会优先使用各自的设置。</p><div class="diy-swatch"><label class="grow">主色</label><input type="color" id="diyThemePrimary" oninput="diyChangeTheme()"></div><div class="diy-swatch"><label class="grow">背景色</label><input type="color" id="diyThemeBg" oninput="diyChangeTheme()"></div><div class="diy-swatch"><label class="grow">文字颜色</label><input type="color" id="diyThemeInk" oninput="diyChangeTheme()"></div><div class="diy-note">更改主题不会重置你的聊天记录、人设、接口设置或其他功能数据。</div></div></div>
 <div class="diy-actionbar"><div class="row"><button class="btn alt grow" onclick="diyCancel()">取消本次更改</button><button class="btn grow" onclick="diySave()">♡ 保存美化</button></div></div>
@@ -1367,4 +1428,119 @@ function puCropBind(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',puCropBind);
 else puCropBind();
-</script><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><button type="button" onclick="puCropClose()">取消</button><b>移动和缩放</b><button type="button" onclick="puCropReset()">重置</button></div><p class="pu-crop-help">单指移动 · 双指捏合缩放 · 选择方框中的区域</p><div class="pu-crop-stage" id="puCropStage"><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像调整预览"></div><div class="pu-crop-mask"><div id="puCropHole" class="pu-crop-hole"></div></div></div><div class="pu-crop-bottom"><label>缩放 <input type="range" id="puCropZoom" min="1" max="5" step=".01" value="1" oninput="puCropZoomChange()"></label><div class="pu-crop-actions"><button type="button" onclick="puCropClose()">返回</button><button type="button" class="pu-crop-confirm" onclick="puCropSave()">完成</button></div></div></div></div><div id="puProfileEditor" class="pu-profile-editor" hidden><div class="pu-profile-editor-sheet"><div class="pu-profile-editor-head"><button type="button" onclick="puProfileCancel()">取消</button><b>编辑我的资料</b><button type="button" onclick="puProfileSave()">保存</button></div><div class="pu-profile-editor-scroll"><label>我的名字<input id="puEdit_name" maxlength="100" placeholder="填写名字"></label><label>昵称<input id="puEdit_nickname" maxlength="100" placeholder="填写昵称"></label><label>个性签名<textarea id="puEdit_signature" rows="2" maxlength="800" placeholder="填写个性签名"></textarea></label><label>生日<input id="puEdit_birthday" maxlength="100" placeholder="例如：11月3日"></label><label>性格设定<textarea id="puEdit_personality" rows="4" maxlength="800" placeholder="写下你的性格与设定"></textarea></label><label>爱好<textarea id="puEdit_hobbies" rows="3" maxlength="800" placeholder="填写爱好"></textarea></label><label>关于我<textarea id="puEdit_about" rows="5" maxlength="800" placeholder="介绍一下自己"></textarea></label></div><button type="button" class="pu-profile-save-bottom" onclick="puProfileSave()">保存我的资料</button></div></div></body></html>
+</script><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><button type="button" onclick="puCropClose()">取消</button><b>移动和缩放</b><button type="button" onclick="puCropReset()">重置</button></div><p class="pu-crop-help">单指移动 · 双指捏合缩放 · 选择方框中的区域</p><div class="pu-crop-stage" id="puCropStage"><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像调整预览"></div><div class="pu-crop-mask"><div id="puCropHole" class="pu-crop-hole"></div></div></div><div class="pu-crop-bottom"><label>缩放 <input type="range" id="puCropZoom" min="1" max="5" step=".01" value="1" oninput="puCropZoomChange()"></label><div class="pu-crop-actions"><button type="button" onclick="puCropClose()">返回</button><button type="button" class="pu-crop-confirm" onclick="puCropSave()">完成</button></div></div></div></div><div id="puProfileEditor" class="pu-profile-editor" hidden><div class="pu-profile-editor-sheet"><div class="pu-profile-editor-head"><button type="button" onclick="puProfileCancel()">取消</button><b>编辑我的资料</b><button type="button" onclick="puProfileSave()">保存</button></div><div class="pu-profile-editor-scroll"><label>我的名字<input id="puEdit_name" maxlength="100" placeholder="填写名字"></label><label>昵称<input id="puEdit_nickname" maxlength="100" placeholder="填写昵称"></label><label>个性签名<textarea id="puEdit_signature" rows="2" maxlength="800" placeholder="填写个性签名"></textarea></label><label>生日<input id="puEdit_birthday" maxlength="100" placeholder="例如：11月3日"></label><label>性格设定<textarea id="puEdit_personality" rows="4" maxlength="800" placeholder="写下你的性格与设定"></textarea></label><label>爱好<textarea id="puEdit_hobbies" rows="3" maxlength="800" placeholder="填写爱好"></textarea></label><label>关于我<textarea id="puEdit_about" rows="5" maxlength="800" placeholder="介绍一下自己"></textarea></label></div><button type="button" class="pu-profile-save-bottom" onclick="puProfileSave()">保存我的资料</button></div></div><script>
+/* v4.6 — icon-only theme + long press custom upload */
+(function(){
+ const KEY='pu_icon_style_v46';
+ const names={minimal:'极简线条',cream:'奶油浮雕',glass:'磨砂玻璃',draw:'韩系手绘',retro:'复古胶片',jelly:'奶油果冻'};
+ let current=localStorage.getItem(KEY)||'minimal';if(!names[current])current='minimal';
+ const svgPaths={chat:'<path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3.3A7.5 7.5 0 1 1 20 11.5Z"/>',world:'<path d="M12 6c-2.5-1.6-5.3-1.7-9-1v13c3.7-.7 6.5-.6 9 1 2.5-1.6 5.3-1.7 9-1V5c-3.7-.7-6.5-.6-9 1Zm0 0v13"/>',memories:'<path d="M12 20s-8-4.8-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.2C20 15.2 12 20 12 20Z"/>',photos:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 3 3-4 5 6"/>',moments:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',notes:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',persona:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>',backup:'<path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/>',profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/>',music:'<path d="M9 18V5l12-2v13M9 18a3 2 0 1 1-6 0 3 2 0 0 1 6 0Zm12-2a3 2 0 1 1-6 0 3 2 0 0 1 6 0Z"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',calls:'<path d="M5 4h4l1 4-2 2a14 14 0 0 0 6 6l2-2 4 1v4a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2Z"/>'};
+ function svg(id){return '<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(svgPaths[id]||'<rect x="4" y="4" width="16" height="16" rx="3"/>')+'</svg>'}
+ const old=bloomIcon;
+ bloomIcon=function(id){let html=old(id),obj=diySaved.icons[id]||{};if(!diyAssetUrl(obj.asset))html=html.replace(/(<span class="bloom-icon-symbol">)[\s\S]*?(<\/span>)/,function(_,a,b){return a+svg(id)+b});return html.replace('class="bloom-icon"','class="bloom-icon" data-app-id="'+id+'"')};
+ function apply(){let h=document.getElementById('home');if(h)h.dataset.iconStyle=current;document.querySelectorAll('.pu46-style-choice').forEach(b=>b.classList.toggle('selected',b.dataset.style===current))}
+ window.pu46Style=function(style){if(!names[style])return;current=style;localStorage.setItem(KEY,current);apply();toast('已切换：'+names[current])};
+ function options(){let e=document.getElementById('pu46IconOptions');if(!e)return;e.innerHTML=Object.entries(names).map(([id,name])=>'<button type="button" class="pu46-style-choice" data-style="'+id+'"><span class="sample">'+svg('chat')+'</span><span>'+name+'</span></button>').join('');e.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>pu46Style(b.dataset.style)));apply()}
+ // Long press on a desktop icon opens the existing DIY image picker, preserving its save workflow.
+ let timer=null,pressed=null,startX=0,startY=0,suppress=false;
+ function target(e){return e.target.closest&&e.target.closest('#home .bloom-icon[data-app-id]')}
+ document.addEventListener('pointerdown',function(e){let b=target(e);if(!b||e.button>0)return;pressed=b;startX=e.clientX;startY=e.clientY;clearTimeout(timer);timer=setTimeout(function(){if(!pressed)return;let id=pressed.dataset.appId;pressed=null;suppress=true;try{diyDraft=diyClone(diySaved);go('diy');diyStart();diyTab('icons');let select=document.getElementById('diyIconTarget');if(select){select.value=id;diyShowIcon()}setTimeout(function(){diyPick('icon')},180)}catch(err){console.error(err);toast('请到「美化 → 图标」上传图片')}},600)},true);
+ document.addEventListener('pointermove',function(e){if(pressed&&Math.hypot(e.clientX-startX,e.clientY-startY)>12){clearTimeout(timer);pressed=null}},true);
+ ['pointerup','pointercancel','scroll'].forEach(type=>document.addEventListener(type,function(){clearTimeout(timer);pressed=null},true));
+ document.addEventListener('click',function(e){if(suppress&&e.target.closest&&e.target.closest('#home .bloom-icon')){e.preventDefault();e.stopImmediatePropagation();suppress=false}},true);
+ const previous=bloomRenderHome;bloomRenderHome=function(){previous();apply()};
+ options();apply();try{bloomRenderHome()}catch(err){console.warn('图标预览稍后更新',err)}
+})();
+</script><script>
+/* v4.7: iPhone-style wiggle and replaceable original three-page widgets */
+(function(){
+'use strict';
+const STORE='pu_widget_slots_v47';
+const cats=[
+ ['照片组件',['极简相框','四格拍贴','杂志封面','照片墙']],
+ ['时间组件',['数字时钟','指针时钟','月历','翻页时钟']],
+ ['音乐组件',['磁带播放器','黑胶唱片','CD播放器','播放列表']],
+ ['文字组件',['手写便签','诗句语录','日常清单','励志语录']],
+ ['纪念日组件',['恋爱天数','纪念日票根','倒数日','旅行计划']],
+ ['角色专属组件',['角色相框','聊天摘录','角色资料卡','关系纪念卡']]
+];
+const names=cats.flatMap(c=>c[1]);
+let data={};try{data=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){}
+const slots=[
+ ['gallery','.pu44-gallery','第一页 · 照片画廊'],
+ ['side','.pu44-side','第一页 · 音乐小组件'],
+ ['collage','.bloom-page-two .bloom-collage','第二页 · 照片拼贴'],
+ ['quote','.bloom-page-two .bloom-quote','第二页 · 文字卡片'],
+ ['cover','.bloom-page-three .bloom-cover','第三页 · 个人名片'],
+ ['us','.bloom-page-three .bloom-us','第三页 · 关系与音乐']
+];
+let editing=false,selected='gallery',hold=null,originX=0,originY=0,triggered=false;
+const home=document.getElementById('home');
+const done=document.createElement('button');done.id='pu47Done';done.textContent='完成';done.type='button';done.addEventListener('click',()=>setEdit(false));home.appendChild(done);
+const sheet=document.createElement('div');sheet.className='pu47-sheet';sheet.id='pu47Sheet';sheet.innerHTML='<div class="pu47-panel"><div class="pu47-handle"></div><div class="pu47-head"><strong>添加组件</strong><button type="button" id="pu47Close" aria-label="关闭">×</button></div><div class="pu47-scroll"><p class="pu47-hint" id="pu47Where"></p><div class="pu47-tools"><button type="button" id="pu47Original">恢复原组件</button><button type="button" id="pu47Edit">编辑当前组件</button></div><div id="pu47Catalog"></div></div></div>';
+document.body.appendChild(sheet);
+document.getElementById('pu47Close').onclick=()=>sheet.classList.remove('open');
+sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.classList.remove('open')});
+function setEdit(v){editing=v;home.classList.toggle('pu47-edit',v);if(!v)sheet.classList.remove('open')}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(data))}catch(e){toast('组件保存空间不足，请换小一点的照片')}}
+function clean(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function template(id,rec={},preview=false){
+ const title=names[id]||names[0],photo=rec.photo||'',value=clean(rec.text||'');
+ const image=photo?'<img class="pu47-image" src="'+photo+'" alt="自定义照片">':'<div style="width:90%;height:57%;border-radius:8px;background:linear-gradient(135deg,#e5e0da,#f6f3ef);display:grid;place-items:center;color:#aaa;font-size:11px">PHOTO</div>';
+ const now=new Date(),clock=now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
+ const dd=now.toLocaleDateString('zh-CN',{month:'long',day:'numeric'});
+ let content='';
+ switch(id){
+ case 0:content=image+'<small>Moment. / 2026</small>';break;
+ case 1:content='<div class="pu47-tiles">'+[0,1,2,3].map(()=>'<span>'+(photo?'<img src="'+photo+'">':'♡')+'</span>').join('')+'</div><small>photo booth</small>';break;
+ case 2:content='<small>THE LITTLE THINGS</small>'+image+'<small>ISSUE 01 · DAILY</small>';break;
+ case 3:content='<div class="pu47-tiles">'+[0,1,2,3].map(()=>'<span>'+(photo?'<img src="'+photo+'">':'✧')+'</span>').join('')+'</div><small>my gallery</small>';break;
+ case 4:content='<small>LOCAL TIME</small><b data-pu47-clock>'+clock+'</b><small>'+dd+'</small>';break;
+ case 5:content='<div style="border:2px solid #a49e98;border-radius:50%;width:73px;height:73px;display:grid;place-items:center;font-size:27px">◷</div><small>slow moments</small>';break;
+ case 6:content='<small>OCTOBER · CALENDAR</small><b>'+now.getDate()+'</b><small>'+now.toLocaleDateString('zh-CN',{weekday:'long'})+'</small>';break;
+ case 7:content='<small>WEDNESDAY</small><b data-pu47-clock>'+clock+'</b><small>flip clock</small>';break;
+ case 8:content='<div style="border:3px double #b8b0a8;border-radius:12px;padding:12px 22px;font-size:25px">◉ ◉</div><small>'+(value||'LOVE SONG')+'</small><small>◀　▶　▶</small>';break;
+ case 9:content='<div style="background:#383532;color:#fff;border:8px double #d8d0c8;border-radius:50%;width:78px;height:78px;display:grid;place-items:center;font-size:23px">◉</div><small>'+(value||'NOW PLAYING')+'</small>';break;
+ case 10:content='<div style="border-radius:50%;width:78px;height:78px;background:conic-gradient(#c6bdb5,#fff,#ddd5cc,#fff,#c6bdb5);display:grid;place-items:center;font-size:25px">◎</div><small>'+(value||'MY CD')+'</small>';break;
+ case 11:content='<small>MY PLAYLIST</small><div style="text-align:left;width:85%;line-height:2">01. Blue<br>02. At my worst<br>03. Love song</div><small>◀　▶　▶</small>';break;
+ case 12:content='<small>DAILY NOTE</small><div style="border-top:1px solid #d4cdc5;border-bottom:1px solid #d4cdc5;padding:10px">'+(value||'希望我们一直是彼此的例外。')+'</div><small>♡</small>';break;
+ case 13:content='<small>Somewhere</small><div style="font-family:Georgia,serif;font-style:italic">'+(value||'in my little universe, we always belong.')+'</div><small>— a little note</small>';break;
+ case 14:content='<small>TO DO LIST</small><div style="text-align:left;line-height:2">□ 喝一杯喜欢的饮料<br>□ 和他聊聊天<br>□ 拍一张好看的照片</div>';break;
+ case 15:content='<small>ONE DAY AT A TIME</small><div>'+(value||'A little progress each day adds up to big results.')+'</div><small>✧</small>';break;
+ case 16:content='<small>WE HAVE BEEN TOGETHER</small><b>'+(value||'328')+' <small>天</small></b><small>since our first day ♡</small>';break;
+ case 17:content='<small>OUR ANNIVERSARY</small><b>'+(value||'28')+' <small>Days</small></b><small>NO. 001 — TICKET</small>';break;
+ case 18:content='<small>COUNTDOWN</small><b>'+(value||'15')+' <small>天</small></b><small>see you soon</small>';break;
+ case 19:content='<small>NEXT TRIP</small><b>'+(value||'62')+' <small>天</small></b><small>✈ DESTINATION UNKNOWN</small>';break;
+ case 20:content=image+'<small>'+(value||'ONLY FOR YOU.')+'</small>';break;
+ case 21:content='<small>CHAT EXCERPT</small><div style="background:#ede9e4;border-radius:15px;padding:10px">'+(value||'今天有没有想我？')+'</div><small>21:18 · ♡</small>';break;
+ case 22:content=image+'<small>'+(value||'NAME · NO. 1107')+'</small>';break;
+ case 23:content='<small>TO: YOU</small>'+image+'<small>'+(value||'我们的专属回忆 ♡')+'</small>';break;
+ }
+ return '<div class="pu47-face'+(id===13?' pu47-dark':'')+'">'+content+'</div>';
+}
+function apply(){slots.forEach(([id,selector])=>{const el=home.querySelector(selector);if(!el)return;el.classList.add('pu47-slot');el.dataset.pu47Slot=id;el.querySelector(':scope > .pu47-face')?.remove();el.classList.remove('pu47-replaced');const rec=data[id];if(rec&&Number.isInteger(rec.id)&&names[rec.id]){el.classList.add('pu47-replaced');el.insertAdjacentHTML('beforeend',template(rec.id,rec))}})}
+function open(id){selected=id;document.getElementById('pu47Where').textContent='当前替换位置：'+(slots.find(s=>s[0]===id)?.[2]||id)+' · 点击预览直接替换';
+ document.getElementById('pu47Catalog').innerHTML=cats.map(([category,items],cat)=>'<section class="pu47-section"><h4>'+category+' · '+(cat===0?'照片':'INS 简约')+'</h4><div class="pu47-choices">'+items.map((name,i)=>{let n=cat*4+i;return '<button class="pu47-choice" type="button" data-pu47-choice="'+n+'"><div class="pu47-preview">'+template(n,{},true)+'</div>'+name+'</button>'}).join('')+'</div></section>').join('');
+ sheet.classList.add('open');
+}
+document.getElementById('pu47Catalog').addEventListener('click',e=>{let b=e.target.closest('[data-pu47-choice]');if(!b)return;let n=+b.dataset.pu47Choice;data[selected]={id:n,text:'',photo:''};save();apply();sheet.classList.remove('open');toast('已更换：'+names[n]+' · 长按可再次编辑')});
+document.getElementById('pu47Original').onclick=()=>{delete data[selected];save();apply();sheet.classList.remove('open');toast('已恢复原组件')};
+document.getElementById('pu47Edit').onclick=()=>{sheet.classList.remove('open');editSelected()};
+function editSelected(){const rec=data[selected];if(!rec){toast('先选择一个组件样式，再编辑内容');open(selected);return}
+ const text=prompt('编辑「'+names[rec.id]+'」的文字或数字（取消则保持原样）',rec.text||'');if(text!==null){rec.text=text.slice(0,160);save();apply()}
+ if([0,1,2,3,20,22,23].includes(rec.id)&&confirm('要为这个组件上传照片吗？'))document.getElementById('pu47File').click();
+}
+const file=document.createElement('input');file.type='file';file.accept='image/*';file.id='pu47File';file.hidden=true;document.body.appendChild(file);
+file.onchange=async()=>{const f=file.files?.[0];file.value='';if(!f)return;try{const im=new Image(),url=URL.createObjectURL(f);await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=url});const max=700,scale=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);data[selected].photo=c.toDataURL('image/jpeg',.75);save();apply();toast('组件照片已保存')}catch(e){toast('照片处理失败')}};
+function findSlot(e){return e.target.closest&&e.target.closest('#home .pu47-slot')}
+function clear(){if(hold){clearTimeout(hold);hold=null}}
+home.addEventListener('pointerdown',e=>{if(e.button>0||sheet.classList.contains('open'))return;let slot=findSlot(e);if(!slot)return;clear();originX=e.clientX;originY=e.clientY;hold=setTimeout(()=>{hold=null;triggered=true;setEdit(true);if(navigator.vibrate)navigator.vibrate(12);toast('桌面编辑模式 · 点击组件更换 · 点击完成退出')},620)},true);
+home.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-originX,e.clientY-originY)>12)clear()},true);
+['pointerup','pointercancel','pointerleave'].forEach(n=>home.addEventListener(n,clear,true));
+home.addEventListener('click',e=>{const slot=findSlot(e);if(!slot)return;if(editing||triggered){e.preventDefault();e.stopImmediatePropagation();triggered=false;open(slot.dataset.pu47Slot)}},true);
+// Prevent accidental click after entering wiggle mode on an app icon; leave v4.6 long-press upload intact.
+const oldRender=bloomRenderHome;bloomRenderHome=function(){oldRender();apply()};
+apply();
+setInterval(()=>{document.querySelectorAll('#home [data-pu47-clock]').forEach(el=>el.textContent=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false}))},30000);
+})();
+</script></body></html>
