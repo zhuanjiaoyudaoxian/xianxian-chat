@@ -582,6 +582,39 @@ html:not([data-pu-mode="dark"]) .pu-char-picture{background:linear-gradient(145d
 html:not([data-pu-mode="dark"]) .pu-contact-avatar{background:#f0ece6}
 html:not([data-pu-mode="dark"]) .pu-char-summary{background:#f3f0eb!important}
 html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532!important}
+
+/* 4.6 base: only page-three decoration replaced with cassette and newspaper */
+#home .pu46-new-third{gap:clamp(12px,2.2vh,23px);justify-content:center;padding:10px 18px 15px}
+#home .pu-cassette{flex:0 0 auto;border:2px solid #bcb5ac;border-radius:18px;padding:clamp(12px,2.2vh,20px);background:linear-gradient(145deg,#fdfbf7,#e8e3dc);box-shadow:0 8px 22px #38353220,inset 0 2px #fff;min-height:0}
+#home .pu-cassette-top{display:flex;justify-content:space-between;font:9px Georgia,serif;letter-spacing:1.3px;color:#827b74}
+#home .pu-cassette-label{background:#fffdfa;border:1px solid #ccc5bb;border-radius:5px;text-align:center;padding:9px 7px;margin:11px 0 9px;display:flex;flex-direction:column;gap:3px}
+#home .pu-cassette-label span{font-size:clamp(12px,1.8vh,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#home .pu-cassette-label small{font:9px Georgia,serif;letter-spacing:2px;color:#a09a92}
+#home .pu-tape-window{height:clamp(72px,12vh,115px);border-radius:13px;background:#d8d3cd;border:5px solid #f9f6f0;box-shadow:inset 0 0 0 1px #b5aea5;display:flex;align-items:center;justify-content:space-around;position:relative;overflow:hidden}
+#home .pu-tape-reel{width:clamp(51px,9vh,82px);height:clamp(51px,9vh,82px);border:6px solid #f9f8f4;border-radius:50%;background:repeating-conic-gradient(#a7a099 0 20deg,#e8e4df 20deg 40deg);display:grid;place-items:center;z-index:1;box-shadow:0 1px 5px #0002}
+#home .pu-tape-reel span{width:38%;height:38%;background:#fdfbf7;border:3px solid #888078;border-radius:50%}
+#home .pu-tape-ribbon{position:absolute;width:60%;height:19px;border-top:5px solid #6d655d;border-bottom:5px solid #6d655d;left:20%;top:calc(50% - 9px)}
+#home .pu-tape-controls{display:flex;justify-content:center;gap:clamp(18px,5vw,36px);margin-top:10px}
+#home .pu-tape-controls button{border:0;background:transparent;color:#4e4943;padding:4px;display:grid;place-items:center}
+#home .pu-tape-controls svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#home .pu-cassette .bloom-seek{height:12px;margin-top:5px;accent-color:#706960}
+#home .pu-newspaper{flex:0 0 auto;width:100%;background:#fffdfaeb;border:1px solid #d8d2ca;border-radius:8px;padding:clamp(9px,1.5vh,15px);box-shadow:0 5px 18px #51483c17;min-height:0}
+#home .pu-newspaper button{border:0;background:none;color:inherit;padding:0;text-align:inherit;cursor:pointer}
+#home .pu-paper-head{display:grid;grid-template-columns:46px minmax(0,1fr) 43px;gap:5px;align-items:center;border-bottom:2px solid #756e67;padding-bottom:6px}
+#home .pu-paper-stamp,#home .pu-paper-number{border:1px solid #c9c2ba;padding:4px 2px;text-align:center;font-size:9px;line-height:1.25;color:#706961;cursor:pointer}
+#home .pu-paper-title{font-family:Georgia,'Times New Roman',serif;font-size:clamp(19px,5.5vw,29px);white-space:nowrap;letter-spacing:-1px;text-align:center!important;overflow:hidden;text-overflow:ellipsis}
+#home .pu-paper-meta{display:flex;justify-content:space-between;gap:5px;font-size:clamp(8px,1.5vh,10px);color:#837b73;border-bottom:1px solid #cfc8c0;padding:6px 0}
+#home .pu-paper-story{display:grid;grid-template-columns:42% 1fr;gap:10px;padding:10px 0}
+#home .pu-paper-photo{width:100%;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e9e4dd!important;color:#938b82!important;overflow:hidden;border-radius:3px;font-size:20px}
+#home .pu-paper-photo img{width:100%;height:100%;object-fit:cover}
+#home .pu-paper-photo small{font-size:9px}
+#home .pu-paper-article{display:flex;flex-direction:column;align-items:stretch;gap:clamp(5px,1vh,10px);min-width:0}
+#home .pu-paper-kicker{font-size:9px!important;color:#938b82!important}
+#home .pu-paper-headline{font-size:clamp(11px,1.7vh,14px)!important;font-weight:600;line-height:1.45;overflow-wrap:anywhere}
+#home .pu-paper-rule{height:1px;background:#d8d2ca;margin-top:auto}
+#home .pu-paper-body{font-size:clamp(10px,1.5vh,12px)!important;line-height:1.45;overflow-wrap:anywhere;color:#67615b!important}
+#home .pu-paper-ticker{border-top:2px solid #817971!important;width:100%;padding-top:7px!important;font-size:9px!important;color:#79716b!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left!important}
+@media(max-height:720px){#home .pu46-new-third{gap:8px;padding-top:5px}#home .pu-cassette{padding:10px}#home .pu-tape-window{height:65px}#home .pu-tape-reel{height:50px;width:50px}#home .pu-paper-story{padding:6px 0}#home .pu-paper-headline{font-size:11px!important}}
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -591,7 +624,7 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
  <div class="bloom-pages" id="bloomPages">
   <div class="bloom-page bloom-page-one pu44-page">
     <div class="pu44-gallery">
-      <div class="pu44-gallery-top"><span>♡ My little gallery</span><span class="pu44-gallery-hint">点击照片更换</span></div>
+      
       <div class="pu44-triptych">
         <button onclick="bloomPick('gallery1')" class="pu44-photo" id="bloomImg_gallery1" aria-label="更换第一张照片">＋<small>导入图片</small></button>
         <button onclick="bloomPick('gallery2')" class="pu44-photo" id="bloomImg_gallery2" aria-label="更换第二张照片">＋<small>导入图片</small></button>
@@ -614,11 +647,30 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
         <div class="pu44-music-controls"><button onclick="skipMusic(-1)" aria-label="上一首">◁</button><button onclick="toggleMusic()" data-bloom-play aria-label="播放暂停">▷</button><button onclick="skipMusic(1)" aria-label="下一首">▷|</button><button onclick="go('music')" aria-label="音乐列表">☷</button></div>
       </div>
     </div>
-    <div class="pu44-footer-quote">♡ my own little universe ♡</div>
+    
     <div class="pu44-clock-hidden" id="homeTime"></div><div class="pu44-clock-hidden" id="bloomBigDate"></div>
   </div>
   <div class="bloom-page bloom-page-two"><div class="bloom-grid bloom-grid-second" id="bloomGrid2"></div><div class="bloom-collage"><button class="bloom-polaroid collage-a" onclick="bloomPick('polaroid2')"><div class="bloom-img" id="bloomImg_polaroid2">＋<small>导入图片</small></div><em>see you tomorrow</em></button><button class="bloom-polaroid collage-b" onclick="bloomPick('polaroid3')"><div class="bloom-img" id="bloomImg_polaroid3">＋<small>导入图片</small></div><em>dear you</em></button><button class="bloom-polaroid collage-c" onclick="bloomPick('polaroid4')"><div class="bloom-img" id="bloomImg_polaroid4">＋<small>导入图片</small></div><em>my melody</em></button></div><button class="bloom-quote" onclick="bloomEditText('quote')"><span id="bloomQuoteText">人的心臟都在左邊，要怎樣擁抱才能心心相印</span></button></div>
-  <div class="bloom-page bloom-page-three"><div class="bloom-cover"><button class="bloom-cover-picture" onclick="bloomPick('cover')" aria-label="修改名片背景"><div id="bloomImg_cover" class="bloom-cover-img">＋<small>导入名片背景</small></div></button><button class="bloom-cover-avatar" onclick="bloomPick('myavatar')" id="bloomImg_myavatar">＋<small>头像</small></button><button class="bloom-cover-identity" onclick="bloomEditText('profile')"><strong id="bloomCoverName">我的名片</strong><span id="bloomCoverQuote">点击编辑个性签名</span></button></div><div class="bloom-us"><div class="bloom-us-title"><span>I</span><span>U</span></div><div class="bloom-circles"><button onclick="bloomPick('us1')" id="bloomImg_us1">＋<small>导入图片</small></button><button onclick="bloomPick('us2')" id="bloomImg_us2">＋<small>导入图片</small></button></div><p>a little piece of us</p><div class="bloom-large-player"><strong data-bloom-song>暂无播放歌曲</strong><small>‧˚₊世界の片隅で私に属するあなたを見つける‧₊˚</small><input aria-label="播放进度" class="bloom-seek" type="range" min="0" max="100" value="0" oninput="seekMusic(this.value)"><div class="bloom-controls"><button onclick="bloomToggleRepeat()" data-bloom-repeat aria-label="循环播放"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg></button><button onclick="skipMusic(-1)" aria-label="上一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6Z"/></svg></button><button onclick="toggleMusic()" data-bloom-play aria-label="播放暂停"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5.5 19 12 9 18.5Z"/></svg></button><button onclick="skipMusic(1)" aria-label="下一首"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M6 6l9 6-9 6Z"/></svg></button><button onclick="go('music')" aria-label="打开音乐列表"><svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg></button></div></div></div></div>
+  <div class="bloom-page bloom-page-three pu46-new-third">
+    <div class="pu-cassette" aria-label="录音带音乐播放器">
+      <div class="pu-cassette-top"><span>POCKET UNIVERSE · TAPE 01</span><span>STEREO</span></div>
+      <div class="pu-cassette-label"><span data-bloom-song>暂无播放歌曲</span><small>MY LITTLE MIXTAPE</small></div>
+      <div class="pu-tape-window"><div class="pu-tape-reel"><span></span></div><div class="pu-tape-ribbon"></div><div class="pu-tape-reel"><span></span></div></div>
+      <div class="pu-tape-controls">
+        <button onclick="skipMusic(-1)" aria-label="上一首"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6Z"/></svg></button>
+        <button onclick="toggleMusic()" data-bloom-play aria-label="播放或暂停"><svg viewBox="0 0 24 24"><path d="M9 5.5 19 12 9 18.5Z"/></svg></button>
+        <button onclick="skipMusic(1)" aria-label="下一首"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l9 6-9 6Z"/></svg></button>
+        <button onclick="go('music')" aria-label="打开音乐列表"><svg viewBox="0 0 24 24"><path d="M7 7h13M7 12h13M7 17h13M3 7h.1M3 12h.1M3 17h.1"/></svg></button>
+      </div>
+      <input aria-label="录音带播放进度" class="bloom-seek" type="range" min="0" max="100" value="0" oninput="seekMusic(this.value)">
+    </div>
+    <article class="pu-newspaper" aria-label="可编辑的每日小报">
+      <div class="pu-paper-head"><span class="pu-paper-stamp" onclick="puPaperEdit('stamp')" role="button" tabindex="0" aria-label="编辑报纸角标" id="puPaperStamp">只印<br>一份</span><button class="pu-paper-title" id="puPaperTitle" onclick="puPaperEdit('title')">The Universe Daily</button><span class="pu-paper-number" onclick="puPaperEdit('number')" role="button" tabindex="0" id="puPaperNumber">NO.<br>001</span></div>
+      <div class="pu-paper-meta"><button id="puPaperDate" onclick="puPaperEdit('date')">2026.10.21 · WED</button><span>DAILY EDITION</span></div>
+      <div class="pu-paper-story"><button class="pu-paper-photo" id="bloomImg_paperphoto" onclick="bloomPick('paperphoto')" aria-label="更换报纸照片">＋<small>添加照片</small></button><div class="pu-paper-article"><button class="pu-paper-kicker" id="puPaperKicker" onclick="puPaperEdit('kicker')">头条 · HEADLINE</button><button class="pu-paper-headline" id="puPaperHeadline" onclick="puPaperEdit('headline')">今天也有值得记录的小事。</button><div class="pu-paper-rule"></div><button class="pu-paper-body" id="puPaperBody" onclick="puPaperEdit('body')">属于我们的日常，都值得被珍藏。</button></div></div>
+      <button class="pu-paper-ticker" id="puPaperTicker" onclick="puPaperEdit('ticker')">快讯　/　A LITTLE PIECE OF LIFE　/　每一天都值得纪念</button>
+    </article>
+  </div>
  </div>
  <div id="bloomAppDrawer" class="bloom-app-drawer" aria-hidden="true"><div class="bloom-app-drawer-inner"><button class="bloom-drawer-close" onclick="bloomCloseApps()">关闭 ×</button><h3>全部应用</h3><div id="bloomAllApps"></div></div></div>
  <div class="bloom-dots" id="bloomDots"><button class="on" onclick="bloomPage(0)" aria-label="第一页"></button><button onclick="bloomPage(1)" aria-label="第二页"></button><button onclick="bloomPage(2)" aria-label="第三页"></button></div>
@@ -927,7 +979,7 @@ function bloomPick(slot){bloomPickSlot=slot;$('bloomFile').click()}
 async function bloomFileChosen(input){const f=input.files?.[0];input.value='';if(!f)return;if(!f.type.startsWith('image/'))return toast('请选择图片');if(f.size>8*1024*1024)return toast('图片请小于 8MB');let id='bloom_'+uid();try{let db=await diyOpenAssets();await new Promise((resolve,reject)=>{let req=db.transaction('diy_assets','readwrite').objectStore('diy_assets').put({id,name:f.name,blob:f});req.onsuccess=resolve;req.onerror=()=>reject(req.error)});bloomMeta[bloomPickSlot]=id;bloomSave();await diyLoadAssets();bloomRenderHome();toast('图片已保存 ♡')}catch(e){console.error(e);toast('导入失败，请检查存储空间')}}
 function bloomSlot(slot){let id=bloomMeta[slot],url=id&&diyAssetUrl(id),el=$('bloomImg_'+slot);if(!el)return;if(url){el.innerHTML='<img alt="自定义图片" src="'+url+'">'}else{el.innerHTML=(slot==='chatleft'||slot==='chatright')?'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>':'＋<small>'+(slot==='musicart'?'导入图片':slot==='myavatar'?'头像':'导入图片')+'</small>'}}
 function bloomIcon(id){let item=appItems.find(a=>a[0]===id);if(!item)return '';let i=diySaved.icons[id]||{},url=diyAssetUrl(i.asset);return `<button class="bloom-icon" onclick="go('${id}')"><span class="bloom-icon-symbol">${url?'<img alt="" src="'+url+'">':(id==='calls'?'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.1 10a16 16 0 0 0 6 6l1.5-1.9a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.6 2.9Z"/></svg>':item[1])}</span><span>${esc(i.name||item[2])}</span></button>`}
-function bloomRenderHome(){bloomClockApply();const d=new Date();$('homeTime').textContent=d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});$('homeDate').textContent=d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('bloomBigDate').textContent=$('homeDate').textContent;$('lockQuote').textContent=state.settings.quote;$('footerText').textContent=state.settings.footer;const order=[...new Set([...(diySaved.order||[]),...appItems.map(a=>a[0])])];$('bloomGrid1').innerHTML=['chat','world','memories','photos'].map(bloomIcon).join('');$('bloomGrid2').innerHTML=['moments','notes','persona','backup'].map(bloomIcon).join('');$('bloomDock').innerHTML=['profile','music','diy','settings'].map(id=>id==='diy'?`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`:bloomIcon(id)).join('');for(let slot of ['polaroid1','polaroid2','polaroid3','polaroid4','cover','myavatar','musicart','us1','us2','gallery1','gallery2','gallery3','round1','round2','round3','round4'])bloomSlot(slot);$('bloomCoverName').textContent=bloomMeta.myname||'我的名片';$('bloomCoverQuote').textContent=bloomMeta.mysign||'点击编辑个性签名';$('bloomQuoteText').textContent=bloomMeta.quote??'人的心臟都在左邊，要怎樣擁抱才能心心相印';$('appGrid').innerHTML=order.map(bloomIcon).join('');$('bloomAllApps').innerHTML=order.map(bloomIcon).join('')+`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`;diyApply(diySaved);bloomSyncMusic()}
+function bloomRenderHome(){bloomClockApply();const d=new Date();$('homeTime').textContent=d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});$('homeDate').textContent=d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('bloomBigDate').textContent=$('homeDate').textContent;$('lockQuote').textContent=state.settings.quote;$('footerText').textContent=state.settings.footer;const order=[...new Set([...(diySaved.order||[]),...appItems.map(a=>a[0])])];$('bloomGrid1').innerHTML=['chat','world','memories','photos'].map(bloomIcon).join('');$('bloomGrid2').innerHTML=['moments','notes','persona','backup'].map(bloomIcon).join('');$('bloomDock').innerHTML=['profile','music','diy','settings'].map(id=>id==='diy'?`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`:bloomIcon(id)).join('');for(let slot of ['polaroid1','polaroid2','polaroid3','polaroid4','cover','myavatar','musicart','us1','us2','gallery1','gallery2','gallery3','round1','round2','round3','round4','paperphoto'])bloomSlot(slot);$('bloomCoverName').textContent=bloomMeta.myname||'我的名片';$('bloomCoverQuote').textContent=bloomMeta.mysign||'点击编辑个性签名';$('bloomQuoteText').textContent=bloomMeta.quote??'人的心臟都在左邊，要怎樣擁抱才能心心相印';$('appGrid').innerHTML=order.map(bloomIcon).join('');$('bloomAllApps').innerHTML=order.map(bloomIcon).join('')+`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`;diyApply(diySaved);if(typeof puPaperRender==='function')puPaperRender();bloomSyncMusic()}
 function bloomPage(n){const el=$('bloomPages');el.scrollTo({left:el.clientWidth*n,behavior:'smooth'})}
 $('bloomPages').addEventListener('scroll',()=>{let el=$('bloomPages'),n=Math.max(0,Math.min(2,Math.round(el.scrollLeft/el.clientWidth)));document.querySelectorAll('#bloomDots button').forEach((b,i)=>b.classList.toggle('on',i===n))},{passive:true});
 function bloomEdit(){bloomEditing=!bloomEditing;$('home').classList.toggle('bloom-editing',bloomEditing);toast(bloomEditing?'点击照片可导入图片；美化 APP 可更换图标':'整理完成')}
@@ -1416,4 +1468,10 @@ else puCropBind();
  const previous=bloomRenderHome;bloomRenderHome=function(){previous();apply()};
  options();apply();try{bloomRenderHome()}catch(err){console.warn('图标预览稍后更新',err)}
 })();
+</script><script>
+/* Editable newspaper fields reuse the base version's bloomMeta persistence. */
+const puPaperDefaults={stamp:'只印\n一份',number:'NO.\n001',title:'The Universe Daily',date:'2026.10.21 · WED',kicker:'头条 · HEADLINE',headline:'今天也有值得记录的小事。',body:'属于我们的日常，都值得被珍藏。',ticker:'快讯　/　A LITTLE PIECE OF LIFE　/　每一天都值得纪念'};
+function puPaperRender(){for(const [key,def] of Object.entries(puPaperDefaults)){const el=document.getElementById('puPaper'+key[0].toUpperCase()+key.slice(1));if(el){el.textContent=bloomMeta['paper_'+key]??def;if(key==='stamp'||key==='number')el.style.whiteSpace='pre-line';}}}
+function puPaperEdit(key){const def=puPaperDefaults[key];const value=prompt('编辑报纸文字',bloomMeta['paper_'+key]??def);if(value===null)return;bloomMeta['paper_'+key]=value.trim().slice(0,160);bloomSave();puPaperRender()}
+if(typeof bloomRenderHome==='function')puPaperRender();
 </script></body></html>
