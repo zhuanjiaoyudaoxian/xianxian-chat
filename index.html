@@ -531,6 +531,28 @@ html[data-chat-avatar-shape="square"] #chat .msg .avatar,html[data-chat-avatar-s
 #chat .pu-mode-panel{z-index:9}
 @media(max-width:370px){#chat .pu-ref-header{padding-left:10px;padding-right:10px}#chat .pu-ref-actions{gap:0}#chat .msg .bubble{font-size:14px!important}}
 
+
+/* 喂喂机完整深色外观：只影响内置控件，保留头像、壁纸与用户图片 */
+html[data-pu-mode="dark"]{color-scheme:dark;--bg:#111216;--panel:#22242a;--ink:#f0f0f3;--muted:#aaaab3;--soft:#1b1d23;--line:#393b43;--other:#343740;--mine:#334a3b;--shadow:0 8px 28px #0005;--card:#22242a;--text:#f0f0f3}
+html[data-pu-mode="dark"] :is(.screen,.card,.bar,.modal,.modal-content,.dialog,.sheet,.panel,.settings-panel,.wei-settings-group,.wei-settings-link,.wei-prompt-page,.wei-prompt-card,.pu-mode-panel,.pu-contact-row,.pu-char-card,.pu-char-summary,.pu-main-tabs,.composer,.bloom-app-drawer-inner){color:var(--ink);border-color:var(--line)}
+html[data-pu-mode="dark"] :is(.wei-settings-link,.wei-settings-group,.wei-prompt-card,.modal-content,.dialog,.sheet,.panel,.settings-panel,.pu-mode-panel){background:#22242a!important;color:#f0f0f3!important;border-color:#393b43!important}
+html[data-pu-mode="dark"] :is(input:not([type=color]),textarea,select){background:#2b2d35!important;color:#f0f0f3!important;border-color:#444650!important}
+html[data-pu-mode="dark"] :is(input,textarea)::placeholder{color:#9a9ba5}
+html[data-pu-mode="dark"] :is(.muted,.hint,.sub,.desc,.wei-settings-caption){color:#aaaab3!important}
+html[data-pu-mode="dark"] :is(button,.btn){border-color:#444650}
+html[data-pu-mode="dark"] :is(.msg .bubble,.bubble){color:#f0f0f3}
+html[data-pu-mode="dark"] .msg:not(.mine) .bubble{background:#353740!important;color:#f0f0f3!important}
+html[data-pu-mode="dark"] .msg.mine .bubble{background:#334a3b!important;color:#e3f2e5!important}
+.wei-theme-overlay{position:fixed;inset:0;background:#0008;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:24px}
+.wei-theme-dialog{width:min(340px,100%);background:#fff;color:#202126;border-radius:20px;padding:12px 18px;box-shadow:0 15px 45px #0004;font-family:inherit}
+.wei-theme-title{text-align:center;font-size:16px;font-weight:650;padding:12px 0 15px}
+.wei-theme-dialog button{display:flex;width:100%;justify-content:space-between;align-items:center;background:transparent;border:0;border-top:1px solid #e9e9ec;color:inherit;text-align:left;font-size:15px;padding:16px 8px;cursor:pointer}
+.wei-theme-dialog .wei-theme-tick{font-weight:700;font-size:19px}
+.wei-theme-dialog .wei-theme-cancel{justify-content:center;color:#777;margin-top:4px}
+html[data-pu-mode="dark"] .wei-theme-dialog{background:#22242a;color:#f1f1f4}
+html[data-pu-mode="dark"] .wei-theme-dialog button{border-color:#393b43;color:#f1f1f4}
+html[data-pu-mode="dark"] .wei-theme-dialog .wei-theme-cancel{color:#aaaab3}
+
 </style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
@@ -1416,6 +1438,15 @@ function puRenderPresets(){let el=$('puPresetList');if(!el)return;el.innerHTML=p
 function puRenamePreset(id){let p=puPresets.find(x=>x.id===id);if(!p)return;let n=prompt('修改主题名称',p.name);if(n===null||!n.trim())return;p.name=n.trim().slice(0,35);localStorage.setItem(PU_PRESETS,JSON.stringify(puPresets));puRenderPresets()}
 function puDeletePreset(id){if(!confirm('删除这个主题预设？不会删除正在使用的桌面。'))return;puPresets=puPresets.filter(p=>p.id!==id);localStorage.setItem(PU_PRESETS,JSON.stringify(puPresets));puRenderPresets()}
 async function puUsePreset(id){const p=puPresets.find(x=>x.id===id);if(!p)return;if(!confirm('切换到「'+p.name+'」？当前未保存的装扮将被替换。'))return;try{bloomMeta=JSON.parse(JSON.stringify(p.bloom));bloomSave();bloomTheme=p.theme;localStorage.setItem(BLOOM_THEME_KEY,bloomTheme);diySaved=diyClone(p.diy);diyDraft=diyClone(diySaved);localStorage.setItem(DIY_KEY,JSON.stringify(diySaved));puSetMode(p.mode||'light');await diyLoadAssets();diyApply(diySaved);bloomThemeApply();bloomRenderHome();renderChat();toast('已切换到 '+p.name)}catch(e){console.error(e);toast('切换失败，请检查主题素材')}}
+function weiThemeOpen(){
+ let old=document.getElementById('weiThemeOverlay');if(old){old.remove()}
+ const overlay=document.createElement('div');overlay.id='weiThemeOverlay';overlay.className='wei-theme-overlay';
+ const current=puMode==='dark'?'dark':'light';
+ overlay.innerHTML='<div class="wei-theme-dialog" role="dialog" aria-modal="true" aria-label="外观模式"><div class="wei-theme-title">外观模式</div><button type="button" data-mode="light"><span>☀ &nbsp; 日间模式</span><span class="wei-theme-tick">'+(current==='light'?'✓':'')+'</span></button><button type="button" data-mode="dark"><span>☾ &nbsp; 夜间模式</span><span class="wei-theme-tick">'+(current==='dark'?'✓':'')+'</span></button><button type="button" class="wei-theme-cancel">取消</button></div>';
+ overlay.addEventListener('click',e=>{if(e.target===overlay||e.target.closest('.wei-theme-cancel')){overlay.remove();return}const b=e.target.closest('[data-mode]');if(b){puSetMode(b.dataset.mode);overlay.remove();weiThemeSyncLabel()}});
+ document.body.appendChild(overlay);
+}
+function weiThemeSyncLabel(){document.querySelectorAll('.wei-settings-link').forEach(b=>{if(b.querySelector('.wei-setting-label')?.textContent==='夜间模式'){b.setAttribute('aria-label','夜间模式，当前'+(puMode==='dark'?'夜间':'日间'))}})}
 function puSetMode(mode){if(!['light','dark','auto'].includes(mode))return;puMode=mode;localStorage.setItem(PU_MODE,mode);puApplyMode()}
 function puApplyMode(){let dark=puMode==='dark'||(puMode==='auto'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.puMode=dark?'dark':'light';if($('puMode'))$('puMode').value=puMode}
 if(window.matchMedia){window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',puApplyMode)}
@@ -2935,7 +2966,7 @@ if($id('worldList'))renderWorld();
     if(route==='apiLogs'){weiShowApiLogs();return}if(route==='smartMemory'){weiSmartOpen();return}
     if(route==='unsupported'){toast('「'+name+'」尚未在当前版本实现，暂不能使用');return}
     if(route==='guide'){toast('新手指南尚未提供独立页面');return}
-    if(route==='night'){const sel=el('diy')?.querySelector('select');go('diy');if(sel)sel.focus();return}
+    if(route==='night'){weiThemeOpen();return}
     if(name==='API 自检'){weiApiCheckOpen();return}if(route==='stickers'){if(typeof puStickerManagerOpen==='function')puStickerManagerOpen();else toast('表情包管理暂不可用');return}
     if(route==='chatPrompt'){weiPromptOpen();return}if(route==='details'){if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'start'})}return}
     go(route);
