@@ -1919,21 +1919,39 @@ document.addEventListener('DOMContentLoaded',()=>{});
 <script id="pu-hub-script">
 (function(){
 const ACC_KEY='pu_chat_accounts_v1';const LAST_KEY='pu_chat_active_account_v1';
+// IndexedDB is the authoritative large-data store. Existing localStorage is retained as a migration backup.
+const puBigDB=(()=>{let dbPromise;const open=()=>dbPromise||(dbPromise=new Promise((resolve,reject)=>{if(!window.indexedDB)return reject(new Error('浏览器不支持 IndexedDB'));const r=indexedDB.open('pu_large_storage_v1',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('data'))r.result.createObjectStore('data')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)}));
+const read=async key=>{const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction('data','readonly');const r=tx.objectStore('data').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})};
+const write=async(key,value)=>{const db=await open();return new Promise((resolve,reject)=>{const tx=db.transaction('data','readwrite');tx.objectStore('data').put(value,key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})};
+return{read,write}})();
+let puBigReady=false;let puBigPending=false;let puBigSaving=Promise.resolve();
+function puBigCommit(){if(!puBigReady){puBigPending=true;return}const snapshot={accounts:clone(accounts),activeId,state:clone(state),chars:clone(puChars)};puBigSaving=puBigSaving.catch(()=>{}).then(()=>puBigDB.write('snapshot',snapshot)).catch(e=>{console.error('IndexedDB 保存失败',e);toast('数据保存失败：请先备份数据，勿刷新页面')});}
 const clone=v=>JSON.parse(JSON.stringify(v));
 let accounts;try{accounts=JSON.parse(localStorage.getItem(ACC_KEY)||'null')}catch(e){}
 if(!Array.isArray(accounts)||!accounts.length){accounts=[{id:'user_main',name:'主账号',profile:clone(puUser),banner:localStorage.getItem(PU_X_BANNER)||'',chars:clone(puChars),activeChar:puChars.current,wallet:{balance:5200,records:[]}}];}
 let activeId=localStorage.getItem(LAST_KEY)||accounts[0].id;
 if(!accounts.some(a=>a.id===activeId))activeId=accounts[0].id;
 const current=()=>accounts.find(a=>a.id===activeId)||accounts[0];
-function saveAccounts(){try{localStorage.setItem(ACC_KEY,JSON.stringify(accounts));localStorage.setItem(LAST_KEY,activeId)}catch(e){toast('账号数据保存失败：请检查浏览器存储空间')}}
+function saveAccounts(){try{localStorage.setItem(LAST_KEY,activeId)}catch(e){}puBigCommit()}
 function capture(){const a=current();if(!a)return;const char=puChars.list.find(x=>x.id===puChars.current);if(char)char.data=puCaptureChar();a.profile=clone(puUser);a.banner=localStorage.getItem(PU_X_BANNER)||'';a.chars=clone(puChars);a.activeChar=puChars.current;a.moments=clone(state.moments||[]);}
-let restoring=false;function restore(a){restoring=true;puUser=clone(a.profile);puUser.id=a.id;localStorage.setItem(PU_USER,JSON.stringify(puUser));if(a.banner)localStorage.setItem(PU_X_BANNER,a.banner);else localStorage.removeItem(PU_X_BANNER);puChars=clone(a.chars);puChars.current=a.activeChar||puChars.current;const char=puChars.list.find(c=>c.id===puChars.current)||puChars.list[0];if(char){puChars.current=char.id;puSelectedChar=char.id;for(const k of puCharFields){if(char.data[k]!==undefined)state[k]=clone(char.data[k]);else if(['messages','memories','world'].includes(k))state[k]=[];}}state.moments=Array.isArray(a.moments)?clone(a.moments):[];puStoreChars();puOriginalPersist();restoring=false;}
+let restoring=false;function restore(a){restoring=true;puUser=clone(a.profile);puUser.id=a.id;localStorage.setItem(PU_USER,JSON.stringify(puUser));if(a.banner)localStorage.setItem(PU_X_BANNER,a.banner);else localStorage.removeItem(PU_X_BANNER);puChars=clone(a.chars);puChars.current=a.activeChar||puChars.current;const char=puChars.list.find(c=>c.id===puChars.current)||puChars.list[0];if(char){puChars.current=char.id;puSelectedChar=char.id;for(const k of puCharFields){if(char.data[k]!==undefined)state[k]=clone(char.data[k]);else if(['messages','memories','world'].includes(k))state[k]=[];}}state.moments=Array.isArray(a.moments)?clone(a.moments):[];try{puStoreChars()}catch(e){}restoring=false;}
 // On startup, recover the account last used, not the old shared chat cache.
-restore(current());saveAccounts();
+restore(current());
+// Migrate once without deleting the old data. Wait for the database read before writing anything.
+puBigDB.read('snapshot').then(saved=>{
+ if(saved&&Array.isArray(saved.accounts)&&saved.accounts.length){
+  accounts=saved.accounts;activeId=saved.activeId||activeId;
+  if(!accounts.some(a=>a.id===activeId))activeId=accounts[0].id;
+  if(saved.state&&typeof saved.state==='object')Object.assign(state,saved.state);
+  restore(current());
+  try{renderChat();puRenderUser();if(typeof puInboxRefresh==='function')puInboxRefresh()}catch(e){console.warn('界面恢复',e)}
+ }
+ puBigReady=true;puBigCommit();
+}).catch(e=>{console.error('IndexedDB 初始化失败',e);toast('大容量存储不可用，请先备份数据');});
 const originalPersist=persist;
-persist=function(){const result=originalPersist();if(!restoring){capture();saveAccounts()}return result};
+persist=function(){if(!restoring){capture();saveAccounts()}return true};
 const originalStore=puStoreChars;
-puStoreChars=function(){const result=originalStore();if(!restoring){capture();saveAccounts()}return result};
+puStoreChars=function(){if(!restoring){capture();saveAccounts()}return true};
 window.puHubSwitchAccount=function(id){if(sending)return toast('请等待回复完成后再切换账号');if(id===activeId)return puHubAccountClose();const next=accounts.find(a=>a.id===id);if(!next)return;capture();saveAccounts();activeId=id;restore(next);saveAccounts();puHubAccountClose();puHubRenderMe();if(typeof puRenderUser==='function')puRenderUser();renderChat();if(typeof puInboxRefresh==='function')puInboxRefresh();toast('已切换到 '+(puUser.name||next.name));};
 window.puHubNewAccount=function(){if(sending)return toast('请等待回复完成后再创建账号');const name=prompt('给新小号取一个名字','新身份');if(name===null)return;const id='user_'+Date.now().toString(36);capture();const blank=clone(puChars);blank.list=blank.list.map(c=>({...c,data:{...clone(c.data),messages:[],memories:[],summary:'',summaryText:''}}));accounts.push({id,name:name.trim()||'新身份',profile:{name:name.trim()||'新身份',nickname:'',birthday:'',signature:'',personality:'',hobbies:'',about:'',avatar:''},banner:'',chars:blank,activeChar:blank.current,moments:[],wallet:{balance:5200,records:[]}});saveAccounts();puHubSwitchAccount(id);};
 window.puHubAccountOpen=function(){capture();saveAccounts();const list=document.getElementById('puHubAccountList');list.innerHTML=accounts.map(a=>`<button class="pu-me-account" data-id="${a.id}" onclick="puHubSwitchAccount(this.dataset.id)"><span class="pu-me-account-avatar">${a.profile.avatar?`<img src="${a.profile.avatar}" alt="">`:puMeSvg('user')}</span><span>${esc(a.profile.name||a.name)}</span>${a.id===activeId?'<span style="margin-left:auto">当前账号</span>':''}</button>`).join('');document.getElementById('puHubAccountSheet').classList.add('open')};
