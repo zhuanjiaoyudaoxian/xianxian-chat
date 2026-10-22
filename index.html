@@ -1289,42 +1289,77 @@ let sending=false;
 let puReplyController=null,puReplyStopped=false;
 function puUpdateReplyButtons(){const start=document.getElementById('puStartBtn'),send=document.getElementById('sendBtn'),input=document.getElementById('chatInput');if(start){start.innerHTML=sending?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="7.5" width="9" height="9" rx="1.6" fill="currentColor"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.7 17 12l-8 5.3z" fill="currentColor"/></svg>';start.title=sending?'停止 Char 输出':'开始 Char 回复';start.setAttribute('aria-label',start.title)}if(send)send.disabled=sending;if(input){input.disabled=sending;input.placeholder=sending?'Char 正在回复…':'发送消息…'}}
 function sendMessage(){const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;input.value='';state.messages.push({id:uid(),role:'user',content:text,date:now(),puHandled:false});autoMemory(text);persist();renderChat();puUpdateReplyButtons()}
-function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();$('typing').classList.remove('show');toast('已停止 Char 输出');return;}puGenerateQueuedReply()}
+const WEI_REPLY_RESCUE='wei_reply_rescue_v2';
+function weiRescueRead(){try{return JSON.parse(localStorage.getItem(WEI_REPLY_RESCUE)||'null')}catch(e){return null}}
+function weiRescueWrite(data){try{localStorage.setItem(WEI_REPLY_RESCUE,JSON.stringify(data));return true}catch(e){console.warn('回复救援缓存失败',e);return false}}
+function weiRescueClear(){try{localStorage.removeItem(WEI_REPLY_RESCUE)}catch(e){}}
+function weiRescueRecover(){
+ const r=weiRescueRead();if(!r||!r.raw)return;
+ if(r.charId!==puChars.current)return toast('有其他角色的未显示回复，切换到该角色后可恢复');
+ if(!confirm('检测到一次 API 已成功生成、但可能未显示的回复。要恢复到当前聊天吗？'))return;
+ try{
+  const parts=puParseChatReplies(r.raw);let added=0;
+  for(let i=0;i<parts.length;i++){
+   const source=parts[i].replace(/\[STICKER:[^\]]+\]/g,'').trim();
+   if(!source)continue;
+   let parsed=weiParseCharOutput(source);if(!parsed.length)parsed=[{id:uid(),role:'assistant',content:source,date:now()}];
+   for(const m of parsed){if(!state.messages.some(x=>x.puRescueKey===r.key+':'+i+':'+added)){m.puRescueKey=r.key+':'+i+':'+added;state.messages.push(m)}added++}
+  }
+  if(!added)throw Error('没有可恢复的文本');
+  if(!persist())throw Error('存储空间不足');
+  for(const m of state.messages)if(r.pendingIds?.includes(m.id))m.puHandled=true;
+  persist();weiRescueClear();renderChat();toast('已恢复 '+added+' 条消息');
+ }catch(e){console.error(e);toast('恢复失败：'+e.message)}
+}
+function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();toast('正在停止 Char 输出');return;}if(weiRescueRead()?.charId===puChars.current){weiRescueRecover();return}void puGenerateQueuedReply()}
 async function puGenerateQueuedReply(){
  if(sending)return;
- const pending=state.messages.filter(m=>m.role==='user' && !m.puHandled);
- if(!pending.length){toast('请先发送消息');return;}
- const text=pending.map(m=>m.content).join('\n');
- pending.forEach(m=>m.puHandled=true);persist();
+ const pending=state.messages.filter(m=>m.role==='user'&&!m.puHandled);
+ if(!pending.length){toast('请先发送消息');return}
+ const charId=puChars.current,pendingIds=pending.map(m=>m.id),text=pending.map(m=>m.content).join('\n');
  sending=true;puReplyController=new AbortController();puReplyStopped=false;puUpdateReplyButtons();
  $('typing').classList.add('show');scrollChat();
- let reply='',error='';
+ let raw='',saved=0;
  try{
   if(state.api.mode==='remote'){
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.role==='user'?'[消息ID:'+x.id+'] '+x.content:x.content}));
-   const weiStickerChoices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[];
-   const weiStickerGuide=weiStickerChoices.length?'\n你可以根据人设和当前语境偶尔发送表情包，仅在合适时使用。可用表情包：'+JSON.stringify(weiStickerChoices)+'。如需发送，在回复文字最后添加 [STICKER:对应id]，不要编造id；无需发送则不加。':' ';
-   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。只有符合人设和当前情境时才主动转账，不要频繁转账。转账请在一条独立JSON字符串消息中写【转账:52.00|备注:去吃饭】；备注要贴合当下对话、关系及角色口吻，可省略备注（写【转账:52.00】），不得随意套模板。金额为人民币元，勿在普通对话里输出转账标记。若引用用户真实发过的消息，在回复开头写【引用ID:消息ID】；从上下文消息中选择有意义的真实消息，必要时才引用，不要机械引用最后一句。'+weiStickerGuide : systemPrompt(recent)+'\n\n'+puConversationPrompt()+weiStickerGuide+'\n你可以自然地针对用户某条消息引用回复。需要引用时，在该条回复开头写【引用:用户原消息】；不要每条都引用。',{signal:puReplyController.signal,kind:'Char 聊天'});
-  }else reply=localReply(text);
- }catch(e){error=e.message;reply=''}
- if(puReplyStopped){$('typing').classList.remove('show');sending=false;puUpdateReplyButtons();return;}
- let parts=error?[]:puParseChatReplies(reply);
- if(puChatOptions.reply==='one')parts=parts.slice(0,1);
- if(!parts.length){error=error||'模型回复解析后没有有效文本';weiApiLog({model:state.api.model,status:'解析',result:'失败',preview:String(reply).slice(0,220),detail:error})}
- for(let i=0;i<parts.length;i++){
-  const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
-  await new Promise(r=>setTimeout(r,delay));
-  if(puReplyStopped)break;
-  const stickerMatches=[...parts[i].matchAll(/\[STICKER:([^\]\s]+)\]/g)];
-  const cleaned=parts[i].replace(/\[STICKER:[^\]]+\]/g,'').trim();
-  if(cleaned){const parsed=weiParseCharOutput(cleaned);for(const msg of parsed)state.messages.push(msg);}
-  for(const m of stickerMatches.slice(0,1)){const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(m[1]):null;if(sticker)state.messages.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}
-  persist();renderChat();
-  if(i===parts.length-1)$('typing').classList.remove('show');
+   let choices=[];try{choices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[]}catch(e){console.warn('表情包目录加载失败',e)}
+   if(puReplyStopped)return;
+   const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
+   const prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   raw=await requestModel(recent,prompt,{signal:puReplyController.signal,kind:'Char 聊天'});
+  }else raw=localReply(text);
+  if(puReplyStopped)return;
+  const key=uid();
+  // 原文在任何解析或 UI 更新前保存，失败或刷新后可恢复。
+  weiRescueWrite({key,charId,pendingIds,raw,time:Date.now()});
+  let parts=puParseChatReplies(raw);
+  if(puChatOptions.reply==='one')parts=parts.slice(0,1);
+  if(!parts.length)parts=[String(raw).trim()];
+  for(let i=0;i<parts.length;i++){
+   if(puReplyStopped)break;
+   const part=String(parts[i]);const stickerMatches=[...part.matchAll(/\[STICKER:([^\]\s]+)\]/g)];
+   const cleaned=part.replace(/\[STICKER:[^\]]+\]/g,'').trim();
+   let items=[];
+   if(cleaned){try{items=weiParseCharOutput(cleaned)}catch(e){console.warn('特殊消息解析失败，保留原文',e)}if(!items.length)items=[{id:uid(),role:'assistant',content:cleaned,date:now()}]}
+   // 表情包失败不应阻断文字消息。
+   if(stickerMatches.length){try{const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(stickerMatches[0][1]):null;if(sticker)items.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}catch(e){console.warn('表情包读取失败',e)}}
+   for(let j=0;j<items.length;j++){items[j].puRescueKey=key+':'+i+':'+j;state.messages.push(items[j]);saved++}
+   if(!persist())throw Error('消息保存失败，请检查浏览器存储空间');
+   try{renderChat()}catch(e){console.error('消息已保存，但界面渲染失败',e)}
+  }
+  if(saved){pending.forEach(m=>m.puHandled=true);if(!persist())throw Error('回复已显示，但处理标记保存失败');weiRescueClear();}
+  else if(!puReplyStopped)throw Error('模型生成了回复，但没有可显示的消息');
+  if(!puReplyStopped&&saved&&state.api.mode==='remote')Promise.resolve().then(()=>maybeSummarize()).catch(e=>console.warn('摘要失败',e));
+ }catch(e){
+  console.error('Char 回复处理失败',e);
+  weiApiLog({model:state.api.model,status:'处理',result:'失败',preview:String(raw).slice(0,220),detail:e.message});
+  toast('回复处理失败：'+e.message+'；可再次点击生成尝试恢复');
+ }finally{
+  // 无论成功、解析异常、存储异常、停止或网络超时，都必须释放全局锁。
+  sending=false;puReplyController=null;puReplyStopped=false;
+  $('typing')?.classList.remove('show');puUpdateReplyButtons();
  }
- if(error){$('typing').classList.remove('show');$('chatStatus').textContent='接口回复失败 · 请查看 API 运行日志';toast('未生成 Char 消息：'+error)}
- sending=false;puUpdateReplyButtons();
- if(!error && !puReplyStopped && state.api.mode==='remote') Promise.resolve().then(()=>maybeSummarize()).catch(e=>console.warn('后台摘要失败',e));
 }
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 /* 模拟通话与本地通话记录：不访问真实电话网络 */
@@ -3425,6 +3460,7 @@ puConversationPrompt=function(){const original=originalConversation();if(puChatO
 
 // Quote presentation and pending-message state (preserve existing bubble rendering).
 const puOriginalRenderQuoted=renderChat;
+function weiQuoteName(m){return m.role==='user'?(puUser.name||'我'):(state.persona.remark||state.persona.nickname||displayName())}
 renderChat=function(){
  puOriginalRenderQuoted();
  const nodes=[...$('chatList').children];
@@ -3435,16 +3471,16 @@ renderChat=function(){
    const target=state.messages.find(x=>x.id===m.puQuoteId);
    const preview=target?(target.content||target.puNote||'[转账]'):(m.puQuote||'');
    const bubble=node.querySelector('.bubble')||node.querySelector('.pu-msg-content');
-   if(bubble&&preview){const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+(target?(target.role==='user'?'我':'Char')+'：':'')+preview.slice(0,150);quote.title='点击定位原消息';quote.onclick=e=>{e.stopPropagation();if(target)weiJumpToQuote(target.id)};bubble.prepend(quote)}
+   if(bubble&&preview){const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+(target?weiQuoteName(target)+'：':'')+preview.slice(0,150);quote.title='点击定位原消息';quote.onclick=e=>{e.stopPropagation();if(target)weiJumpToQuote(target.id)};bubble.prepend(quote)}
   }
   const content=node.querySelector('.bubble')||node.querySelector('.pu-msg-content');
-  if(content){content.addEventListener('contextmenu',e=>{e.preventDefault();weiChooseQuote(m.id)});let timer,moved=false;content.addEventListener('touchstart',()=>{moved=false;timer=setTimeout(()=>{timer=null;if(!moved)weiChooseQuote(m.id)},550)},{passive:true});content.addEventListener('touchmove',()=>{moved=true;clearTimeout(timer)},{passive:true});content.addEventListener('touchend',()=>clearTimeout(timer),{passive:true});content.addEventListener('touchcancel',()=>clearTimeout(timer),{passive:true})}
+  if(content){content.addEventListener('dblclick',e=>{e.preventDefault();weiChooseQuote(m.id)});let lastTap=0;content.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTap<350){e.preventDefault();weiChooseQuote(m.id);lastTap=0}else lastTap=now},{passive:false})}
  });
 };
 
 let weiPendingQuoteId=null;
 function weiJumpToQuote(id){const node=[...document.querySelectorAll('#chatList .msg')].find(x=>x.dataset.messageId===id);if(node){node.scrollIntoView({block:'center',behavior:'smooth'});node.classList.add('wei-quote-flash');setTimeout(()=>node.classList.remove('wei-quote-flash'),1200)}}
-function weiQuoteBar(){let bar=document.getElementById('weiQuoteBar');if(!bar){bar=document.createElement('div');bar.id='weiQuoteBar';bar.className='wei-quote-bar';const composer=document.querySelector('#chat .pu-wx-composer');composer?.parentNode?.insertBefore(bar,composer)}if(!bar)return;const m=state.messages.find(x=>x.id===weiPendingQuoteId);bar.hidden=!m;if(!m){bar.replaceChildren();return}bar.replaceChildren();const t=document.createElement('span');t.textContent='↳ '+(m.role==='user'?'我':'Char')+'：'+String(m.content||m.puNote||'[转账]').slice(0,90);const x=document.createElement('button');x.type='button';x.textContent='×';x.title='取消引用';x.onclick=()=>{weiPendingQuoteId=null;weiQuoteBar()};bar.append(t,x)}
+function weiQuoteBar(){let bar=document.getElementById('weiQuoteBar');if(!bar){bar=document.createElement('div');bar.id='weiQuoteBar';bar.className='wei-quote-bar';const composer=document.querySelector('#chat .pu-wx-composer');composer?.parentNode?.insertBefore(bar,composer)}if(!bar)return;const m=state.messages.find(x=>x.id===weiPendingQuoteId);bar.hidden=!m;if(!m){bar.replaceChildren();return}bar.replaceChildren();const t=document.createElement('span');t.textContent='↳ '+weiQuoteName(m)+'：'+String(m.content||m.puNote||'[转账]').slice(0,90);const x=document.createElement('button');x.type='button';x.textContent='×';x.title='取消引用';x.onclick=()=>{weiPendingQuoteId=null;weiQuoteBar()};bar.append(t,x)}
 function weiChooseQuote(id){const m=state.messages.find(x=>x.id===id);if(!m)return;weiPendingQuoteId=id;weiQuoteBar();document.getElementById('chatInput')?.focus()}
 const weiOldUserSend=window.sendMessage;
 window.sendMessage=function(...args){const before=state.messages.length;const ret=weiOldUserSend.apply(this,args);const created=state.messages.slice(before).filter(x=>x.role==='user');if(created.length&&weiPendingQuoteId){created[0].puQuoteId=weiPendingQuoteId;weiPendingQuoteId=null;weiQuoteBar();persist();renderChat()}return ret};
