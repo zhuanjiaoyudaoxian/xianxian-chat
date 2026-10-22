@@ -893,7 +893,15 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #chat .pu-transfer-amount strong{font-size:clamp(27px,7vw,34px);font-weight:500;letter-spacing:-1px;color:#312a2d;font-variant-numeric:tabular-nums}
 #chat .pu-transfer-note{font-size:12px;color:#928b91;line-height:1.45;overflow-wrap:anywhere}
 @media(max-width:350px){#chat .pu-transfer-glass{padding:12px;min-height:125px;border-radius:20px}#chat .pu-transfer-amount{margin:14px 0 9px}}
-</style></head>
+</style><style id="wei-contact-compact-fix">
+#puSocialContent .wei-contact-actions{display:flex;align-items:center;justify-content:center;gap:10px;margin:105px auto 0;padding:0 18px;max-width:410px}
+#puSocialContent .wei-contact-actions button{box-sizing:border-box;flex:0 1 158px;width:158px;min-width:0;height:38px;padding:0 10px!important;margin:0!important;border-radius:22px!important;font-size:12px!important;font-weight:600;white-space:nowrap;line-height:38px;cursor:pointer}
+#puSocialContent .wei-contact-actions .pu-social-backhome{background:#ecebed!important;border:1px solid #ecebed!important;color:#b34b55!important}
+#puSocialContent .wei-contact-actions #weiContactProfileButton{background:#fff!important;border:1px solid #dedee1!important;color:#333!important}
+#puSocialContent #weiBlackListLink{display:block;margin:17px auto 34px;padding:8px 18px;background:none;border:0;color:#929297;font-size:13px;cursor:pointer}
+#contacts .pu-contacts-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+</style>
+</head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
@@ -1514,7 +1522,7 @@ function puCancelCreateChar(){
  const old=puChars.list.find(c=>c.id===puChars.current);
  if(old){for(const k of puCharFields)if(old.data[k]!==undefined)state[k]=JSON.parse(JSON.stringify(old.data[k]))}
  puSelectedChar=puChars.current;puCreatingChar=false;puCreatePrevious=null;
- puStoreChars();puOriginalPersist();puOriginalGo('contacts');puRenderContacts();
+ puStoreChars();puOriginalPersist();puOriginalGo('contacts');puRenderContacts();if(typeof puHubTab==='function')puHubTab(1);
 }
 const PU_USER='pocket_user_profile_v30';let puUser=puJson(PU_USER,{name:'',nickname:'',birthday:'',signature:'',personality:'',hobbies:'',about:'',avatar:''});let puAvatarTarget='char';
 const PU_X_THEME='pu_profile_x_theme_v43';const PU_X_BANNER='pu_profile_x_banner_v43';let puXTab=0;
@@ -1623,7 +1631,13 @@ async function puChatPhotoChosen(input){const f=input.files?.[0];input.value='';
 }
 function puChatFileChosen(input){const f=input.files?.[0];input.value='';if(f)puAddRichMessage({puType:'file',puFileName:f.name.slice(0,100),content:'[文件] '+f.name.slice(0,100)})}
 async function puAddRichMessage(info){if(sending)return toast('请等待角色回复完成');state.messages.push({id:uid(),role:'user',date:now(),...info});try{persist()}catch(e){state.messages.pop();toast('本机存储空间不足，请换张小图或先备份聊天');return}renderChat();puToggleExtras(false);await puReplyToRichMessage(info.content)}
-async function puReplyToRichMessage(content){if(sending)return;sending=true;$('sendBtn').disabled=true;$('typing').classList.add('show');scrollChat();let reply='',error='';try{if(state.api.mode==='remote'){await maybeSummarize();const recent=state.messages.slice(-state.settings.context).map(m=>({role:m.role,content:m.content}));reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt())}else reply=localReply(content)}catch(e){error=e.message;reply=localReply(content)}finally{$('typing').classList.remove('show');for(const part of puParseChatReplies(reply)){state.messages.push({id:uid(),role:'assistant',content:part,date:now()})}persist();renderChat();sending=false;$('sendBtn').disabled=false;if(error)toast('接口未连通，已回退本地回复：'+error)}}
+function puPendingUserTransfer(){return [...state.messages].reverse().find(m=>m.role==='user'&&m.puType==='transfer'&&m.puStatus==='pending')||null}
+function puParseTransferDecision(raw){const text=String(raw||'');const m=text.match(/[\[【（(]\s*(收款|退还)(?:\s*[¥￥]?\s*\d+(?:\.\d{1,2})?)?\s*[\]】）)]/);if(!m)return null;return {status:m[1]==='收款'?'received':'returned',cleaned:text.replace(/(?:[\[【（(]\s*(?:收款|退还)(?:\s*[¥￥]?\s*\d+(?:\.\d{1,2})?)?\s*[\]】）)]\s*)+/g,'').trim()}}
+async function puReplyToRichMessage(content){if(sending)return;sending=true;$('sendBtn').disabled=true;$('typing').classList.add('show');scrollChat();let reply='',error='';try{if(state.api.mode==='remote'){await maybeSummarize();const recent=state.messages.slice(-state.settings.context).map(m=>({role:m.role,content:m.content}));reply=await requestModel(recent,systemPrompt(recent)+'\n\n'+puConversationPrompt()+(puPendingUserTransfer()?'\n\n【当前待处理转账】'+puPendingUserTransfer().puAmount+'元，用户备注：'+(puPendingUserTransfer().puNote||'无')+'。你必须结合人设、关系、聊天和备注选择收款或退还，并自然回应备注。仅在回复末尾添加一条系统指令：[收款] 或 [退还]（不带金额）。指令不能作为对话内容。不要同时输出两种指令。':'') )}else reply=localReply(content)}catch(e){error=e.message;reply=localReply(content)}finally{$('typing').classList.remove('show');const pending=puPendingUserTransfer();const decision=pending&&state.api.mode==='remote'?puParseTransferDecision(reply):null;
+  if(decision)reply=decision.cleaned;
+  for(const part of puParseChatReplies(reply)){state.messages.push({id:uid(),role:'assistant',content:part,date:now()})}
+  if(decision&&pending&&pending.puStatus==='pending')puMoneyResolve(pending.id,decision.status);
+  persist();renderChat();sending=false;$('sendBtn').disabled=false;if(error)toast('接口未连通，已回退本地回复：'+error)}}
 puApplyAvatarShape();
 const puOldBloomIcon=bloomIcon;
 bloomIcon=function(id){if(id==='chat'){let item=appItems.find(a=>a[0]===id),i=diySaved.icons[id]||{},url=diyAssetUrl(i.asset);return `<button class="bloom-icon" onclick="go('contacts')"><span class="bloom-icon-symbol">${url?'<img alt="" src="'+url+'">':(id==='calls'?'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.1 10a16 16 0 0 0 6 6l1.5-1.9a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.6 2.9Z"/></svg>':item[1])}</span><span>聊天</span></button>`}return puOldBloomIcon(id)};
@@ -1865,7 +1879,7 @@ window.puSocialRender=function(){
  <div class="pu-social-bio">${esc(p.bio||c.data?.persona?.signature||'点击编辑个人档案，添加角色简介。')}</div>
  <div class="pu-social-tags">${puSocialTags(p.tags).map(t=>`<span># ${esc(t)}</span>`).join('')}</div>
  <div class="pu-social-people"><button class="pu-social-person" onclick="puAddChar()"><span class="pu-social-mini">＋</span><small>新建</small></button>${puChars.list.map(x=>`<button class="pu-social-person ${x.id===c.id?'selected':''}" data-social-id="${esc(x.id)}" onclick="puSocialSelect(this.dataset.socialId)"><span class="pu-social-mini">${avatar(x)}</span><small>${esc(puCharName(x))}</small></button>`).join('')}</div>
- <div class="pu-social-bottom"><button onclick="puSocialOpenChat()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 9 6-9 6z"/></svg><span>${esc(p.song||'Song Title - Artist Name')}</span></button></div><button class="pu-social-backhome" onclick="puSocialDeleteCurrent()">删除当前角色</button>`;
+ <div class="pu-social-bottom"><button onclick="puSocialOpenChat()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 9 6-9 6z"/></svg><span>${esc(p.song||'Song Title - Artist Name')}</span></button></div><div class="wei-contact-actions"><button class="pu-social-backhome" onclick="puSocialDeleteCurrent()">删除当前角色</button><button id="weiContactProfileButton" onclick="weiOpenCharProfile(puSelectedChar,'contacts')">查看个人主页</button></div><button id="weiBlackListLink" onclick="weiOpenBlacklist()">黑名单</button>`;
 };
 window.puSocialSelect=function(id){if(sending)return toast('请等待当前回复完成');if(!puChars.list.some(x=>x.id===id))return;puSelectedChar=id;puSocialRender()};
 window.puSocialOpenChat=function(){puOpenChat()};
@@ -3041,7 +3055,9 @@ const originalDraw=window.drawInbox; if(typeof originalDraw==='function'){window
 // Some builds bind drawInbox lexically. A mutation observer safely updates the re-rendered button.
 const inbox=by('puInbox');if(inbox){const ob=new MutationObserver(()=>{const b=inbox.querySelector('.pu-inbox-profile button');if(b&&!b.classList.contains('wei-inbox-trigger')){b.setAttribute('onclick','weiOpenPending()');b.classList.add('wei-inbox-trigger');updateBadge()}});ob.observe(inbox,{childList:true,subtree:true});const b=inbox.querySelector('.pu-inbox-profile button');if(b){b.setAttribute('onclick','weiOpenPending()');b.classList.add('wei-inbox-trigger');updateBadge()}}
 document.addEventListener('click',e=>{const av=e.target.closest('#chat .msg:not(.me) .pu-message-avatar');if(av){e.preventDefault();e.stopPropagation();weiOpenCharProfile(puChars.current,'chat')}},true);const chatHeaderAvatar=by('chatAvatar');if(chatHeaderAvatar){chatHeaderAvatar.style.cursor='pointer';chatHeaderAvatar.addEventListener('click',()=>weiOpenCharProfile(puChars.current,'chat'))}
-const oldSocial=window.puSocialRender;window.puSocialRender=function(...args){const ret=oldSocial?.(...args);const content=by('puSocialContent');if(content){let button=by('weiContactProfileButton');if(!button){button=document.createElement('button');button.id='weiContactProfileButton';button.textContent='查看个人主页';button.style.cssText='display:block;margin:48px auto 0;padding:13px 23px;border:1px solid #dedee1;border-radius:24px;background:#fff;color:#333;min-height:46px';content.appendChild(button)}button.onclick=()=>weiOpenCharProfile(puSelectedChar,'contacts');let black=by('weiBlackListLink');if(!black){black=document.createElement('button');black.id='weiBlackListLink';black.textContent='黑名单';black.style.cssText='display:block;margin:17px auto 28px;padding:8px 20px;background:none;border:0;color:#929297;min-height:38px';content.appendChild(black)}black.onclick=weiOpenBlacklist}return ret};
+// Contact action buttons are rendered in the same row by puSocialRender.
+// Keep the profile and blacklist handlers on the real controls rather than adding duplicates.
+
 // Contact profile entry: use the selected Char, and also make its portrait tappable.
 document.addEventListener('click',e=>{
  const profileButton=e.target.closest('#weiContactProfileButton');
@@ -3050,8 +3066,8 @@ document.addEventListener('click',e=>{
 },true);
 const oldMom=window.renderMoments;window.renderMoments=async function(...args){const ret=await oldMom?.(...args);const plus=document.querySelector('.pu-mom-friends-head button');if(plus)plus.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';return ret};
 // Fix create/cancel navigation to the actual hub pane, rather than the detached legacy contacts screen.
-const oldCancel=window.puCancelCreateChar;window.puCancelCreateChar=function(){const was=puCreatingChar;oldCancel?.();if(was&&!puCreatingChar)puHubTab(1)};
-const oldSave=window.savePersona;window.savePersona=function(...args){const was=puCreatingChar;const result=oldSave?.(...args);if(was&&!puCreatingChar)puHubTab(1);return result};
+const oldCancel=window.puCancelCreateChar;window.puCancelCreateChar=function(){const was=puCreatingChar;oldCancel?.();if(was&&!puCreatingChar){puHubTab(1);const hub=document.getElementById("puHub");if(hub)hub.classList.add("active")}};
+const oldSave=window.savePersona;window.savePersona=function(...args){const was=puCreatingChar;const result=oldSave?.(...args);if(was&&!puCreatingChar){puHubTab(1);const hub=document.getElementById("puHub");if(hub)hub.classList.add("active")};return result};
 // Friend request is event-driven and rate-limited; never bypass a block.
 async function maybeRequest(id){const c=char(id),r=relation(id),t=Date.now();if(!c||r.status!=='removed'||t-(r.lastRequest||0)<24*3600e3||t-(r.lastRejected||0)<72*3600e3)return;let message='我想重新加你为好友，可以吗？';try{if(state.api?.mode==='remote'&&typeof requestModel==='function'){const out=await requestModel([{role:'user',content:'你曾经与对方是好友，后来被删除好友。根据你的角色人设，写一条简短自然、不重复、不强迫对方的好友申请语，最多60字。只输出申请语。'}],`你是${puCharName(c)}。${c.data?.persona?.personality||''}`);if(typeof out==='string'&&out.trim())message=out.trim().slice(0,100)}}catch(e){console.warn('好友申请生成失败',e)}if(relation(id).status!=='removed')return;change(id,r=>({...r,lastRequest:Date.now(),requests:[...(r.requests||[]),{id:'req_'+Date.now(),message,status:'pending',seen:false}]}));updateBadge()}
 const originalSend=window.sendMessage;window.sendMessage=async function(...args){const id=puChars.current;if(relation(id).status!=='friend'){toast(relation(id).status==='blocked'?'已拉黑该角色':'当前不是好友');return}const ret=await originalSend.apply(this,args);if(relation(id).status==='removed')maybeRequest(id);return ret};
