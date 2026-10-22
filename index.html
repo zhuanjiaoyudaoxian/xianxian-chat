@@ -2557,4 +2557,149 @@ if($id('worldList'))renderWorld();
 }
 .screen .bar .back::before,.screen .bar .back::after{box-shadow:none!important;background:transparent!important}
 </style>
+<style id="wei-final-css">
+/* Folder-first library and compact, native-feeling controls */
+#world .body{background:#f2f2f7!important;color:#1c1c1e!important;padding:16px!important}
+#world .body>p.muted,#world .body>.row.wrap,#world .body>.spacer{display:none!important}
+#world .bar h2{font-size:18px!important}
+#world .bar .back{background:none!important;border:none!important;box-shadow:none!important}
+#world .wei-world-heading{display:flex;align-items:center;justify-content:space-between;margin:12px 0 13px}
+#world .wei-world-heading h3{margin:0;font-size:23px;font-weight:700}
+#world .wei-link{background:none;border:0;color:#007aff;font-size:14px;padding:8px 0;box-shadow:none}
+#world .wei-folder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#world .wei-folder-card{min-height:105px;text-align:left;background:#fff;border:1px solid #e8e9ee;border-radius:17px;padding:15px;display:flex;flex-direction:column;gap:8px;box-shadow:none;color:#1c1c1e}
+#world .wei-folder-card svg{color:#8ba4b6}
+#world .wei-folder-card strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+#world .wei-folder-card small{color:#8e8e93;font-size:12px}
+#world .wei-folder-card.selected{outline:2px solid #b4c8d9}
+#world .wei-section-row{display:flex;align-items:center;justify-content:space-between;margin:23px 0 10px}
+#world .wei-section-row h4{font-size:13px;color:#8e8e93;font-weight:500;margin:0}
+#world .wei-list,#world .wei-actions{background:#fff;border-radius:16px;overflow:hidden}
+#world .wei-list-item,#world .wei-action-item{width:100%;display:flex;align-items:center;gap:11px;padding:15px;background:#fff;border:0;border-bottom:1px solid #e5e5ea;color:#1c1c1e;text-align:left;font-size:14px}
+#world .wei-list-item:last-child,#world .wei-action-item:last-child{border-bottom:0}
+#world .wei-list-item span:nth-child(2),#world .wei-action-item span:nth-child(2){flex:1}
+#world .wei-list-item small{color:#8e8e93}
+#world .wei-action-item svg,#world .wei-list-item svg{color:#8299a8;flex:none}
+#world .wei-world-empty{padding:20px;text-align:center;color:#8e8e93;font-size:13px}
+#editor.wei-world-editor{background:#f2f2f7!important;align-items:stretch!important;overflow-y:auto!important}
+#editor.wei-world-editor>.card{background:transparent!important;box-shadow:none!important;border:0!important;margin:0 auto!important;padding:0 15px 30px!important;width:100%!important;max-width:600px!important}
+#editor.wei-world-editor>.card>.row:first-child{position:sticky;top:0;z-index:5;background:#f2f2f7;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -15px 14px;padding:8px 15px;border-bottom:1px solid #e5e5ea}
+#editor.wei-world-editor #editorTitle{font-size:16px!important;text-align:center;margin:0!important;flex:1;min-width:0}
+#editor.wei-world-editor .wei-editor-back,#editor.wei-world-editor .wei-editor-save{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;font-size:14px;padding:7px 3px;min-width:46px}
+#editor.wei-world-editor .wei-editor-back{color:#30343a;text-align:left}
+#editor.wei-world-editor .wei-editor-save{color:#007aff;text-align:right;font-weight:600}
+#editor.wei-world-editor>.card>.row:last-child{display:none!important}
+#editor.wei-world-editor #editorFields{background:#fff;border-radius:16px;padding:16px;margin:0}
+#editor.wei-world-editor .pu-world-edit-panel{padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important}
+#editor.wei-world-editor .pu-world-edit-panel>.row:last-child{display:none!important}
+#editor.wei-world-editor .pu-world-edit-panel input:not([type=range]):not([type=file]),#editor.wei-world-editor .pu-world-edit-panel select,#editor.wei-world-editor .pu-world-edit-panel textarea{background:#f2f2f7!important;border:1px solid #e5e5ea!important;border-radius:12px!important;color:#1c1c1e!important;max-width:100%;box-sizing:border-box}
+#editor.wei-world-editor .pu-world-edit-panel textarea{min-height:180px}
+#editor.wei-world-editor .wei-word-import{border:0!important;background:transparent!important;box-shadow:none!important;color:#007aff!important;padding:8px 0!important}
+#editor.wei-world-editor .wei-editor-content-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#editor.wei-world-editor .wei-editor-content-row .label{margin:0}
+#editor.wei-world-editor .wei-editor-content-row+textarea{margin-top:9px}
+/* Existing settings form remains available under detailed settings. */
+#settings .wei-settings-head{display:none!important}
+#settings .wei-settings-group{margin-bottom:18px!important}
+#settings .wei-settings-caption{padding:5px 12px 9px!important}
+#settings .wei-settings-link{border-radius:0!important}
+#settings .wei-settings-group .wei-settings-link:nth-child(2){border-radius:13px 13px 0 0!important}
+#settings .wei-settings-group .wei-settings-link:last-child{border-radius:0 0 13px 13px!important}
+#settings .wei-settings-group .wei-settings-link:nth-child(2):last-child{border-radius:13px!important}
+#settings .wei-settings-link{min-height:56px!important;padding:13px 15px!important}
+#settings .wei-settings-link .wei-setting-icon{display:inline-flex;align-items:center;justify-content:center;width:35px;height:35px;border-radius:10px;background:#f2f5f7;color:#60798a;margin-right:13px;flex:none}
+#settings .wei-settings-link .wei-setting-label{flex:1}
+#settings .wei-settings-details{margin-top:14px}
+/* The unwanted lightning floating ball is disabled globally. */
+#puFloatBall,#puFloatingBall,.pu-floating-ball,.pu-float-ball,[id*="petFloat"],[id*="floatPet"]{display:none!important}
+</style>
+<script id="wei-final-script">
+(function(){
+ 'use strict';
+ const el=id=>document.getElementById(id);
+ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const folderSvg='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/></svg>';
+ const bookSvg='<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h14v17H6a2 2 0 0 0-2 2z"/><path d="M4 5v15a2 2 0 0 1 2-2h14"/></svg>';
+ const arrow='<span style="color:#b8bbc3">›</span>';
+ const folderKey='pu_world_folders_v1';
+ function folders(){try{const v=JSON.parse(localStorage.getItem(folderKey)||'[]');return Array.isArray(v)?v:[]}catch{return []}}
+ function all(){return Array.isArray(state.world)?state.world:[]}
+ function groups(){return [...new Set([...folders(),...all().map(w=>w.group||'未分组')].filter(g=>g&&g!=='未分组'&&g!=='全部'))]}
+ function count(g){return g==='全部'?all().length:all().filter(w=>(w.group||'未分组')===g).length}
+ function folderCard(name){return '<button type="button" class="wei-folder-card'+(window.puWorldCurrentGroup===name?' selected':'')+'" data-wei-folder="'+safe(name)+'">'+folderSvg+'<strong>'+safe(name==='全部'?'全部世界书':name)+'</strong><small>'+count(name)+' 本</small></button>'}
+ function listRow(w){return '<button type="button" class="wei-list-item" data-wei-world="'+safe(w.id)+'">'+bookSvg+'<span>'+safe(w.title||'未命名世界书')+'</span><small>'+safe(w.group||'未分组')+'</small>'+arrow+'</button>'}
+ function actionRow(label,action){return '<button type="button" class="wei-action-item" data-wei-action="'+safe(action)+'">'+folderSvg+'<span>'+safe(label)+'</span>'+arrow+'</button>'}
+ window.renderWorld=function(){
+  const control=el('puWorldGroups'),list=el('worldList');if(!control||!list)return;
+  const current=window.puWorldCurrentGroup||'全部';
+  const names=['全部',...groups(),'未分组'];
+  control.innerHTML='<div class="wei-world-heading"><h3>我的文件夹</h3><button type="button" class="wei-link" data-wei-action="manage">管理</button></div><div class="wei-folder-grid">'+names.map(folderCard).join('')+'</div>';
+  const items=current==='全部'?all():all().filter(w=>(w.group||'未分组')===current);
+  const sorted=[...items].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  list.innerHTML='<div class="wei-section-row"><h4>'+(current==='全部'?'最近编辑':safe(current)+' · '+items.length+' 本')+'</h4><button type="button" class="wei-link" data-wei-action="all">查看全部</button></div><div class="wei-list">'+(sorted.length?sorted.map(listRow).join(''):'<div class="wei-world-empty">这个文件夹里还没有世界书</div>')+'</div><div class="wei-section-row"><h4>管理工具</h4></div><div class="wei-actions">'+actionRow('新建文件夹','newFolder')+actionRow('导入世界书','import')+actionRow('更多管理操作','more')+'</div>';
+ };
+ const world=el('world');if(world){world.addEventListener('click',e=>{
+  const folder=e.target.closest('[data-wei-folder]');if(folder){window.puWorldCurrentGroup=folder.dataset.weiFolder;renderWorld();return}
+  const book=e.target.closest('[data-wei-world]');if(book){editWorld(book.dataset.weiWorld);return}
+  const action=e.target.closest('[data-wei-action]');if(!action)return;
+  const a=action.dataset.weiAction;
+  if(a==='all'){window.puWorldCurrentGroup='全部';renderWorld()}
+  if(a==='newFolder')puWorldAddFolder();
+  if(a==='import')puWorldOpenImport();
+  if(a==='manage'||a==='more'){
+   const old=el('weiWorldManage');if(old){old.remove();return}
+   const menu=document.createElement('div');menu.id='weiWorldManage';menu.className='wei-actions';menu.style.marginTop='10px';
+   menu.innerHTML=actionRow('导出 JSON','export')+actionRow('导入 JSON','importJson')+actionRow('整理重复','duplicates')+(window.puWorldCurrentGroup&& !['全部','未分组'].includes(window.puWorldCurrentGroup)?actionRow('重命名当前文件夹','rename')+actionRow('删除当前文件夹','deleteFolder'):'');
+   el('worldList').appendChild(menu);
+  }
+  if(a==='export')exportWorld();
+  if(a==='importJson')el('worldFile')?.click();
+  if(a==='duplicates'){
+   if(confirm('整理完全重复的世界书？建议先导出 JSON 备份。'))puWorldCleanDuplicates();
+  }
+  if(a==='rename')puWorldRenameFolder(encodeURIComponent(window.puWorldCurrentGroup));
+  if(a==='deleteFolder'){puWorldDeleteFolder(encodeURIComponent(window.puWorldCurrentGroup));window.puWorldCurrentGroup='全部';renderWorld()}
+ });}
+ // Editor: one clear header action, no duplicate footer save and no overlap.
+ const oldEdit=window.editWorld,oldImport=window.puWorldOpenImport;
+ function configureEditor(isImport){const editor=el('editor');if(!editor)return;editor.classList.add('wei-world-editor');const head=editor.querySelector(':scope > .card > .row:first-child');if(!head)return;
+  head.innerHTML='<button type="button" class="wei-editor-back" aria-label="返回">‹</button><h3 id="editorTitle">'+(isImport?'导入世界书':window.weiWorldEditing?'编辑世界书':'新建世界书')+'</h3><button type="button" class="wei-editor-save">'+(isImport?'导入':'保存')+'</button>';
+  head.querySelector('.wei-editor-back').onclick=()=>closeEditor();
+  head.querySelector('.wei-editor-save').onclick=()=>isImport?puWorldDoImport():puWorldSave();
+  if(!isImport){const label=[...el('editorFields').querySelectorAll('label')].find(x=>x.textContent.trim()==='设定内容');if(label){const row=document.createElement('div');row.className='wei-editor-content-row';label.parentNode.insertBefore(row,label);row.appendChild(label);const wrap=el('pweWord')?.parentElement;if(wrap){const b=wrap.querySelector('button');if(b){b.className='wei-word-import';b.textContent='从 Word 导入';row.appendChild(b)}wrap.style.display='none';el('editorFields').appendChild(wrap)}}}
+ }
+ window.editWorld=function(id){window.weiWorldEditing=!!id;oldEdit.call(this,id);configureEditor(false)};
+ window.puWorldOpenImport=function(){oldImport.call(this);configureEditor(true)};
+ const oldClose=window.closeEditor;
+ window.closeEditor=function(){el('editor')?.classList.remove('wei-world-editor');return oldClose.apply(this,arguments)};
+ // Screenshot-inspired Settings A. Keep existing detailed controls and working routes.
+ const settings=el('settings');if(settings){const body=settings.querySelector('.body');if(body){
+  body.querySelectorAll('.wei-settings-head,.wei-settings-group').forEach(n=>n.remove());
+  const details=body.querySelector('.wei-settings-details');
+  const sections=[
+   ['App 仓库',[['App 仓库','wrench','unsupported'],['MCP 工具','monitor','unsupported']]],
+   ['通用',[['新手指南','book','guide'],['夜间模式','moon','night'],['主动发消息','message','unsupported'],['表情包管理','grid','stickers'],['聊天 & 生图 API','message','api'],['API 自检','search','api'],['API 报错日志','file','unsupported'],['API 运行日志','chart','unsupported'],['语音 API','mic','unsupported'],['向量 · ASR · 记忆总结','brain','details'],['聊天提示词','message','details'],['外观设置','palette','diy'],['消息提示音','bell','unsupported']]],
+   ['数据',[['云备份','cloud','unsupported'],['账号与设备','phone','profile'],['备份数据','upload','backup'],['恢复数据','download','backup'],['清理生成图片','image','unsupported'],['恢复出厂设置','trash','backup']]]
+  ];
+  const icons={wrench:'⚙',monitor:'▣',book:'ⓘ',moon:'◐',message:'▤',grid:'▦',search:'⌕',file:'▤',chart:'▥',mic:'♩',brain:'⌁',palette:'◉',bell:'♫',cloud:'☁',phone:'▯',upload:'↑',download:'↓',image:'▧',trash:'♜'};
+  const frag=document.createDocumentFragment();
+  for(const [heading,items] of sections){const section=document.createElement('div');section.className='wei-settings-group';section.innerHTML='<div class="wei-settings-caption">'+safe(heading)+'</div>';
+   for(const [name,icon,route] of items){const b=document.createElement('button');b.type='button';b.className='wei-settings-link';b.innerHTML='<span class="wei-setting-icon">'+safe(icons[icon]||'◦')+'</span><span class="wei-setting-label">'+safe(name)+'</span>';b.onclick=()=>{
+    if(route==='unsupported'){toast('「'+name+'」尚未在当前版本实现，暂不能使用');return}
+    if(route==='guide'){toast('新手指南尚未提供独立页面');return}
+    if(route==='night'){const sel=el('diy')?.querySelector('select');go('diy');if(sel)sel.focus();return}
+    if(route==='stickers'){if(typeof puStickerManagerOpen==='function')puStickerManagerOpen();else toast('表情包管理暂不可用');return}
+    if(route==='details'){if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'start'})}return}
+    go(route);
+   };section.appendChild(b)}frag.appendChild(section)
+  }
+  body.insertBefore(frag,details||body.firstChild);
+  if(details){const summary=details.querySelector('summary');if(summary)summary.innerHTML='原有详细设置 <span>›</span>'}
+ }}
+ // Remove the extra simulated phone status bar, not the real iOS browser status bar.
+ const extraStyle=document.createElement('style');extraStyle.textContent='[class*="fake-status"],[class*="sim-status"],.pu-statusbar,.phone-statusbar{display:none!important}';document.head.appendChild(extraStyle);
+ // Initial world library render after all wrappers have loaded.
+ try{renderWorld()}catch(e){console.error('世界书渲染失败',e)}
+})();
+</script>
 </body></html>
