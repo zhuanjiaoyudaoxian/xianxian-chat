@@ -2825,7 +2825,8 @@ if($id('worldList'))renderWorld();
  window.renderWorld=function(){
   const control=el('puWorldGroups'),list=el('worldList');if(!control||!list)return;
   const current=window.puWorldCurrentGroup||'全部';
-  const names=['全部',...groups(),'未分组'];
+  const recent=(()=>{try{return JSON.parse(localStorage.getItem('wei_world_recent_folders_v3')||'[]')}catch{return []}})();
+  const available=groups();const names=['全部','未分组',...([...recent.filter(g=>available.includes(g)),...available].filter((g,i,a)=>a.indexOf(g)===i).slice(0,2))];
   control.innerHTML='<div class="wei-world-heading"><h3>我的文件夹</h3><button type="button" class="wei-link" data-wei-action="manage">管理</button></div><div class="wei-folder-grid">'+names.map(folderCard).join('')+'</div>';
   const items=current==='全部'?all():all().filter(w=>(w.group||'未分组')===current);
   const sorted=[...items].sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')));
@@ -3046,7 +3047,7 @@ window.weiProfileMessage=()=>{const r=relation(profileId);if(r.status==='blocked
 function pending(){return Object.entries(read()).flatMap(([id,r])=>(r.requests||[]).filter(x=>x.status==='pending').map(x=>({...x,charId:id}))) }
 function unseen(){return pending().filter(x=>!x.seen).length}
 function updateBadge(){const b=document.querySelector('#puInbox .wei-inbox-trigger');if(!b)return;const n=unseen();b.innerHTML='•••'+(n?`<span class="wei-inbox-badge">${n>99?'99+':n}</span>`:'')}
-window.weiOpenPending=()=>{const list=pending();by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>待处理消息</b><span>${list.filter(x=>!x.seen).length} 条未查看</span></div>${list.map(x=>`<div class="wei-pending-item"><b>${clean(puCharName(char(x.charId))||'角色')} · 好友申请</b><p>${clean(x.message)}</p><button class="wei-accept" onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',true)">同意</button><button onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',false)">拒绝</button></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">暂无待处理消息</p>'}`;const r=read();for(const x of Object.values(r))for(const q of x.requests||[])if(q.status==='pending')q.seen=true;write(r);updateBadge()};
+window.weiOpenPending=()=>{const list=pending();by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>待处理消息</b><span>${list.filter(x=>!x.seen).length} 条未读</span></div>${list.map(x=>`<div class="wei-pending-item"><b>${clean(puCharName(char(x.charId))||'角色')} · 好友申请</b><p>${clean(x.message)}</p><button class="wei-accept" onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',true)">同意</button><button onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',false)">拒绝</button></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">暂无待处理消息</p>'}`;const r=read();for(const x of Object.values(r))for(const q of x.requests||[])if(q.status==='pending')q.seen=true;write(r);updateBadge()};
 window.weiClosePending=()=>{by('weiPendingPage').hidden=true;drawInbox()};
 window.weiResolveRequest=(id,rid,accept)=>{change(id,r=>({...r,status:accept?'friend':'removed',lastRejected:accept?0:Date.now(),requests:(r.requests||[]).map(q=>q.id===rid?{...q,status:accept?'accepted':'rejected',seen:true}:q)}));weiOpenPending();toast(accept?'已添加好友':'已拒绝申请')};
 window.weiOpenBlacklist=()=>{const all=Object.entries(read()).filter(([id,r])=>r.status==='blocked'&&char(id));by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>黑名单</b><span></span></div>${all.map(([id])=>`<div class="wei-pending-item"><b>${clean(puCharName(char(id)))}</b><button onclick="weiUnblockFromList('${clean(id)}')">解除拉黑</button></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">黑名单为空</p>'}`};
@@ -3174,12 +3175,12 @@ const unfriend=window.weiRemoveFriend;window.weiRemoveFriend=function(){const id
  const items=g=>g==='全部'?books():books().filter(w=>group(w)===g);
  const enabled=w=>w.enabled!==false&&localStorage.getItem('pu_world_group_off_'+group(w))!=='1';
  const oldRender=window.renderWorld;
- let lastVisited=[];
- function remember(g){if(g==='全部'||g==='未分组')return;lastVisited=[g,...lastVisited.filter(x=>x!==g)].slice(0,50)}
+ let lastVisited=[];try{const v=JSON.parse(localStorage.getItem('wei_world_recent_folders_v3')||'[]');if(Array.isArray(v))lastVisited=v.filter(x=>typeof x==='string')}catch(e){}
+ function remember(g){if(g==='全部'||g==='未分组')return;lastVisited=[g,...lastVisited.filter(x=>x!==g)].slice(0,50);try{localStorage.setItem('wei_world_recent_folders_v3',JSON.stringify(lastVisited))}catch(e){}}
  function decorate(){
   const control=document.getElementById('puWorldGroups'),list=document.getElementById('worldList');if(!control||!list)return;
   const g=window.puWorldCurrentGroup||'全部';
-  const names=['全部','未分组',...lastVisited.filter(x=>groups().includes(x)),...groups()].filter((x,i,a)=>a.indexOf(x)===i).slice(0,4);
+  const available=groups();const recent=[...lastVisited.filter(x=>available.includes(x)),...available].filter((x,i,a)=>a.indexOf(x)===i);const names=['全部','未分组',...recent.slice(0,2)];
   const grid=control.querySelector('.wei-folder-grid');
   if(grid){const cards=[...grid.querySelectorAll('[data-wei-folder]')];const byName=new Map(cards.map(c=>[c.dataset.weiFolder,c]));grid.replaceChildren(...names.map(n=>byName.get(n)).filter(Boolean));}
   const old=control.querySelector('.wei-folder-all-link');if(old)old.remove();
@@ -3236,4 +3237,10 @@ const unfriend=window.weiRemoveFriend;window.weiRemoveFriend=function(){const id
  window.renderWorld();
 })();
 </script>
+<style id="wei-pending-header-align-v3">
+#weiPendingPage .wei-page-head{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:56px;height:56px;padding:0 18px;box-sizing:border-box}
+#weiPendingPage .wei-page-head>button{justify-self:start;min-width:32px;padding:0;text-align:left;line-height:1}
+#weiPendingPage .wei-page-head>b{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:15px;letter-spacing:.4px;font-weight:600;pointer-events:none}
+#weiPendingPage .wei-page-head>span{grid-column:3;justify-self:end;color:#8d8d95;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+</style>
 </body></html>
