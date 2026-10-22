@@ -3316,6 +3316,7 @@ window.weiSmartCommit=function(){const draft=$('weiSummaryDraft').value.trim();i
 #weiPromptPage .wp-choice-copy strong{display:block;font-size:15px;font-weight:600}
 #weiPromptPage .wp-choice-copy small{display:block;font-size:11px;color:#8e8e93;margin-top:5px;line-height:1.4}
 #weiPromptPage .wp-check{font-size:20px;color:#111;min-width:20px;text-align:center}
+#weiPromptPage .wp-editor[hidden]{display:none!important}
 #weiPromptPage .wp-editor{margin-top:19px;background:#fff;border-radius:15px;padding:16px}
 #weiPromptPage .wp-editor h3{font-size:15px;margin:0 0 7px}
 #weiPromptPage .wp-editor p{font-size:12px;color:#8e8e93;line-height:1.6;margin:0 0 12px}
@@ -3334,7 +3335,7 @@ window.weiSmartCommit=function(){const draft=$('weiSummaryDraft').value.trim();i
    <button type="button" class="wp-choice" onclick="weiPromptSelect('romance')"><svg viewBox="0 0 24 24"><path d="M20.5 8.5c0 5-8.5 10.5-8.5 10.5S3.5 13.5 3.5 8.5a4.5 4.5 0 0 1 8.5-2 4.5 4.5 0 0 1 8.5 2Z"/></svg><span class="wp-choice-copy"><strong>人机恋版</strong><small>情绪层次 · 亲密互动 · 关系沉浸</small></span><span class="wp-check" id="wpCheckRomance"></span></button>
    <button type="button" class="wp-choice" onclick="weiPromptSelect('custom')"><svg viewBox="0 0 24 24"><path d="M5 19h14M6 15l9-9 3 3-9 9-4 1zM14 7l3 3"/></svg><span class="wp-choice-copy"><strong>自定义</strong><small>独立保存你自己的聊天风格提示词</small></span><span class="wp-check" id="wpCheckCustom"></span></button>
   </div>
-  <div class="wp-editor"><h3 id="wpEditorTitle">提示词内容</h3><p id="wpEditorHelp"></p><textarea id="wpEditorText" spellcheck="false"></textarea><div class="wp-actions"><button type="button" onclick="weiPromptReset()" id="wpResetBtn">恢复预设</button><button type="button" class="wp-primary" onclick="weiPromptSave()" id="wpSaveBtn">保存自定义</button></div></div>
+  <div class="wp-editor" id="wpCustomEditor" hidden><h3 id="wpEditorTitle">提示词内容</h3><p id="wpEditorHelp"></p><textarea id="wpEditorText" spellcheck="false"></textarea><div class="wp-actions"><button type="button" onclick="weiPromptReset()" id="wpResetBtn">恢复预设</button><button type="button" class="wp-primary" onclick="weiPromptSave()" id="wpSaveBtn">保存自定义</button></div></div>
  </div>
 </div>
 <script>
@@ -3351,7 +3352,20 @@ const readCustom=()=>{try{return localStorage.getItem(CUSTOM)||''}catch(e){retur
 const getStyle=()=>selected==='custom'?readCustom():styles[selected];
 window.weiPromptOpen=function(){const el=document.getElementById('weiPromptPage');el.classList.add('wei-prompt-open');weiPromptRender()};
 window.weiPromptClose=function(){document.getElementById('weiPromptPage').classList.remove('wei-prompt-open')};
-window.weiPromptRender=function(){const map={alive:'Alive',current:'Current',romance:'Romance',custom:'Custom'};Object.keys(map).forEach(k=>document.getElementById('wpCheck'+map[k]).textContent=k===selected?'✓':'');document.getElementById('wpEditorTitle').textContent=({alive:'活人感版 · 提示词预览',current:'当前版本 · 提示词预览',romance:'人机恋版 · 提示词预览',custom:'自定义 · 编辑提示词'})[selected];document.getElementById('wpEditorHelp').textContent=selected==='custom'?'这里只编辑自定义风格补充；所有版本的基础互动原则与手机消息格式仍然生效。':'预设为只读，保留原有完整聊天输出协议与人设资料。切换版本不会覆盖自定义内容。';const ta=document.getElementById('wpEditorText');ta.readOnly=selected!=='custom';ta.value=selected==='custom'?readCustom():common+'\n\n'+styles[selected];document.getElementById('wpSaveBtn').style.display=selected==='custom'?'':'none';document.getElementById('wpResetBtn').style.display=selected==='custom'?'':'none'};
+window.weiPromptRender=function(){
+ const map={alive:'Alive',current:'Current',romance:'Romance',custom:'Custom'};
+ Object.keys(map).forEach(k=>document.getElementById('wpCheck'+map[k]).textContent=k===selected?'✓':'');
+ const isCustom=selected==='custom';
+ const editor=document.getElementById('wpCustomEditor');
+ editor.hidden=!isCustom;
+ editor.style.display=isCustom?'block':'none';
+ if(!isCustom)return; // 内置三版只显示名称和简介，绝不向页面编辑器注入预设内容
+ document.getElementById('wpEditorTitle').textContent='自定义 · 编辑提示词';
+ document.getElementById('wpEditorHelp').textContent='这里只编辑自定义风格补充；所有版本的基础互动原则与手机消息格式仍然生效。';
+ const ta=document.getElementById('wpEditorText');ta.readOnly=false;ta.value=readCustom();
+ document.getElementById('wpSaveBtn').style.display='';
+ document.getElementById('wpResetBtn').style.display='';
+};
 window.weiPromptSelect=function(v){if(selected==='custom'){const t=document.getElementById('wpEditorText');if(t&&!t.readOnly){try{localStorage.setItem(CUSTOM,t.value)}catch(e){}}}selected=v;try{localStorage.setItem(KEY,v)}catch(e){}weiPromptRender();if(typeof toast==='function')toast('已切换至'+({alive:'活人感版',current:'当前版本',romance:'人机恋版',custom:'自定义'})[v])};
 window.weiPromptSave=function(){if(selected!=='custom')return;try{localStorage.setItem(CUSTOM,document.getElementById('wpEditorText').value);toast('自定义提示词已保存')}catch(e){toast('保存失败，请检查存储空间')}};
 window.weiPromptReset=function(){if(selected!=='custom')return;if(!confirm('清空自定义提示词？不会影响其他版本。'))return;document.getElementById('wpEditorText').value='';weiPromptSave()};
