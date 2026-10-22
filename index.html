@@ -1301,10 +1301,10 @@ async function puGenerateQueuedReply(){
  let reply='',error='';
  try{
   if(state.api.mode==='remote'){
-   const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
+   const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.role==='user'?'[消息ID:'+x.id+'] '+x.content:x.content}));
    const weiStickerChoices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[];
    const weiStickerGuide=weiStickerChoices.length?'\n你可以根据人设和当前语境偶尔发送表情包，仅在合适时使用。可用表情包：'+JSON.stringify(weiStickerChoices)+'。如需发送，在回复文字最后添加 [STICKER:对应id]，不要编造id；无需发送则不加。':' ';
-   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。如果角色主动转账，在角色消息中使用（转账 52.00）这样的明确标记，金额为人民币元，后面可以接正常台词；只有角色真的决定转账时才使用，不能把User的转账当作角色发起。'+weiStickerGuide : systemPrompt(recent)+'\n\n'+puConversationPrompt()+weiStickerGuide+'\n你可以自然地针对用户某条消息引用回复。需要引用时，在该条回复开头写【引用:用户原消息】；不要每条都引用。',{signal:puReplyController.signal,kind:'Char 聊天'});
+   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。只有符合人设和当前情境时才主动转账，不要频繁转账。转账请在一条独立JSON字符串消息中写【转账:52.00|备注:去吃饭】；备注要贴合当下对话、关系及角色口吻，可省略备注（写【转账:52.00】），不得随意套模板。金额为人民币元，勿在普通对话里输出转账标记。若引用用户真实发过的消息，在回复开头写【引用ID:消息ID】；从上下文消息中选择有意义的真实消息，必要时才引用，不要机械引用最后一句。'+weiStickerGuide : systemPrompt(recent)+'\n\n'+puConversationPrompt()+weiStickerGuide+'\n你可以自然地针对用户某条消息引用回复。需要引用时，在该条回复开头写【引用:用户原消息】；不要每条都引用。',{signal:puReplyController.signal,kind:'Char 聊天'});
   }else reply=localReply(text);
  }catch(e){error=e.message;reply=''}
  if(puReplyStopped){$('typing').classList.remove('show');sending=false;puUpdateReplyButtons();return;}
@@ -1317,7 +1317,7 @@ async function puGenerateQueuedReply(){
   if(puReplyStopped)break;
   const stickerMatches=[...parts[i].matchAll(/\[STICKER:([^\]\s]+)\]/g)];
   const cleaned=parts[i].replace(/\[STICKER:[^\]]+\]/g,'').trim();
-  if(cleaned){const match=cleaned.match(/^【引用[:：]([^】]+)】\s*/);state.messages.push({id:uid(),role:'assistant',content:match?cleaned.slice(match[0].length):cleaned,puQuote:match?match[1]:null,date:now()});}
+  if(cleaned){const parsed=weiParseCharOutput(cleaned);for(const msg of parsed)state.messages.push(msg);}
   for(const m of stickerMatches.slice(0,1)){const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(m[1]):null;if(sticker)state.messages.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}
   persist();renderChat();
   if(i===parts.length-1)$('typing').classList.remove('show');
@@ -2572,30 +2572,6 @@ function puExtractCharTransfer(text){
  const note=explicit?explicit[1].trim().slice(0,24):'转账';
  return {amount,note,remaining:remaining.replace(/(?:备注|附言|转账备注)\s*[：:]\s*[^\n，。]{1,24}/,'').trim()};
 }
-sendMessage=async function(){
- const start=state.messages.length;
- await puMoneyBaseSend();
- if(state.api.mode!=='remote'||puChatOptions.mode!=='chat')return;
- const newMessages=state.messages.slice(start);
- let changed=false;
- for(const m of newMessages){
-  if(m.role!=='assistant'||m.puType||m.puTransferParsed)continue;
-  const transfer=puExtractCharTransfer(m.content);
-  if(!transfer)continue;
-  m.puTransferParsed=true;
-  // Keep ordinary dialogue, but remove the instruction marker.
-  if(transfer.remaining)m.content=transfer.remaining;
-  else {m.puType='transfer';m.puAmount=transfer.amount.toFixed(2);m.puNote='';m.puStatus='pending';m.content=`[转账 ¥${m.puAmount}]`;changed=true;continue;}
-  const exists=state.messages.some(x=>x.puTransferSourceId===m.id);
-  if(!exists)state.messages.splice(state.messages.indexOf(m)+1,0,{
-   id:uid(),role:'assistant',date:now(),puType:'transfer',
-   puAmount:transfer.amount.toFixed(2),puNote:transfer.note,
-   puStatus:'pending',puTransferSourceId:m.id,content:`[转账 ¥${transfer.amount.toFixed(2)}]`
-  });
-  changed=true;
- }
- if(changed){persist();renderChat()}
-};
 /* Existing incoming gifts from AI and old messages get status support. */
 const puMoneyOldRender=puRenderMessage;
 puRenderMessage=function(m){if(['gift','transfer'].includes(m.puType)&&!m.puStatus)m.puStatus='pending';return puMoneyOldRender(m)};
@@ -3449,10 +3425,83 @@ puConversationPrompt=function(){const original=originalConversation();if(puChatO
 
 // Quote presentation and pending-message state (preserve existing bubble rendering).
 const puOriginalRenderQuoted=renderChat;
-renderChat=function(){puOriginalRenderQuoted();const nodes=[...$('chatList').children];state.messages.forEach((m,i)=>{if(!m.puQuote||!nodes[i])return;const bubble=nodes[i].querySelector('.bubble');if(!bubble)return;const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+m.puQuote;bubble.prepend(quote)});};
+renderChat=function(){
+ puOriginalRenderQuoted();
+ const nodes=[...$('chatList').children];
+ state.messages.forEach((m,i)=>{
+  const node=nodes[i];if(!node)return;
+  node.dataset.messageId=m.id;
+  if(m.puQuoteId||m.puQuote){
+   const target=state.messages.find(x=>x.id===m.puQuoteId);
+   const preview=target?(target.content||target.puNote||'[转账]'):(m.puQuote||'');
+   const bubble=node.querySelector('.bubble')||node.querySelector('.pu-msg-content');
+   if(bubble&&preview){const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+(target?(target.role==='user'?'我':'Char')+'：':'')+preview.slice(0,150);quote.title='点击定位原消息';quote.onclick=e=>{e.stopPropagation();if(target)weiJumpToQuote(target.id)};bubble.prepend(quote)}
+  }
+  const content=node.querySelector('.bubble')||node.querySelector('.pu-msg-content');
+  if(content){content.addEventListener('contextmenu',e=>{e.preventDefault();weiChooseQuote(m.id)});let timer,moved=false;content.addEventListener('touchstart',()=>{moved=false;timer=setTimeout(()=>{timer=null;if(!moved)weiChooseQuote(m.id)},550)},{passive:true});content.addEventListener('touchmove',()=>{moved=true;clearTimeout(timer)},{passive:true});content.addEventListener('touchend',()=>clearTimeout(timer),{passive:true});content.addEventListener('touchcancel',()=>clearTimeout(timer),{passive:true})}
+ });
+};
+
+let weiPendingQuoteId=null;
+function weiJumpToQuote(id){const node=[...document.querySelectorAll('#chatList .msg')].find(x=>x.dataset.messageId===id);if(node){node.scrollIntoView({block:'center',behavior:'smooth'});node.classList.add('wei-quote-flash');setTimeout(()=>node.classList.remove('wei-quote-flash'),1200)}}
+function weiQuoteBar(){let bar=document.getElementById('weiQuoteBar');if(!bar){bar=document.createElement('div');bar.id='weiQuoteBar';bar.className='wei-quote-bar';const composer=document.querySelector('#chat .pu-wx-composer');composer?.parentNode?.insertBefore(bar,composer)}if(!bar)return;const m=state.messages.find(x=>x.id===weiPendingQuoteId);bar.hidden=!m;if(!m){bar.replaceChildren();return}bar.replaceChildren();const t=document.createElement('span');t.textContent='↳ '+(m.role==='user'?'我':'Char')+'：'+String(m.content||m.puNote||'[转账]').slice(0,90);const x=document.createElement('button');x.type='button';x.textContent='×';x.title='取消引用';x.onclick=()=>{weiPendingQuoteId=null;weiQuoteBar()};bar.append(t,x)}
+function weiChooseQuote(id){const m=state.messages.find(x=>x.id===id);if(!m)return;weiPendingQuoteId=id;weiQuoteBar();document.getElementById('chatInput')?.focus()}
+const weiOldUserSend=window.sendMessage;
+window.sendMessage=function(...args){const before=state.messages.length;const ret=weiOldUserSend.apply(this,args);const created=state.messages.slice(before).filter(x=>x.role==='user');if(created.length&&weiPendingQuoteId){created[0].puQuoteId=weiPendingQuoteId;weiPendingQuoteId=null;weiQuoteBar();persist();renderChat()}return ret};
+function weiParseCharOutput(raw){
+ let text=String(raw||'').trim(),quoteId=null,legacyQuote=null;
+ const idMatch=text.match(/^【引用ID[:：]\s*([^】]+)】\s*/);
+ if(idMatch){const id=idMatch[1].trim();const ref=state.messages.find(m=>m.id===id&&m.role==='user');if(ref)quoteId=id;text=text.slice(idMatch[0].length)}
+ const legacy=text.match(/^【引用[:：]([^】]+)】\s*/);
+ if(legacy){const content=legacy[1].trim();const ref=[...state.messages].reverse().find(m=>m.role==='user'&&m.content.trim()===content);if(ref)quoteId=ref.id;else legacyQuote=null;text=text.slice(legacy[0].length)}
+ const output=[];const tokens=weiTransferTokens(text);
+ let first=true;
+ for(const token of tokens){
+  if(token.type==='text'){if(token.value.trim()){output.push({id:uid(),role:'assistant',content:token.value.trim(),date:now(),...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
+  else{const amount=Number(token.amount);if(amount>=.01&&amount<=99999.99){output.push({id:uid(),role:'assistant',date:now(),puType:'transfer',puAmount:amount.toFixed(2),puNote:(token.note||'').slice(0,100),puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+']',...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
+ }
+ return output;
+}
+function weiTransferTokens(text){
+ const result=[];
+ // Explicit protocol, legacy bracket variants, and an optional inline remark.
+ const re=/[【\[（(]\s*(?:向你|给你)?转账\s*[:：]?\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?(?:\s*[|｜,，;；]\s*(?:备注|附言|转账备注)\s*[:：]\s*([^】\]）)\n]{0,100}))?\s*[】\]）)]|(?:^|\n)\s*(?:转账金额|转账)\s*[:：]\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元)?(?:\s*[，,;；|｜]\s*(?:备注|附言)\s*[:：]\s*([^\n]{1,100}))?/g;
+ let last=0,m;
+ while((m=re.exec(text))){const amount=(m[1]||m[3]||'').replace(/,/g,'');if(!(Number(amount)>=.01&&Number(amount)<=99999.99))continue;
+  if(m.index>last)result.push({type:'text',value:text.slice(last,m.index)});
+  let note=(m[2]||m[4]||'').trim();let end=re.lastIndex;
+  if(!note){const tail=text.slice(end).match(/^\s*(?:备注|附言|转账备注)\s*[:：]\s*([^\n，。]{1,100})/);if(tail){note=tail[1].trim();end+=tail[0].length;re.lastIndex=end}}
+  result.push({type:'transfer',amount,note});last=end;
+ }
+ if(last<text.length)result.push({type:'text',value:text.slice(last)});
+ return result.length?result:[{type:'text',value:text}];
+}
+// Correct the active sticker importer: accept named links, whitespace, full-width colons and pasted line wrapping.
+window.weiStickerImportLinks=async function(single=false){
+ const get=id=>document.getElementById(id);
+ const raw=single?get('weiStickerUrl').value:get('weiStickerUrls').value;
+ const rows=raw.replace(/\r/g,'').split(/\n/);const parsed=[];let invalid=0;
+ for(let i=0;i<rows.length;i++){
+  const line=rows[i].trim();if(!line)continue;
+  const found=[...line.matchAll(/https?:\/\/[^\s<>"'，；;]+/gi)];
+  if(!found.length){if(parsed.length&&/^[\w%-]+\.(?:gif|webp|png|jpe?g)(?:\?\S*)?$/i.test(line)){parsed[parsed.length-1].url+=line}else invalid++;continue}
+  for(const m of found){let url=m[0].replace(/[。；;，,）)\]】]+$/g,'');const name=line.slice(0,m.index).replace(/^[\s•*\-\d.、]+/,'').replace(/[\s:：\-—]+$/g,'').trim();try{const u=new URL(url);if(!['http:','https:'].includes(u.protocol))throw Error('protocol');parsed.push({url:u.href,name:single?(get('weiStickerName').value.trim()||name||'未命名表情'):(name||'未命名表情')})}catch(e){invalid++}}
+ }
+ if(!parsed.length){get('weiStickerFeedback').textContent='未识别到有效图片链接，请检查粘贴内容';return}
+ try{
+  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('pu_sticker_database_v1',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('stickers'))r.result.createObjectStore('stickers',{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+  const existing=await new Promise((resolve,reject)=>{const r=db.transaction('stickers','readonly').objectStore('stickers').getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+  const known=new Set(existing.map(x=>x.url));const batch=[];let duplicate=0;
+  for(const item of parsed){if(known.has(item.url)){duplicate++;continue}known.add(item.url);batch.push({...item,id:'url_'+Date.now()+'_'+batch.length+'_'+Math.random().toString(36).slice(2),category:'未分类'})}
+  if(batch.length)await new Promise((resolve,reject)=>{const t=db.transaction('stickers','readwrite');for(const x of batch)t.objectStore('stickers').put(x);t.oncomplete=resolve;t.onerror=()=>reject(t.error)});
+  db.close();get('weiStickerFeedback').textContent='成功导入 '+batch.length+' 张；重复 '+duplicate+' 条；无效 '+invalid+' 条。图片能否显示仍取决于图片源。';
+  if(single){get('weiStickerUrl').value='';get('weiStickerName').value=''}else get('weiStickerUrls').value='';
+  get('weiStickerCount').textContent=(existing.length+batch.length)+' 张　›';
+ }catch(e){get('weiStickerFeedback').textContent='保存失败：'+e.message}
+};
 const puComposer=document.querySelector('#chat .pu-wx-composer');
 if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.style.order='-2';plus.onclick=()=>puToggleExtras();const voice=puComposer.querySelector('button[onclick="puToggleVoice()"]');if(voice)voice.style.display='none';const emoji=puComposer.querySelector('button[onclick="puToggleEmoji()"]');if(emoji)emoji.style.display='none';const send=$('sendBtn');send.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6m0 0-4.5 4.5M12 6l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';send.title='发送消息';send.setAttribute('aria-label','发送消息');send.classList.add('pu-reply-action');send.style.display='inline-flex';send.style.order='2';const start=document.createElement('button');start.id='puStartBtn';start.type='button';start.className='pu-wx-tool pu-reply-action';start.style.order='3';start.onclick=puStartOrStop;send.after(start);puComposer.querySelector('textarea').style.order='1';puUpdateReplyButtons();}
 
 })();
 </script>
-</body></html>
+<style id="wei-functional-repairs">.wei-quote-bar{display:flex;align-items:center;gap:9px;padding:8px 14px;background:var(--panel);font-size:12px;border-top:1px solid var(--line);color:var(--muted)}.wei-quote-bar[hidden]{display:none!important}.wei-quote-bar span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wei-quote-bar button{border:0;background:transparent;font-size:21px;color:var(--ink)}.pu-quoted{padding:6px 9px;margin-bottom:7px;border-left:3px solid #a6a6ae;background:#88888813;border-radius:4px;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}.wei-quote-flash{outline:2px solid #9aa7c7;outline-offset:3px;border-radius:9px}</style></body></html>
