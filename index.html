@@ -3142,4 +3142,98 @@ const unfriend=window.weiRemoveFriend;window.weiRemoveFriend=function(){const id
  setTimeout(proactive,3500);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(proactive,1800)});setInterval(proactive,15*60*1000);
 })();
 </script>
+<style id="wei-world-folders-compact-v2">
+#world .wei-folder-all-link{display:block;width:100%;margin:12px 0 0;padding:13px 14px;border:0;border-radius:13px;background:#fff;color:#287af4;font-size:14px;text-align:center}
+#world .wei-folder-batch{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 8px;flex-wrap:wrap}
+#world .wei-folder-batch small{font-size:12px;color:#91939a}
+#world .wei-folder-batch-buttons{display:flex;gap:7px}
+#world .wei-folder-batch-buttons button{background:#fff;border:1px solid #dddfe4;color:#444;border-radius:18px;font-size:12px;padding:7px 11px}
+#world .wei-folder-batch-buttons button:disabled{opacity:.4}
+#world .wei-folder-manage-layer{position:fixed;inset:0;z-index:9999;background:#f2f2f7;overflow:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 35px)}
+#world .wei-folder-manage-header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;margin-bottom:12px}
+#world .wei-folder-manage-header strong{font-size:17px;color:#252525}
+#world .wei-folder-manage-header button{border:0;background:transparent;color:#287af4;padding:9px;font-size:14px}
+#world .wei-folder-search{width:100%;padding:13px 15px;border:0;border-radius:13px;background:#fff;color:#333;font-size:15px;margin-bottom:12px;box-sizing:border-box}
+#world .wei-folder-manage-row{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;margin:7px 0;padding:10px}
+#world .wei-folder-manage-open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;color:#333;font-size:14px}
+#world .wei-folder-manage-open span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#world .wei-folder-manage-row small{color:#999;white-space:nowrap}
+#world .wei-folder-manage-row>.wei-folder-manage-edit{border:0;background:#f3f3f5;border-radius:10px;color:#777;font-size:12px;padding:9px}
+</style>
+<script id="wei-world-folders-compact-v2-script">
+(function(){
+ 'use strict';
+ const root=document.getElementById('world');
+ if(!root)return;
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const folderKey='pu_world_folders_v1';
+ const savedFolders=()=>{try{let a=JSON.parse(localStorage.getItem(folderKey)||'[]');return Array.isArray(a)?a:[]}catch{return []}};
+ const books=()=>Array.isArray(state.world)?state.world:[];
+ const group=w=>String(w.group||'未分组').trim()||'未分组';
+ const groups=()=>[...new Set([...savedFolders(),...books().map(group)].filter(x=>x&&x!=='全部'&&x!=='未分组'))];
+ const items=g=>g==='全部'?books():books().filter(w=>group(w)===g);
+ const enabled=w=>w.enabled!==false&&localStorage.getItem('pu_world_group_off_'+group(w))!=='1';
+ const oldRender=window.renderWorld;
+ let lastVisited=[];
+ function remember(g){if(g==='全部'||g==='未分组')return;lastVisited=[g,...lastVisited.filter(x=>x!==g)].slice(0,50)}
+ function decorate(){
+  const control=document.getElementById('puWorldGroups'),list=document.getElementById('worldList');if(!control||!list)return;
+  const g=window.puWorldCurrentGroup||'全部';
+  const names=['全部','未分组',...lastVisited.filter(x=>groups().includes(x)),...groups()].filter((x,i,a)=>a.indexOf(x)===i).slice(0,4);
+  const grid=control.querySelector('.wei-folder-grid');
+  if(grid){const cards=[...grid.querySelectorAll('[data-wei-folder]')];const byName=new Map(cards.map(c=>[c.dataset.weiFolder,c]));grid.replaceChildren(...names.map(n=>byName.get(n)).filter(Boolean));}
+  const old=control.querySelector('.wei-folder-all-link');if(old)old.remove();
+  const more=document.createElement('button');more.type='button';more.className='wei-folder-all-link';more.dataset.weiNewAction='folders';more.textContent='查看全部文件夹 ›';control.appendChild(more);
+  const prior=list.querySelector('.wei-folder-batch');if(prior)prior.remove();
+  if(g!=='全部'){
+   const own=items(g),on=own.filter(enabled).length;
+   const bar=document.createElement('div');bar.className='wei-folder-batch';
+   bar.innerHTML='<small>共 '+own.length+' 本 · 已开启 '+on+' 本</small><div class="wei-folder-batch-buttons"><button type="button" data-wei-new-action="batchOn" '+(!own.length?'disabled':'')+'>全部开启</button><button type="button" data-wei-new-action="batchOff" '+(!own.length?'disabled':'')+'>全部关闭</button></div>';
+   const section=list.querySelector('.wei-section-row');if(section)section.after(bar);else list.prepend(bar);
+  }
+ }
+ window.renderWorld=function(){oldRender();decorate()};
+ function modal(){
+  const old=root.querySelector('.wei-folder-manage-layer');if(old){old.remove();return}
+  const layer=document.createElement('div');layer.className='wei-folder-manage-layer';layer.innerHTML='<div class="wei-folder-manage-header"><button type="button" data-wei-new-action="closeFolders">‹ 返回</button><strong>全部文件夹</strong><button type="button" data-wei-new-action="addFolder">＋ 新建</button></div><input class="wei-folder-search" placeholder="搜索文件夹" aria-label="搜索文件夹"><div class="wei-folder-manage-results"></div>';
+  root.appendChild(layer);layer.querySelector('input').addEventListener('input',fillModal);fillModal();
+ }
+ function fillModal(){
+  const layer=root.querySelector('.wei-folder-manage-layer');if(!layer)return;
+  const q=layer.querySelector('input').value.trim().toLowerCase();
+  const names=['全部','未分组',...groups()].filter(x=>x.toLowerCase().includes(q));
+  layer.querySelector('.wei-folder-manage-results').innerHTML=names.length?names.map((g,i)=>'<div class="wei-folder-manage-row"><button type="button" class="wei-folder-manage-open" data-wei-new-action="openFolder" data-folder-index="'+i+'"><span>▱　'+esc(g==='全部'?'全部世界书':g)+'</span></button><small>'+items(g).length+' 本</small>'+(!['全部','未分组'].includes(g)?'<button type="button" class="wei-folder-manage-edit" data-wei-new-action="editFolder" data-folder-index="'+i+'">管理</button>':'')+'</div>').join(''):'<p style="text-align:center;color:#999;padding:35px 0">没有找到文件夹</p>';
+  layer._shownNames=names;
+ }
+ root.addEventListener('click',function(e){
+  const action=e.target.closest('[data-wei-new-action]');
+  if(action){
+   const a=action.dataset.weiNewAction;
+   if(a==='folders'){modal();return}
+   if(a==='closeFolders'){root.querySelector('.wei-folder-manage-layer')?.remove();return}
+   if(a==='addFolder'){window.puWorldAddFolder();fillModal();return}
+   if(a==='openFolder'||a==='editFolder'){
+    const layer=root.querySelector('.wei-folder-manage-layer');const g=layer?._shownNames?.[Number(action.dataset.folderIndex)];if(!g)return;
+    if(a==='openFolder'){remember(g);window.puWorldCurrentGroup=g;layer.remove();window.renderWorld();return}
+    const choice=prompt('管理「'+g+'」\n输入 1 重命名，输入 2 删除（世界书保留）','1');
+    if(choice==='1')window.puWorldRenameFolder(encodeURIComponent(g));
+    if(choice==='2')window.puWorldDeleteFolder(encodeURIComponent(g));
+    fillModal();return;
+   }
+   if(a==='batchOn'||a==='batchOff'){
+    const g=window.puWorldCurrentGroup||'全部';if(g==='全部')return;
+    const own=items(g);if(!own.length)return;
+    const on=a==='batchOn';
+    // Match the existing group-level activation semantics, including its legacy group-off flag.
+    try{localStorage.setItem('pu_world_group_off_'+g,on?'0':'1')}catch(err){alert('保存开关状态失败，请检查浏览器存储空间');return}
+    own.forEach(w=>w.enabled=on);
+    if(typeof persist==='function'&&!persist()){alert('世界书状态保存失败，请先备份数据');return}
+    window.renderWorld();if(typeof toast==='function')toast(on?'当前文件夹已全部开启':'当前文件夹已全部关闭');return;
+   }
+  }
+  const folder=e.target.closest('[data-wei-folder]');if(folder)remember(folder.dataset.weiFolder);
+ },true);
+ window.renderWorld();
+})();
+</script>
 </body></html>
