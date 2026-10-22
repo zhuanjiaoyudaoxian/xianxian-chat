@@ -3504,14 +3504,14 @@ function weiParseCharOutput(raw){
  let first=true;
  for(const token of tokens){
   if(token.type==='text'){if(token.value.trim()){output.push({id:uid(),role:'assistant',content:token.value.trim(),date:now(),...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
-  else{const amount=Number(token.amount);if(amount>=.01&&amount<=99999.99){output.push({id:uid(),role:'assistant',date:now(),puType:'transfer',puAmount:amount.toFixed(2),puNote:(token.note||'').slice(0,100),puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+']',...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
+  else{const amount=Number(token.amount);if(amount>=.01&&amount<=999999999.99){output.push({id:uid(),role:'assistant',date:now(),puType:'transfer',puAmount:amount.toFixed(2),puNote:(token.note||'').slice(0,100),puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+']',...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
  }
  return output;
 }
 function weiTransferTokens(text){
  const result=[];
  // Explicit protocol, legacy bracket variants, and an optional inline remark.
- const re=/[【\[（(]\s*(?:向你|给你)?转账\s*[:：]?\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?(?:\s*[|｜,，;；]\s*(?:备注|附言|转账备注)\s*[:：]\s*([^】\]）)\n]{0,100}))?\s*[】\]）)]|(?:^|\n)\s*(?:转账金额|转账)\s*[:：]\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元)?(?:\s*[，,;；|｜]\s*(?:备注|附言)\s*[:：]\s*([^\n]{1,100}))?/g;
+ const re=/[【\[（(]\s*(?:向你|给你)?转账\s*[:：]?\s*[¥￥]?\s*([\d,]{1,13}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?(?:\s*[|｜,，;；]\s*(?:备注|附言|转账备注)\s*[:：]\s*([^】\]）)\n]{0,100}))?\s*[】\]）)]|(?:^|\n)\s*(?:转账金额|转账)\s*[:：]\s*[¥￥]?\s*([\d,]{1,13}(?:\.\d{1,2})?)\s*(?:元)?(?:\s*[，,;；|｜]\s*(?:备注|附言)\s*[:：]\s*([^\n]{1,100}))?/g;
  let last=0,m;
  while((m=re.exec(text))){const amount=(m[1]||m[3]||'').replace(/,/g,'');if(!(Number(amount)>=.01&&Number(amount)<=99999.99))continue;
   if(m.index>last)result.push({type:'text',value:text.slice(last,m.index)});
@@ -3528,11 +3528,11 @@ const weiPreviousTransferTokens=weiTransferTokens;
 weiTransferTokens=function(source){
  const text=String(source||'');
  const pieces=[];
- const marker=/[【\[（(]\s*(?:向你|给你)?\s*转账\s*[:：]\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?\s*(?:[|｜,，;；]\s*(?:转账备注|备注|附言)\s*[:：]\s*([^】\]）)\r\n]{0,100}))?\s*[】\]）)]/g;
+ const marker=/[【\[（(]\s*(?:向你|给你)?\s*转账\s*[:：]\s*[¥￥]?\s*([\d,]{1,13}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?\s*(?:[|｜,，;；]\s*(?:转账备注|备注|附言)\s*[:：]\s*([^】\]）)\r\n]{0,100}))?\s*[】\]）)]/g;
  let last=0,match;
  while((match=marker.exec(text))){
   const amount=Number(match[1].replace(/,/g,''));
-  if(!(amount>=.01&&amount<=99999.99))continue;
+  if(!(amount>=.01&&amount<=999999999.99))continue;
   if(match.index>last)pieces.push(...weiPreviousTransferTokens(text.slice(last,match.index)));
   pieces.push({type:'transfer',amount:String(amount),note:(match[2]||'').trim()});
   last=marker.lastIndex;
@@ -3541,18 +3541,35 @@ weiTransferTokens=function(source){
  if(last<text.length)pieces.push(...weiPreviousTransferTokens(text.slice(last)));
  return pieces;
 };
+// Normalize legacy plain-text transfers into real message records BEFORE rendering.
+// This retains their original ID, so puMoneyOpen / puMoneyResolve can find them.
 const weiRenderTransferPrevious=puRenderMessage;
+function weiNormalizeTransferMessage(message){
+ if(!message||message.role!=='assistant'||message.puType||typeof message.content!=='string')return false;
+ const tokens=weiTransferTokens(message.content);
+ if(tokens.length!==1||tokens[0].type!=='transfer')return false;
+ const t=tokens[0],amount=Number(t.amount);
+ if(!Number.isFinite(amount)||amount<.01||amount>999999999.99)return false;
+ message.puType='transfer';message.puAmount=amount.toFixed(2);
+ message.puNote=t.note||'';message.puStatus=message.puStatus||'pending';
+ message.content='[转账 ¥'+amount.toFixed(2)+']';
+ return true;
+}
 puRenderMessage=function(message){
- if(message&&message.role==='assistant'&&!message.puType&&typeof message.content==='string'){
-  const tokens=weiTransferTokens(message.content);
-  if(tokens.length===1&&tokens[0].type==='transfer'){
-   const t=tokens[0];
-   return weiRenderTransferPrevious({...message,puType:'transfer',puAmount:Number(t.amount).toFixed(2),puNote:t.note||'',puStatus:'pending'});
-  }
+ // Even if renderChat is called directly, use the actual stored object.
+ if(message&&weiNormalizeTransferMessage(message)){
+  try{persist()}catch(e){console.warn('历史转账迁移保存失败',e)}
  }
  return weiRenderTransferPrevious(message);
 };
-
+// Convert any remaining old messages before the regular chat renderer runs.
+const weiRenderTransferChatPrevious=renderChat;
+renderChat=function(){
+ let changed=false;
+ for(const message of state.messages)if(weiNormalizeTransferMessage(message))changed=true;
+ if(changed){try{persist()}catch(e){console.warn('转账迁移保存失败',e)}}
+ return weiRenderTransferChatPrevious();
+};
 // Correct the active sticker importer: accept named links, whitespace, full-width colons and pasted line wrapping.
 window.weiStickerImportLinks=async function(single=false){
  const get=id=>document.getElementById(id);
@@ -3576,6 +3593,60 @@ window.weiStickerImportLinks=async function(single=false){
   get('weiStickerCount').textContent=(existing.length+batch.length)+' 张　›';
  }catch(e){get('weiStickerFeedback').textContent='保存失败：'+e.message}
 };
+// Unified transfer protocol v3: tokenize all amounts and multiple inline markers.
+// Do not treat free-form prose as a transfer: only explicit delimited instructions.
+weiTransferTokens=function(source){
+ const text=String(source||'');const tokens=[];
+ const marker=/[【\[（(]\s*(?:向你|给你)?\s*转账\s*[:：]\s*[¥￥]?\s*([\d,]+(?:\.\d{1,2})?)\s*(?:元|块钱|块)?\s*(?:[|｜,，;；]\s*(?:转账备注|备注|附言)\s*[:：]\s*([^】\]）)\r\n]{0,100}))?\s*[】\]）)]/g;
+ let last=0,m;
+ while((m=marker.exec(text))!==null){
+  const amount=Number(m[1].replace(/,/g,''));
+  if(!Number.isFinite(amount)||amount<.01||amount>999999999.99)continue;
+  if(m.index>last)tokens.push({type:'text',value:text.slice(last,m.index)});
+  tokens.push({type:'transfer',amount:amount.toFixed(2),note:(m[2]||'').trim()});
+  last=marker.lastIndex;
+ }
+ if(last<text.length)tokens.push({type:'text',value:text.slice(last)});
+ return tokens.length?tokens:[{type:'text',value:text}];
+};
+// The existing incoming-transfer renderer and puMoneyOpen remain the sole UI/actions.
+// Normalize mixed historical messages into actual message records, preserving the
+// original ID on the first segment so existing quote references keep working.
+function weiSplitLegacyTransfers(){
+ let changed=false;
+ for(let i=0;i<state.messages.length;i++){
+  const old=state.messages[i];
+  if(!old||old.role!=='assistant'||old.puType||typeof old.content!=='string')continue;
+  const tokens=weiTransferTokens(old.content);
+  if(!tokens.some(t=>t.type==='transfer'))continue;
+  const parts=[];
+  for(const t of tokens){
+   if(t.type==='text'){
+    if(!t.value.trim())continue;
+    parts.push({...old,id:uid(),content:t.value.trim()});
+   }else{
+    parts.push({...old,id:uid(),puType:'transfer',puAmount:t.amount,
+      puNote:t.note,puStatus:'pending',content:'[转账 ¥'+t.amount+']'});
+   }
+  }
+  if(!parts.length)continue;
+  parts[0].id=old.id;
+  for(let j=1;j<parts.length;j++){
+   delete parts[j].puQuoteId;delete parts[j].puQuote;
+   if(old.puRescueKey)parts[j].puRescueKey=old.puRescueKey+':split:'+j;
+  }
+  state.messages.splice(i,1,...parts);i+=parts.length-1;changed=true;
+ }
+ return changed;
+}
+const weiUnifiedRenderChat=renderChat;
+renderChat=function(){
+ if(weiSplitLegacyTransfers()){
+  try{persist()}catch(e){console.error('拆分历史转账后保存失败',e)}
+ }
+ return weiUnifiedRenderChat();
+};
+
 const puComposer=document.querySelector('#chat .pu-wx-composer');
 if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.style.order='-2';plus.onclick=()=>puToggleExtras();const voice=puComposer.querySelector('button[onclick="puToggleVoice()"]');if(voice)voice.style.display='none';const emoji=puComposer.querySelector('button[onclick="puToggleEmoji()"]');if(emoji)emoji.style.display='none';const send=$('sendBtn');send.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6m0 0-4.5 4.5M12 6l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';send.title='发送消息';send.setAttribute('aria-label','发送消息');send.classList.add('pu-reply-action');send.style.display='inline-flex';send.style.order='2';const start=document.createElement('button');start.id='puStartBtn';start.type='button';start.className='pu-wx-tool pu-reply-action';start.style.order='3';start.onclick=puStartOrStop;send.after(start);puComposer.querySelector('textarea').style.order='1';puUpdateReplyButtons();}
 
