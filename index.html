@@ -2924,7 +2924,7 @@ if($id('worldList'))renderWorld();
   const details=body.querySelector('.wei-settings-details');
   const sections=[
    ['App 仓库',[['App 仓库','wrench','unsupported'],['MCP 工具','monitor','unsupported']]],
-   ['通用',[['新手指南','book','guide'],['夜间模式','moon','night'],['角色设置','grid','charSettings'],['表情包管理','grid','stickers'],['聊天 & 生图 API','message','api'],['API 报错日志','file','apiLogs'],['API 运行日志','chart','apiLogs'],['语音 API','mic','unsupported'],['向量 · ASR · 记忆总结','brain','smartMemory'],['聊天提示词','message','details'],['外观设置','palette','diy'],['消息提示音','bell','unsupported']]],
+   ['通用',[['新手指南','book','guide'],['夜间模式','moon','night'],['角色设置','grid','charSettings'],['表情包管理','grid','stickers'],['聊天 & 生图 API','message','api'],['API 报错日志','file','apiLogs'],['API 运行日志','chart','apiLogs'],['语音 API','mic','unsupported'],['向量 · ASR · 记忆总结','brain','smartMemory'],['聊天提示词','message','chatPrompt'],['外观设置','palette','diy'],['消息提示音','bell','unsupported']]],
    ['数据',[['云备份','cloud','unsupported'],['账号与设备','phone','profile'],['备份数据','upload','backup'],['恢复数据','download','backup'],['清理生成图片','image','unsupported'],['恢复出厂设置','trash','backup']]]
   ];
   const icons={wrench:'⚙',monitor:'▣',book:'ⓘ',moon:'◐',message:'▤',grid:'▦',search:'⌕',file:'▤',chart:'▥',mic:'♩',brain:'⌁',palette:'◉',bell:'♫',cloud:'☁',phone:'▯',upload:'↑',download:'↓',image:'▧',trash:'♜'};
@@ -2937,7 +2937,7 @@ if($id('worldList'))renderWorld();
     if(route==='guide'){toast('新手指南尚未提供独立页面');return}
     if(route==='night'){const sel=el('diy')?.querySelector('select');go('diy');if(sel)sel.focus();return}
     if(name==='API 自检'){weiApiCheckOpen();return}if(route==='stickers'){if(typeof puStickerManagerOpen==='function')puStickerManagerOpen();else toast('表情包管理暂不可用');return}
-    if(route==='details'){if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'start'})}return}
+    if(route==='chatPrompt'){weiPromptOpen();return}if(route==='details'){if(details){details.open=true;details.scrollIntoView({behavior:'smooth',block:'start'})}return}
     go(route);
    };section.appendChild(b)}frag.appendChild(section)
   }
@@ -3300,4 +3300,64 @@ window.weiSmartStopListen=function(){if(recognition)recognition.stop()};
 window.weiSmartSummarize=async function(){const status=$('weiSummaryStatus');if(state.api.mode!=='remote'||!state.api.key||!state.api.url){status.textContent='请先配置并启用聊天 API';return}const messages=(state.messages||[]).filter(m=>m&&typeof m.content==='string'&&m.content.trim()).slice(-100);if(!messages.length){status.textContent='当前没有可总结的聊天记录';return}if(!confirm('将调用聊天 API 生成摘要，可能产生费用。继续吗？'))return;status.textContent='正在生成…';try{const r=await fetch(normalizeUrl(state.api.url),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.api.key},body:JSON.stringify({model:state.api.model,messages:[{role:'system',content:'请用中文准确概括以下角色扮演聊天中的确定事实、关系进展、偏好、重要约定。不要编造，没有证据的不要写。控制在500字以内。'},{role:'user',content:messages.map(m=>(m.role==='user'?'User':'Char')+'：'+m.content).join('\n').slice(-18000)}],temperature:0.2})});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();const summary=j.choices?.[0]?.message?.content;if(typeof summary!=='string'||!summary.trim())throw Error('接口未返回有效摘要');$('weiSummaryDraft').value=summary.trim();status.textContent='草稿已生成，请核对后保存'}catch(e){status.textContent='生成失败：'+e.message}};
 window.weiSmartCommit=function(){const draft=$('weiSummaryDraft').value.trim();if(!draft){toast('请先生成或填写摘要');return}state.summaryText=draft;state.settings.summary=true;persist();toast('已保存到当前角色的旧聊天摘要')};
 })();
-</script></body></html>
+</script>
+<style>
+#weiPromptPage{position:absolute;inset:0;z-index:60;background:#f5f5f7;display:none;flex-direction:column;color:#1c1c1e;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+#weiPromptPage.wei-prompt-open{display:flex}
+#weiPromptPage .wp-nav{height:55px;min-height:55px;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid #eee;font-size:17px;font-weight:600}
+#weiPromptPage .wp-back{position:absolute;left:15px;top:0;height:55px;border:0;background:transparent;color:#111;font-size:29px;line-height:1;padding:0 12px 0 0}
+#weiPromptPage .wp-scroll{overflow:auto;padding:22px 16px 35px;flex:1}
+#weiPromptPage .wp-note{font-size:12px;color:#8e8e93;line-height:1.7;margin:0 4px 15px}
+#weiPromptPage .wp-group{background:#fff;border-radius:15px;overflow:hidden}
+#weiPromptPage .wp-choice{width:100%;min-height:69px;display:flex;align-items:center;gap:13px;padding:13px 16px;border:0;border-bottom:1px solid #f0f0f0;background:#fff;text-align:left;color:#1c1c1e}
+#weiPromptPage .wp-choice:last-child{border-bottom:0}
+#weiPromptPage .wp-choice svg{width:22px;height:22px;flex:none;fill:none;stroke:#262626;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#weiPromptPage .wp-choice-copy{flex:1;min-width:0}
+#weiPromptPage .wp-choice-copy strong{display:block;font-size:15px;font-weight:600}
+#weiPromptPage .wp-choice-copy small{display:block;font-size:11px;color:#8e8e93;margin-top:5px;line-height:1.4}
+#weiPromptPage .wp-check{font-size:20px;color:#111;min-width:20px;text-align:center}
+#weiPromptPage .wp-editor{margin-top:19px;background:#fff;border-radius:15px;padding:16px}
+#weiPromptPage .wp-editor h3{font-size:15px;margin:0 0 7px}
+#weiPromptPage .wp-editor p{font-size:12px;color:#8e8e93;line-height:1.6;margin:0 0 12px}
+#weiPromptPage .wp-editor textarea{width:100%;min-height:230px;resize:vertical;border:1px solid #e5e5ea;border-radius:10px;background:#fafafa;color:#222;padding:12px;font-size:12px;line-height:1.75;box-sizing:border-box}
+#weiPromptPage .wp-actions{display:flex;gap:9px;margin-top:12px}
+#weiPromptPage .wp-actions button{border:1px solid #ddd;background:#fff;color:#111;border-radius:10px;padding:10px 13px;font-size:13px;flex:1}
+#weiPromptPage .wp-actions .wp-primary{background:#171717;color:#fff;border-color:#171717}
+</style>
+<div id="weiPromptPage" aria-label="聊天提示词设置">
+ <div class="wp-nav"><button class="wp-back" type="button" onclick="weiPromptClose()" aria-label="返回设置">‹</button>聊天提示词</div>
+ <div class="wp-scroll">
+  <p class="wp-note">所有版本共享人设优先、爱 User 为底色、关系双向经营的基础原则。切换仅改变表达风格，不会覆盖角色卡或聊天记录。</p>
+  <div class="wp-group">
+   <button type="button" class="wp-choice" onclick="weiPromptSelect('alive')"><svg viewBox="0 0 24 24"><path d="M4 13h3l2-6 4 11 2-6h5"/><path d="M4 4h16v16H4z" opacity=".25"/></svg><span class="wp-choice-copy"><strong>活人感版</strong><small>生活琐事 · 个性打字 · 情绪延续 · 去重</small></span><span class="wp-check" id="wpCheckAlive"></span></button>
+   <button type="button" class="wp-choice" onclick="weiPromptSelect('current')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span class="wp-choice-copy"><strong>当前版本</strong><small>自然均衡 · 真人性格型 · 忠于人设</small></span><span class="wp-check" id="wpCheckCurrent"></span></button>
+   <button type="button" class="wp-choice" onclick="weiPromptSelect('romance')"><svg viewBox="0 0 24 24"><path d="M20.5 8.5c0 5-8.5 10.5-8.5 10.5S3.5 13.5 3.5 8.5a4.5 4.5 0 0 1 8.5-2 4.5 4.5 0 0 1 8.5 2Z"/></svg><span class="wp-choice-copy"><strong>人机恋版</strong><small>情绪层次 · 亲密互动 · 关系沉浸</small></span><span class="wp-check" id="wpCheckRomance"></span></button>
+   <button type="button" class="wp-choice" onclick="weiPromptSelect('custom')"><svg viewBox="0 0 24 24"><path d="M5 19h14M6 15l9-9 3 3-9 9-4 1zM14 7l3 3"/></svg><span class="wp-choice-copy"><strong>自定义</strong><small>独立保存你自己的聊天风格提示词</small></span><span class="wp-check" id="wpCheckCustom"></span></button>
+  </div>
+  <div class="wp-editor"><h3 id="wpEditorTitle">提示词内容</h3><p id="wpEditorHelp"></p><textarea id="wpEditorText" spellcheck="false"></textarea><div class="wp-actions"><button type="button" onclick="weiPromptReset()" id="wpResetBtn">恢复预设</button><button type="button" class="wp-primary" onclick="weiPromptSave()" id="wpSaveBtn">保存自定义</button></div></div>
+ </div>
+</div>
+<script>
+(function(){
+'use strict';
+const KEY='wei_chat_prompt_style_v1', CUSTOM='wei_chat_prompt_custom_v1';
+const common=`【所有版本共享的 Char 互动原则】\n人设优先，爱 User 为底色，关系双向经营。严格依据角色卡、既有关系、历史对话和当下情境塑造角色；不同 Char 的词汇、语气、标点、亲密方式、脾气、缺点与边界必须不同，不能统一成完美恋人。\nChar 在符合人设与关系阶段的前提下，能够主动关心、表达想念、试探暧昧、吃醋、撒娇、邀约、表白、经营感情，也会主动分享自己的生活；不必等待 User 永远先行动。珍视 User、认真回应其感受，争执时可以嘴硬或需要冷静，但不长期冷暴力、不把全部修复责任推给 User。爱不等于盲从，允许独立意见与自然冲突，双方保持尊重。\n感情和事件应有连续性：记住可获得的共同经历、承诺、重要情绪及关系变化，不凭空杜撰既定记忆。根据关系阶段自然互动，不按轮数强制升级。察觉 User 情绪变化，但不要把普通简短回复一律解读为生气；认真倾诉时先理解和倾听，不机械说教、强行积极或转移话题。\n手机聊天时只输出角色本人发送的消息，不写小说旁白、动作括号、第三人称场景描写；小说/长文模式遵循该模式的叙事要求。日常可简短，重要谈心、道歉、告白允许真诚长消息；分条和长短随人设、情绪、情境及用户选择，不固定条数。避免客服口吻、套路开头结尾、每次强行提问、同义复读、机械口癖；错字纠正、表情包、语音只在自然且符合角色时使用，不设固定频率。`;
+const styles={
+current:`【当前版本｜真人性格型】\n优先还原人物的真实个性、说话习惯和动机，表达自然均衡。根据对话自然切换玩笑、日常、严肃、亲密与争执，不刻意加戏，不为显得真实而故意冷淡，也不将所有角色写成同一种温柔口吻。`,
+alive:`【活人感版｜生活连续性与去重】\n在忠实人设的前提下，表现手机另一端正在生活的人：自然提起今天吃的东西、工作学习、朋友、路上的小插曲、琐碎吐槽和突然想起的小事；这些内容要符合已有背景，不能虚构重大设定。主动延续前面提过的考试、约会、计划和话题，尊重时间间隔与可用记忆。\n每个角色保留独特的输入节奏、标点、断句、口头禅和幽默方式；允许偶尔自然的改口或纠错，但不要强制错字、禁用句号或刻意模仿网聊黑话。聊天可有自然的联想和话题跳跃，但 User 认真说话时必须先回应。上一轮的情绪不会无故清零，修复后也应逐渐缓和。加强跨轮次去重：避免固定安慰结构、重复开场、反复相同情话、语音或表情包。`,
+romance:`【人机恋版｜情感层次与关系沉浸】\n所有版本都一样珍惜 User、主动经营感情；本版只增强情感细节和关系互动的表现层次，而不是更爱、更黏或更主动。通过符合人设的细节、独有称呼、彼此默契、共同约定和情绪余韵体现亲密；暧昧、试探、心动、误会、和好与日常陪伴自然衔接。不要每句话都强行撩拨、重复表白或过度甜腻。关系阶段以角色设定和真实互动为准；保留角色自己的缺点、骄傲、幽默和表达方式。`};
+let selected='current';try{selected=localStorage.getItem(KEY)||'current'}catch(e){}if(!['current','alive','romance','custom'].includes(selected))selected='current';
+const readCustom=()=>{try{return localStorage.getItem(CUSTOM)||''}catch(e){return ''}};
+const getStyle=()=>selected==='custom'?readCustom():styles[selected];
+window.weiPromptOpen=function(){const el=document.getElementById('weiPromptPage');el.classList.add('wei-prompt-open');weiPromptRender()};
+window.weiPromptClose=function(){document.getElementById('weiPromptPage').classList.remove('wei-prompt-open')};
+window.weiPromptRender=function(){const map={alive:'Alive',current:'Current',romance:'Romance',custom:'Custom'};Object.keys(map).forEach(k=>document.getElementById('wpCheck'+map[k]).textContent=k===selected?'✓':'');document.getElementById('wpEditorTitle').textContent=({alive:'活人感版 · 提示词预览',current:'当前版本 · 提示词预览',romance:'人机恋版 · 提示词预览',custom:'自定义 · 编辑提示词'})[selected];document.getElementById('wpEditorHelp').textContent=selected==='custom'?'这里只编辑自定义风格补充；所有版本的基础互动原则与手机消息格式仍然生效。':'预设为只读，保留原有完整聊天输出协议与人设资料。切换版本不会覆盖自定义内容。';const ta=document.getElementById('wpEditorText');ta.readOnly=selected!=='custom';ta.value=selected==='custom'?readCustom():common+'\n\n'+styles[selected];document.getElementById('wpSaveBtn').style.display=selected==='custom'?'':'none';document.getElementById('wpResetBtn').style.display=selected==='custom'?'':'none'};
+window.weiPromptSelect=function(v){if(selected==='custom'){const t=document.getElementById('wpEditorText');if(t&&!t.readOnly){try{localStorage.setItem(CUSTOM,t.value)}catch(e){}}}selected=v;try{localStorage.setItem(KEY,v)}catch(e){}weiPromptRender();if(typeof toast==='function')toast('已切换至'+({alive:'活人感版',current:'当前版本',romance:'人机恋版',custom:'自定义'})[v])};
+window.weiPromptSave=function(){if(selected!=='custom')return;try{localStorage.setItem(CUSTOM,document.getElementById('wpEditorText').value);toast('自定义提示词已保存')}catch(e){toast('保存失败，请检查存储空间')}};
+window.weiPromptReset=function(){if(selected!=='custom')return;if(!confirm('清空自定义提示词？不会影响其他版本。'))return;document.getElementById('wpEditorText').value='';weiPromptSave()};
+// Append rather than replace the existing protocol: preserve story mode, JSON array, transfers and stickers.
+const originalConversation=puConversationPrompt;
+puConversationPrompt=function(){const original=originalConversation();if(puChatOptions.mode==='story')return original+'\n\n'+common+'\n\n'+getStyle();return original+'\n\n【风格补充（不改变JSON数组格式和用户所选分条模式）】\n'+common+'\n\n'+getStyle()+'\n\n长度提示：原协议中的80字为日常建议而非硬上限，重要道歉、告白、深度沟通可自然写长；仍按当前消息条数设置及JSON字符串数组格式输出。'};
+})();
+</script>
+</body></html>
