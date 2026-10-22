@@ -2906,4 +2906,23 @@ function puClearCurrentChat(){
  if(result===false)toast('清空后保存失败，请检查存储状态');else toast('当前聊天记录已清空');
 }
 </script>
+
+<!-- Private chat bottom gap: the real footer is #puHubNav, not .pu-hub-nav. -->
+<style id="pu-chat-footer-gap-fix">
+#puHub:has(#chat.pu-inbox-visible) #puHubNav,
+#puHub.pu-private-chat-open #puHubNav{display:none!important;height:0!important;min-height:0!important;padding:0!important;border:0!important;flex:0 0 0!important}
+#puHub:has(#chat.pu-inbox-visible) #puHubTrack,
+#puHub.pu-private-chat-open #puHubTrack{height:100%!important;flex:1 1 0!important;min-height:0!important}
+#puHub.pu-private-chat-open #puHubChatPane #chat.pu-inbox-visible{height:100%!important;min-height:0!important}
+#puHub.pu-private-chat-open #chatScroll{flex:1 1 0!important;min-height:0!important}
+</style>
+<script id="pu-chat-footer-gap-fix-script">
+(function(){
+ const hub=document.getElementById('puHub'),chat=document.getElementById('chat');
+ if(!hub||!chat)return;
+ const sync=()=>hub.classList.toggle('pu-private-chat-open',chat.classList.contains('pu-inbox-visible'));
+ new MutationObserver(sync).observe(chat,{attributes:true,attributeFilter:['class']});
+ sync();
+})();
+</script>
 </body></html>
