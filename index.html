@@ -2409,6 +2409,8 @@ function setFolders(x){localStorage.setItem(worldGroupsKey,JSON.stringify([...ne
 function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase()}
 function signature(w){return JSON.stringify([norm(w.title),norm(w.content),norm(w.keywords),!!w.always])}
 function equivalent(a,b){return signature(a)===signature(b)||!!(a.sourceHash&&b.sourceHash&&a.sourceHash===b.sourceHash)}
+function worldIcon(name){const paths={grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',user:'<path d="M12 20h9"/><path d="M16 4a2 2 0 0 1 3 3L9 17l-4 1 1-4Z"/>'};return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||'')+'</svg>'}
+
 function digest(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
 function cleanWorld(x){return {id:x.id||uid(),title:String(x.title||x.name||'未命名世界书'),content:String(x.content||x.text||''),keywords:Array.isArray(x.keywords)?x.keywords.join(','):String(x.keywords||''),group:String(x.group||'未分组'),always:x.always===true||(!x.keywords&&x.always!==false),enabled:x.enabled!==false,weight:Math.min(100,Math.max(0,Number(x.weight??50)||0)),sourceHash:x.sourceHash||'',date:x.date||now()}}
 function mergeWorld(incoming){let added=0,duplicate=0,updated=0;for(const raw of incoming){const w=cleanWorld(raw);const exact=state.world.find(x=>equivalent(x,w));if(exact){duplicate++;continue}const same=state.world.find(x=>norm(x.title)===norm(w.title));if(same){const choice=confirm('世界书「'+w.title+'」已存在同名条目，但内容不同。\n确定：更新原条目；取消：保留两份。');if(choice){Object.assign(same,{...w,id:same.id,date:same.date});updated++;continue}}state.world.push(w);added++}setFolders([...folders(),...state.world.map(w=>w.group)]);persist();renderWorld();return `新增 ${added}，跳过重复 ${duplicate}，更新 ${updated}`}
@@ -2416,11 +2418,11 @@ window.renderWorld=function(){
  const all=Array.isArray(state.world)?state.world:[];
  const groups=[...new Set(['全部','未分组',...folders(),...all.map(w=>w.group||'未分组')])];
  const controls=$id('puWorldGroups');
- if(controls){controls.style.display='block';controls.innerHTML=`<div class="pu-world-controls"><button class="btn alt small" onclick="puWorldAddFolder()">＋ 新建分组</button><button class="btn alt small" onclick="puWorldOpenImport()">导入世界书</button><button class="btn alt small" onclick="puWorldCleanDuplicates()">整理重复</button></div><div class="pu-world-folder-tabs">${groups.map(g=>`<button class="pu-folder-chip ${window.puWorldCurrentGroup===g?'active':''}" onclick="puWorldSelectFolder(decodeURIComponent('${encodeURIComponent(g)}'))">${esc(g)} (${all.filter(w=>(w.group||'未分组')===g).length})</button>`).join('')}</div><div class="pu-world-folder-actions">${window.puWorldCurrentGroup&&window.puWorldCurrentGroup!=='未分组'?`<button onclick="puWorldRenameFolder('${encodeURIComponent(window.puWorldCurrentGroup)}')">重命名分组</button><button onclick="puWorldDeleteFolder('${encodeURIComponent(window.puWorldCurrentGroup)}')">删除分组</button>`:''}</div>`;}
+ if(controls){controls.style.display='block';controls.innerHTML=`<div class="pu-world-controls"><button class="btn alt small" onclick="puWorldAddFolder()">＋ 新建分组</button><button class="btn alt small" onclick="puWorldOpenImport()">导入世界书</button><button class="btn alt small" onclick="puWorldCleanDuplicates()">整理重复</button></div><div class="pu-world-folder-tabs">${groups.map(g=>`<button class="pu-folder-chip ${window.puWorldCurrentGroup===g?'active':''}" onclick="puWorldSelectFolder(decodeURIComponent('${encodeURIComponent(g)}'))">${esc(g)} (${g==='全部'?all.length:all.filter(w=>(w.group||'未分组')===g).length})</button>`).join('')}</div><div class="pu-world-folder-actions">${window.puWorldCurrentGroup&&window.puWorldCurrentGroup!=='未分组'&&window.puWorldCurrentGroup!=='全部'?`<button onclick="puWorldRenameFolder('${encodeURIComponent(window.puWorldCurrentGroup)}')">重命名分组</button><button onclick="puWorldDeleteFolder('${encodeURIComponent(window.puWorldCurrentGroup)}')">删除分组</button>`:''}</div>`;}
  const current=window.puWorldCurrentGroup||'全部';
  const entries=all.filter(w=>current==='全部'||(w.group||'未分组')===current);
  const list=$id('worldList');if(!list)return;
- list.innerHTML=entries.map(w=>`<div class="pu-world-line"><span>${svg('grid')}</span><button onclick="puWorldToggle('${esc(w.id)}')">${esc(w.title||'未命名世界书')}</button><small>${esc(w.group||'未分组')}</small><button onclick="editWorld('${esc(w.id)}')" aria-label="编辑世界书">${svg('user')}</button></div><div id="pu-world-${esc(w.id)}" class="pu-world-detail" hidden><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(w.content||'')}</p><p class="muted">权重 ${Number(w.weight??50)} · ${esc(w.keywords||'常驻')}</p><div class="row"><button class="btn alt small" onclick="editWorld('${esc(w.id)}')">编辑</button><button class="btn danger small" onclick="deleteEntry('world','${esc(w.id)}')">删除</button></div></div>`).join('')||'<p class="muted">这个分组暂无世界书</p>';
+ list.innerHTML=entries.map(w=>`<div class="pu-world-line"><span>${worldIcon('grid')}</span><button onclick="puWorldToggle('${esc(w.id)}')">${esc(w.title||'未命名世界书')}</button><small>${esc(w.group||'未分组')}</small><button onclick="editWorld('${esc(w.id)}')" aria-label="编辑世界书">${worldIcon('user')}</button></div><div id="pu-world-${esc(w.id)}" class="pu-world-detail" hidden><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(w.content||'')}</p><p class="muted">权重 ${Number(w.weight??50)} · ${esc(w.keywords||'常驻')}</p><div class="row"><button class="btn alt small" onclick="editWorld('${esc(w.id)}')">编辑</button><button class="btn danger small" onclick="deleteEntry('world','${esc(w.id)}')">删除</button></div></div>`).join('')||'<p class="muted">这个分组暂无世界书</p>';
 };
 window.puWorldSelectFolder=function(g){window.puWorldCurrentGroup=g;renderWorld()};
 
@@ -2545,5 +2547,14 @@ if($id('worldList'))renderWorld();
 #settings .wei-settings-details .card{margin-top:12px}
 /* No top-right floating pill controls anywhere; preserve primary buttons elsewhere. */
 .screen > .bar > button:not(.back), .screen > header.bar > button:not(.back){background:transparent!important;box-shadow:none!important;border:0!important;border-radius:0!important;color:#007aff!important;padding:7px 4px!important;min-width:0!important}
+
+/* Global plain iOS navigation arrows: keep click targets, remove circular/pill surfaces. */
+.screen .bar .back, .screen .bar button.back, .screen .bar .iconbtn.back {
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;outline-offset:2px;color:var(--ink)!important;
+ min-width:40px!important;width:40px;height:40px;padding:0!important;
+ display:inline-flex;align-items:center;justify-content:center;
+}
+.screen .bar .back::before,.screen .bar .back::after{box-shadow:none!important;background:transparent!important}
 </style>
 </body></html>
