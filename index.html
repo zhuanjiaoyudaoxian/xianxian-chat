@@ -1200,6 +1200,8 @@ function weiShowApiLogs(){
 async function requestModel(messages,systemOverride,options={}){
  let a=state.api,url=normalizeUrl(a.url);if(!url)throw Error('请填写接口地址');if(!a.model)throw Error('请填写模型名');if(!a.key)throw Error('请填写 API Key');
  let timeoutMs=options.timeoutMs??120000;
+ const requestKind=options.kind||(timeoutMs===30000?'API 自检':'模型请求');
+ const requestStart=performance.now();
  let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeoutMs),status=null,preview='';
  try{
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});
@@ -1211,10 +1213,10 @@ async function requestModel(messages,systemOverride,options={}){
   if(Array.isArray(content))content=content.map(x=>typeof x==='string'?x:(x?.text||x?.content||'')).join('');
   if(content&&typeof content==='object')content=content.text||content.content||'';
   if(typeof content!=='string'||!content.trim())throw Error('模型未返回有效正文（finish_reason: '+(choice?.finish_reason||'未知')+'）');
-  preview=content.slice(0,220);weiApiLog({model:a.model,status,result:'成功',preview});return content.trim();
- }catch(e){const detail=e.name==='AbortError'?'请求超时（'+Math.round(timeoutMs/1000)+' 秒），请检查聊天上下文长度或服务商响应速度':e instanceof TypeError?'浏览器无法连接接口（可能是 CORS 或网络故障）':e.message;weiApiLog({model:a.model,status,result:'失败',preview,detail});throw Error(detail)}finally{clearTimeout(timer)}
+  preview=content.slice(0,220);weiApiLog({model:a.model,status,result:'成功',preview,detail:requestKind+' · '+Math.round(performance.now()-requestStart)+'ms'});return content.trim();
+ }catch(e){const detail=e.name==='AbortError'?'请求超时（'+Math.round(timeoutMs/1000)+' 秒），请检查聊天上下文长度或服务商响应速度':e instanceof TypeError?'浏览器无法连接接口（可能是 CORS 或网络故障）':e.message;weiApiLog({model:a.model,status,result:'失败',preview,detail:requestKind+' · '+Math.round(performance.now()-requestStart)+'ms · '+detail});throw Error(detail)}finally{clearTimeout(timer)}
 }
-async function testApi(){if(!saveApi())return;let btn=$('testApiBtn');btn.disabled=true;$('apiResult').textContent='正在测试…\n实际请求地址：'+state.api.url;try{let reply=await requestModel([{role:'user',content:'你好，请简短回复一句问候。'}],'请简短回复一句友好的中文问候。',{timeoutMs:30000});$('apiResult').textContent='连接成功！\n模型回复：'+reply}catch(e){$('apiResult').textContent='连接失败：'+e.message}finally{btn.disabled=false}}
+async function testApi(){if(!saveApi())return;let btn=$('testApiBtn');btn.disabled=true;$('apiResult').textContent='正在测试…\n实际请求地址：'+state.api.url;try{let reply=await requestModel([{role:'user',content:'你好，请简短回复一句问候。'}],'请简短回复一句友好的中文问候。',{timeoutMs:30000,kind:'API 自检'});$('apiResult').textContent='连接成功！\n模型回复：'+reply}catch(e){$('apiResult').textContent='连接失败：'+e.message}finally{btn.disabled=false}}
 
 const PU_CHAT_OPTIONS='pocket_universe_chat_options_v38';
 let puChatOptions={mode:'chat',reply:'one'};
@@ -1272,7 +1274,6 @@ async function sendMessage(){
  let reply='',error='';
  try{
   if(state.api.mode==='remote'){
-   await maybeSummarize();
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
    const weiStickerChoices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[];
    const weiStickerGuide=weiStickerChoices.length?'\n你可以根据人设和当前语境偶尔发送表情包，仅在合适时使用。可用表情包：'+JSON.stringify(weiStickerChoices)+'。如需发送，在回复文字最后添加 [STICKER:对应id]，不要编造id；无需发送则不加。':' ';
@@ -1294,6 +1295,7 @@ async function sendMessage(){
  }
  if(error){$('typing').classList.remove('show');$('chatStatus').textContent='接口回复失败 · 请查看 API 运行日志';toast('未生成 Char 消息：'+error)}
  sending=false;$('sendBtn').disabled=false;
+ if(!error && state.api.mode==='remote') Promise.resolve().then(()=>maybeSummarize()).catch(e=>console.warn('后台摘要失败',e));
 }
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 /* 模拟通话与本地通话记录：不访问真实电话网络 */
@@ -1593,8 +1595,16 @@ function puProfileSave(){
  catch(e){toast('保存失败，请检查浏览器存储空间')}
 }
 
-function puPickUserAvatar(){puAvatarTarget='user';$('puAvatarFile').click()}
-function puPickCharAvatar(){puAvatarTarget='char';$('puAvatarFile').click()}
+function puOpenAvatarPicker(target){
+ puAvatarTarget=target;
+ const file=document.getElementById('puAvatarFile');
+ if(!file){toast('图片选择器未加载，请刷新页面');return}
+ file.value='';
+ // Trigger directly within the tap handler, as required by iOS Safari.
+ file.click();
+}
+function puPickUserAvatar(){puOpenAvatarPicker('user')}
+function puPickCharAvatar(){puOpenAvatarPicker('char')}
 async function puAvatarUpload(input){const f=input.files?.[0];input.value='';if(!f)return;if(!f.type.startsWith('image/'))return toast('请选择图片');const url=URL.createObjectURL(f);try{const img=new Image();img.src=url;await img.decode();const cv=document.createElement('canvas'),n=320;cv.width=n;cv.height=n;const ctx=cv.getContext('2d'),side=Math.min(img.naturalWidth,img.naturalHeight);ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,n,n);const data=cv.toDataURL('image/jpeg',.78);if(puAvatarTarget==='user'){puUser.avatar=data;localStorage.setItem(PU_USER,JSON.stringify(puUser));puRenderUser();if(document.querySelector("#chat.active"))renderChat()}else{const c=puChars.list.find(x=>x.id===puChars.current);if(!c)return toast('请先选择角色');c.data.persona.avatar=data;state.persona.avatar=data;puStoreChars();puOriginalPersist();puRenderPersonaAvatar();puRenderContacts();if(document.querySelector("#chat.active"))renderChat()}toast('头像已更新')}catch(e){console.error(e);toast('图片保存失败，请换张小一点的图片')}finally{URL.revokeObjectURL(url)}}
 function puRenderPersonaAvatar(){const a=$('puPersonaAvatar');if(!a)return;const v=state.persona.avatar;a.innerHTML=v?`<img src="${v}" alt="角色头像">`:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>'}
 function puNavigate(id){puOriginalGo(id);if(id==='contacts')puRenderContacts();if(id==='diy')puBeautyTabInit();if(id==='persona')puRenderPersonaAvatar()}
@@ -1816,7 +1826,9 @@ function puCropSave(){
  ctx.drawImage(img,sx,sy,ss,ss,0,0,400,400);
  const data=canvas.toDataURL('image/jpeg',.86);
  if(puAvatarTarget==='user'){
-  puUser.avatar=data;localStorage.setItem(PU_USER,JSON.stringify(puUser));puRenderUser();
+  const oldAvatar=puUser.avatar;puUser.avatar=data;
+  try{localStorage.setItem(PU_USER,JSON.stringify(puUser))}catch(e){puUser.avatar=oldAvatar;toast('存储空间不足，头像未保存');return}
+  puRenderUser();
  }else{
   const c=puChars.list.find(x=>x.id===puChars.current);
   if(!c){toast('请先选择角色');return}
@@ -1864,7 +1876,7 @@ function puCropBind(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',puCropBind);
 else puCropBind();
-</script><input type="file" id="puAvatarFile" accept="image/*" style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-100px;top:-100px" onchange="puAvatarUpload(this)"><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><button type="button" onclick="puCropClose()">取消</button><b>移动和缩放</b><button type="button" onclick="puCropReset()">重置</button></div><p class="pu-crop-help">单指移动 · 双指捏合缩放 · 选择方框中的区域</p><div class="pu-crop-stage" id="puCropStage"><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像调整预览"></div><div class="pu-crop-mask"><div id="puCropHole" class="pu-crop-hole"></div></div></div><div class="pu-crop-bottom"><label>缩放 <input type="range" id="puCropZoom" min="1" max="5" step=".01" value="1" oninput="puCropZoomChange()"></label><div class="pu-crop-actions"><button type="button" onclick="puCropClose()">返回</button><button type="button" class="pu-crop-confirm" onclick="puCropSave()">完成</button></div></div></div></div><div id="puProfileEditor" class="pu-profile-editor" hidden><div class="pu-profile-editor-sheet"><div class="pu-profile-editor-head"><button type="button" onclick="puProfileCancel()">取消</button><b>编辑我的资料</b><button type="button" onclick="puProfileSave()">保存</button></div><div class="pu-profile-editor-scroll"><label>名字<input id="puEdit_name" maxlength="100" placeholder="填写 User 名字"></label><label>用户名<input id="puEdit_nickname" maxlength="100" placeholder="@yourname"></label><label>个性签名<textarea id="puEdit_signature" rows="2" maxlength="800" placeholder="显示在个人主页"></textarea></label><label>User 设定<textarea id="puEdit_userSetting" rows="10" maxlength="15000" placeholder="自由填写生日、性格、爱好、背景故事、与 Char 的关系等。只供 AI 理解，不公开展示在主页。"></textarea></label></div><button type="button" class="pu-profile-save-bottom" onclick="puProfileSave()">保存我的资料</button></div></div><script>
+</script><input type="file" id="puAvatarFile" accept="image/*" style="position:fixed;width:1px;height:1px;opacity:0.001;left:0;top:0;z-index:-1" onchange="puAvatarUpload(this)"><div id="puCropOverlay" class="pu-crop-overlay" hidden><div class="pu-crop-dialog"><div class="pu-crop-head"><button type="button" onclick="puCropClose()">取消</button><b>移动和缩放</b><button type="button" onclick="puCropReset()">重置</button></div><p class="pu-crop-help">单指移动 · 双指捏合缩放 · 选择方框中的区域</p><div class="pu-crop-stage" id="puCropStage"><div id="puCropViewport" class="pu-crop-viewport"><img id="puCropImage" alt="头像调整预览"></div><div class="pu-crop-mask"><div id="puCropHole" class="pu-crop-hole"></div></div></div><div class="pu-crop-bottom"><label>缩放 <input type="range" id="puCropZoom" min="1" max="5" step=".01" value="1" oninput="puCropZoomChange()"></label><div class="pu-crop-actions"><button type="button" onclick="puCropClose()">返回</button><button type="button" class="pu-crop-confirm" onclick="puCropSave()">完成</button></div></div></div></div><div id="puProfileEditor" class="pu-profile-editor" hidden><div class="pu-profile-editor-sheet"><div class="pu-profile-editor-head"><button type="button" onclick="puProfileCancel()">取消</button><b>编辑我的资料</b><button type="button" onclick="puProfileSave()">保存</button></div><div class="pu-profile-editor-scroll"><label>名字<input id="puEdit_name" maxlength="100" placeholder="填写 User 名字"></label><label>用户名<input id="puEdit_nickname" maxlength="100" placeholder="@yourname"></label><label>个性签名<textarea id="puEdit_signature" rows="2" maxlength="800" placeholder="显示在个人主页"></textarea></label><label>User 设定<textarea id="puEdit_userSetting" rows="10" maxlength="15000" placeholder="自由填写生日、性格、爱好、背景故事、与 Char 的关系等。只供 AI 理解，不公开展示在主页。"></textarea></label></div><button type="button" class="pu-profile-save-bottom" onclick="puProfileSave()">保存我的资料</button></div></div><script>
 /* v4.6 — icon-only theme + long press custom upload */
 (function(){
  const KEY='pu_icon_style_v46';
