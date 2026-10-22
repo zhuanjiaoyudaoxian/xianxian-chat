@@ -3522,6 +3522,37 @@ function weiTransferTokens(text){
  if(last<text.length)result.push({type:'text',value:text.slice(last)});
  return result.length?result:[{type:'text',value:text}];
 }
+// Transfer protocol safety net: normalize full-width punctuation, keep remarks intact,
+// and render legacy raw transfer messages as cards without modifying stored chat data.
+const weiPreviousTransferTokens=weiTransferTokens;
+weiTransferTokens=function(source){
+ const text=String(source||'');
+ const pieces=[];
+ const marker=/[【\[（(]\s*(?:向你|给你)?\s*转账\s*[:：]\s*[¥￥]?\s*([\d,]{1,8}(?:\.\d{1,2})?)\s*(?:元|块钱|块)?\s*(?:[|｜,，;；]\s*(?:转账备注|备注|附言)\s*[:：]\s*([^】\]）)\r\n]{0,100}))?\s*[】\]）)]/g;
+ let last=0,match;
+ while((match=marker.exec(text))){
+  const amount=Number(match[1].replace(/,/g,''));
+  if(!(amount>=.01&&amount<=99999.99))continue;
+  if(match.index>last)pieces.push(...weiPreviousTransferTokens(text.slice(last,match.index)));
+  pieces.push({type:'transfer',amount:String(amount),note:(match[2]||'').trim()});
+  last=marker.lastIndex;
+ }
+ if(!pieces.length)return weiPreviousTransferTokens(text);
+ if(last<text.length)pieces.push(...weiPreviousTransferTokens(text.slice(last)));
+ return pieces;
+};
+const weiRenderTransferPrevious=puRenderMessage;
+puRenderMessage=function(message){
+ if(message&&message.role==='assistant'&&!message.puType&&typeof message.content==='string'){
+  const tokens=weiTransferTokens(message.content);
+  if(tokens.length===1&&tokens[0].type==='transfer'){
+   const t=tokens[0];
+   return weiRenderTransferPrevious({...message,puType:'transfer',puAmount:Number(t.amount).toFixed(2),puNote:t.note||'',puStatus:'pending'});
+  }
+ }
+ return weiRenderTransferPrevious(message);
+};
+
 // Correct the active sticker importer: accept named links, whitespace, full-width colons and pasted line wrapping.
 window.weiStickerImportLinks=async function(single=false){
  const get=id=>document.getElementById(id);
