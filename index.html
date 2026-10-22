@@ -2586,7 +2586,7 @@ if($id('worldList'))renderWorld();
 #editor.wei-world-editor>.card>.row:first-child{position:sticky;top:0;z-index:5;background:#f2f2f7;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -15px 14px;padding:8px 15px;border-bottom:1px solid #e5e5ea}
 #editor.wei-world-editor #editorTitle{font-size:16px!important;text-align:center;margin:0!important;flex:1;min-width:0}
 #editor.wei-world-editor .wei-editor-back,#editor.wei-world-editor .wei-editor-save{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;font-size:14px;padding:7px 3px;min-width:46px}
-#editor.wei-world-editor .wei-editor-back{color:#30343a;text-align:left}
+#editor.wei-world-editor .wei-editor-back{color:#007aff;text-align:left;white-space:nowrap}
 #editor.wei-world-editor .wei-editor-save{color:#007aff;text-align:right;font-weight:600}
 #editor.wei-world-editor>.card>.row:last-child{display:none!important}
 #editor.wei-world-editor #editorFields{background:#fff;border-radius:16px;padding:16px;margin:0}
@@ -2613,6 +2613,17 @@ if($id('worldList'))renderWorld();
 /* The unwanted lightning floating ball is disabled globally. */
 #puFloatBall,#puFloatingBall,.pu-floating-ball,.pu-float-ball,[id*="petFloat"],[id*="floatPet"]{display:none!important}
 </style>
+<style id="wei-world-interactions-style">
+#editor.wei-world-editor .wei-editor-spacer{width:46px;flex:none}
+#editor.wei-world-editor .wei-world-delete{display:block;width:100%;margin-top:24px;padding:15px;border:0;border-radius:12px;background:#fff;color:#d64545;font-size:15px;font-weight:600;box-shadow:0 0 0 1px #f1dddd inset}
+.wei-all-world-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:20px}
+.wei-all-world-dialog{width:min(100%,430px);max-height:78vh;display:flex;flex-direction:column;overflow:hidden;background:#f2f2f7;border-radius:20px;padding:16px;color:#1c1c1e;box-shadow:0 14px 55px #0003}
+.wei-all-world-head{display:flex;align-items:center;justify-content:space-between;font-size:17px}
+.wei-all-close{border:0;background:transparent;font-size:26px;color:#636366;line-height:1;padding:3px 8px}
+.wei-all-world-dialog p{color:#8e8e93;font-size:13px;margin:5px 0 12px}
+.wei-all-world-list{overflow-y:auto;min-height:0;background:#fff;border-radius:13px}
+.wei-all-world-list .wei-list-item{width:100%}
+</style>
 <script id="wei-final-script">
 (function(){
  'use strict';
@@ -2635,15 +2646,15 @@ if($id('worldList'))renderWorld();
   const names=['全部',...groups(),'未分组'];
   control.innerHTML='<div class="wei-world-heading"><h3>我的文件夹</h3><button type="button" class="wei-link" data-wei-action="manage">管理</button></div><div class="wei-folder-grid">'+names.map(folderCard).join('')+'</div>';
   const items=current==='全部'?all():all().filter(w=>(w.group||'未分组')===current);
-  const sorted=[...items].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  list.innerHTML='<div class="wei-section-row"><h4>'+(current==='全部'?'最近编辑':safe(current)+' · '+items.length+' 本')+'</h4><button type="button" class="wei-link" data-wei-action="all">查看全部</button></div><div class="wei-list">'+(sorted.length?sorted.map(listRow).join(''):'<div class="wei-world-empty">这个文件夹里还没有世界书</div>')+'</div><div class="wei-section-row"><h4>管理工具</h4></div><div class="wei-actions">'+actionRow('新建文件夹','newFolder')+actionRow('导入世界书','import')+actionRow('更多管理操作','more')+'</div>';
+  const sorted=[...items].sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')));
+  list.innerHTML='<div class="wei-section-row"><h4>'+(current==='全部'?'最近编辑':safe(current)+' · '+items.length+' 本')+'</h4><button type="button" class="wei-link" data-wei-action="all">查看全部</button></div><div class="wei-list">'+(sorted.length?(current==='全部'?sorted.slice(0,6):sorted).map(listRow).join(''):'<div class="wei-world-empty">这个文件夹里还没有世界书</div>')+'</div><div class="wei-section-row"><h4>管理工具</h4></div><div class="wei-actions">'+actionRow('新建文件夹','newFolder')+actionRow('导入世界书','import')+actionRow('更多管理操作','more')+'</div>';
  };
  const world=el('world');if(world){world.addEventListener('click',e=>{
   const folder=e.target.closest('[data-wei-folder]');if(folder){window.puWorldCurrentGroup=folder.dataset.weiFolder;renderWorld();return}
   const book=e.target.closest('[data-wei-world]');if(book){editWorld(book.dataset.weiWorld);return}
   const action=e.target.closest('[data-wei-action]');if(!action)return;
   const a=action.dataset.weiAction;
-  if(a==='all'){window.puWorldCurrentGroup='全部';renderWorld()}
+  if(a==='all'){showAllWorldBooks()}
   if(a==='newFolder')puWorldAddFolder();
   if(a==='import')puWorldOpenImport();
   if(a==='manage'||a==='more'){
@@ -2663,13 +2674,46 @@ if($id('worldList'))renderWorld();
  // Editor: one clear header action, no duplicate footer save and no overlap.
  const oldEdit=window.editWorld,oldImport=window.puWorldOpenImport;
  function configureEditor(isImport){const editor=el('editor');if(!editor)return;editor.classList.add('wei-world-editor');const head=editor.querySelector(':scope > .card > .row:first-child');if(!head)return;
-  head.innerHTML='<button type="button" class="wei-editor-back" aria-label="返回">‹</button><h3 id="editorTitle">'+(isImport?'导入世界书':window.weiWorldEditing?'编辑世界书':'新建世界书')+'</h3><button type="button" class="wei-editor-save">'+(isImport?'导入':'保存')+'</button>';
-  head.querySelector('.wei-editor-back').onclick=()=>closeEditor();
+  head.innerHTML='<button type="button" class="wei-editor-back" aria-label="退出世界书编辑">‹ 退出</button><h3 id="editorTitle">'+(isImport?'导入世界书':window.weiWorldEditing?'编辑世界书':'新建世界书')+'</h3><button type="button" class="wei-editor-save">保存</button>';
+  
+  // Exit without saving, with a confirmation only if form fields changed.
+  const fields=el('editorFields');
+  const snapshot=()=>fields?Array.from(fields.querySelectorAll('input,textarea,select')).filter(x=>x.type!=='file').map(x=>[x.id||x.name,x.type==='checkbox'?x.checked:x.value]):[];
+  const initial=JSON.stringify(snapshot());
+  head.querySelector('.wei-editor-back').onclick=()=>{
+   if(JSON.stringify(snapshot())!==initial&&!confirm('有尚未保存的修改，确定退出并放弃修改吗？'))return;
+   closeEditor();
+  };
   head.querySelector('.wei-editor-save').onclick=()=>isImport?puWorldDoImport():puWorldSave();
+  if(!isImport&&window.weiWorldEditing){
+   const panel=el('editorFields')?.querySelector('.pu-world-edit-panel');
+   if(panel){const remove=document.createElement('button');remove.type='button';remove.className='wei-world-delete';remove.textContent='删除世界书';remove.onclick=()=>{
+     const id=window.weiWorldEditingId;
+     const item=all().find(w=>String(w.id)===String(id));if(!item)return;
+     if(!confirm('确定删除世界书「'+(item.title||'未命名')+'」吗？已绑定此世界书的角色将不再使用它。此操作无法撤销。'))return;
+     state.world=all().filter(w=>String(w.id)!==String(id));
+     if(typeof persist==='function'&&!persist()){toast('删除失败，请检查存储空间');return}
+     closeEditor();renderWorld();toast('世界书已删除');
+   };panel.appendChild(remove)}
+  }
   if(!isImport){const label=[...el('editorFields').querySelectorAll('label')].find(x=>x.textContent.trim()==='设定内容');if(label){const row=document.createElement('div');row.className='wei-editor-content-row';label.parentNode.insertBefore(row,label);row.appendChild(label);const wrap=el('pweWord')?.parentElement;if(wrap){const b=wrap.querySelector('button');if(b){b.className='wei-word-import';b.textContent='从 Word 导入';row.appendChild(b)}wrap.style.display='none';el('editorFields').appendChild(wrap)}}}
  }
- window.editWorld=function(id){window.weiWorldEditing=!!id;oldEdit.call(this,id);configureEditor(false)};
+ window.editWorld=function(id){window.weiWorldEditing=!!id;window.weiWorldEditingId=id||null;oldEdit.call(this,id);configureEditor(false)};
  window.puWorldOpenImport=function(){oldImport.call(this);configureEditor(true)};
+ function showAllWorldBooks(){
+  el('weiAllWorldModal')?.remove();
+  const overlay=document.createElement('div');overlay.id='weiAllWorldModal';overlay.className='wei-all-world-overlay';
+  const items=[...all()].sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')));
+  overlay.innerHTML='<div class="wei-all-world-dialog" role="dialog" aria-modal="true" aria-label="全部世界书"><div class="wei-all-world-head"><strong>全部世界书</strong><button type="button" class="wei-all-close" aria-label="关闭">×</button></div><p>共 '+items.length+' 本</p><div class="wei-all-world-list">'+(items.length?items.map(listRow).join(''):'<div class="wei-world-empty">暂无世界书</div>')+'</div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('.wei-all-close').onclick=()=>overlay.remove();
+  overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.remove();return}const book=e.target.closest('[data-wei-world]');if(book){const id=book.dataset.weiWorld;overlay.remove();editWorld(id)}});
+ }
+ // Successful saves update a stable sortable timestamp without altering old worldbook IDs.
+ const weiOldWorldSave=window.puWorldSave;
+ window.puWorldSave=function(){const id=window.weiWorldEditingId;const before=new Set(all().map(w=>w.id));const title=el('pweTitle')?.value.trim();const content=el('pweContent')?.value.trim();const result=weiOldWorldSave.apply(this,arguments);if(title&&content){const target=id?all().find(w=>String(w.id)===String(id)):all().find(w=>!before.has(w.id));if(target){target.updatedAt=new Date().toISOString();persist();renderWorld()}}return result};
+ const weiOldWorldImport=window.puWorldDoImport;
+ window.puWorldDoImport=async function(){const before=new Set(all().map(w=>w.id));const result=await weiOldWorldImport.apply(this,arguments);let changed=false;for(const w of all()){if(!before.has(w.id)){w.updatedAt=new Date().toISOString();changed=true}}if(changed){persist();renderWorld()}return result};
  const oldClose=window.closeEditor;
  window.closeEditor=function(){el('editor')?.classList.remove('wei-world-editor');return oldClose.apply(this,arguments)};
  // Screenshot-inspired Settings A. Keep existing detailed controls and working routes.
