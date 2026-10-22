@@ -1137,7 +1137,36 @@ function saveRules(){state.rules=$('localRules').value;persist();toast('本地�
 function localReply(text){let rules=state.rules.split('\n').map(x=>x.split('='));for(let [key,...rest] of rules){if(key?.trim()&&text.includes(key.trim()))return rest.join('=').trim()||'我在听。'}return '嗯，我在听。你可以再多告诉我一点吗？'}
 function matchedWorld(messages){let recent=messages.map(m=>m.content).join('\n').toLowerCase();return state.world.filter(w=>w.always||String(w.keywords||'').split(/[,，、;；\n]/).some(k=>k.trim()&&recent.includes(k.trim().toLowerCase())))}
 function systemPrompt(recent){let p=state.persona;let world=matchedWorld(recent);return ['你正在进行文字角色扮演。请以角色身份自然回应，保持人设与对话连贯，不要自称系统。',`角色名：${p.name||'未命名角色'}`,`User名字：${puUser.name||'User'}；用户名：${puUser.nickname||''}`,`User设定（由用户填写，作为角色互动背景）：${puUser.userSetting||[puUser.birthday,puUser.personality,puUser.hobbies,puUser.about,puUser.background,puUser.relationship].filter(Boolean).join('；')||'未填写'}`,`对用户的称呼：${p.callMe}`,`性格和说话方式：${p.personality}`,`口头禅：${p.catchphrase}`,`禁止说的话和雷区：${p.taboo}`,`开场白：${p.first}`,`其他人设：${p.extra}`,`角色资料：生日${p.birthday}；星座${p.zodiac}；爱好${p.hobbies}；签名${p.signature}`,`长期记忆：\n${state.memories.map(x=>'- '+x.text).join('\n')||'暂无'}`,`旧聊天摘要：\n${state.settings.summary?state.summaryText||'暂无':'未启用'}`,`相关世界书：\n${world.map(w=>`【${w.title}】${w.content}`).join('\n')||'暂无'}`].join('\n\n')}
-async function requestModel(messages,systemOverride){let a=state.api,url=normalizeUrl(a.url);if(!url)throw Error('请填写接口地址');if(!a.model)throw Error('请填写模型名');if(!a.key)throw Error('请填写 API Key');let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),30000);try{let res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});let raw=await res.text(),data;try{data=JSON.parse(raw)}catch{throw Error('接口返回的不是 JSON（HTTP '+res.status+'）')}if(!res.ok){let detail=String(data.error?.message||data.message||raw).slice(0,220);let hint=({400:'请求参数有误，检查模型名称及随机性参数',401:'API Key 无效或已过期',403:'令牌权限不足或访问被拒绝',404:'接口路径或模型不存在',429:'请求过频或额度受限',500:'服务商内部错误',502:'服务商上游异常',503:'服务暂不可用'})[res.status]||'请检查服务商返回的错误';throw Error('HTTP '+res.status+'（'+hint+'）：'+detail)}let content=data.choices?.[0]?.message?.content;if(Array.isArray(content))content=content.map(x=>x.text||'').join('');if(typeof content!=='string'||!content.trim())throw Error('模型没有返回可用文本，请检查接口格式');return content.trim()}catch(e){if(e.name==='AbortError')throw Error('请求超时（30 秒）');if(e instanceof TypeError)throw Error('浏览器无法连接接口，可能是服务商不允许跨域访问（CORS）或网络问题。此情况需要使用后端代理，无法仅靠网页设置解决。');throw e}finally{clearTimeout(timer)}}
+const WEI_API_LOG_KEY='wei_api_diagnostics_v1';
+function weiApiLog(entry){try{const old=JSON.parse(localStorage.getItem(WEI_API_LOG_KEY)||'[]');old.unshift({time:new Date().toLocaleString(),...entry});localStorage.setItem(WEI_API_LOG_KEY,JSON.stringify(old.slice(0,35)))}catch(e){console.warn('API日志写入失败',e)}}
+function weiShowApiLogs(){
+ document.getElementById('weiApiLogOverlay')?.remove();
+ const overlay=document.createElement('div');overlay.id='weiApiLogOverlay';overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:#0007;display:flex;align-items:center;justify-content:center;padding:18px';
+ const panel=document.createElement('div');panel.style.cssText='background:var(--panel,#fff);color:var(--ink,#222);width:min(100%,560px);max-height:85dvh;overflow:auto;border-radius:20px;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere';
+ const heading=document.createElement('div');heading.textContent='API 运行日志（最近35条）';heading.style.cssText='font-weight:700;font-size:17px;margin-bottom:12px';panel.appendChild(heading);
+ const note=document.createElement('p');note.textContent='仅保存在当前浏览器；不记录 API Key、请求地址或完整对话。仅保留截断的模型回复片段供排查。';note.style.cssText='font-size:12px;color:#888';panel.appendChild(note);
+ const logs=JSON.parse(localStorage.getItem(WEI_API_LOG_KEY)||'[]');
+ const content=document.createElement('div');content.style.cssText='font-size:12px;line-height:1.7';content.textContent=logs.length?logs.map(x=>[x.time,'模型：'+(x.model||''),'HTTP：'+(x.status??'未收到'),'结果：'+(x.result||''),'原始片段：'+(x.preview||'（无）'),'详情：'+(x.detail||'')].join('\n')).join('\n\n──────────\n\n'):'暂无记录。请注意：修复前的请求无法追溯。';panel.appendChild(content);
+ const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:10px;margin-top:16px';
+ const close=document.createElement('button');close.textContent='关闭';close.className='btn alt';close.onclick=()=>overlay.remove();
+ const clear=document.createElement('button');clear.textContent='清空日志';clear.className='btn alt';clear.onclick=()=>{localStorage.removeItem(WEI_API_LOG_KEY);overlay.remove();weiShowApiLogs()};buttons.append(close,clear);panel.appendChild(buttons);overlay.appendChild(panel);overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};document.body.appendChild(overlay);
+}
+async function requestModel(messages,systemOverride){
+ let a=state.api,url=normalizeUrl(a.url);if(!url)throw Error('请填写接口地址');if(!a.model)throw Error('请填写模型名');if(!a.key)throw Error('请填写 API Key');
+ let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),30000),status=null,preview='';
+ try{
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});
+  status=res.status;const raw=await res.text();let data;
+  try{data=JSON.parse(raw)}catch{throw Error('接口返回的不是 JSON（HTTP '+res.status+'）')}
+  if(!res.ok){const detail=String(data.error?.message||data.message||'未知错误').slice(0,180);throw Error('HTTP '+res.status+'：'+detail)}
+  const choice=data.choices?.[0],msg=choice?.message||{};
+  let content=msg.content;
+  if(Array.isArray(content))content=content.map(x=>typeof x==='string'?x:(x?.text||x?.content||'')).join('');
+  if(content&&typeof content==='object')content=content.text||content.content||'';
+  if(typeof content!=='string'||!content.trim())throw Error('模型未返回有效正文（finish_reason: '+(choice?.finish_reason||'未知')+'）');
+  preview=content.slice(0,220);weiApiLog({model:a.model,status,result:'成功',preview});return content.trim();
+ }catch(e){const detail=e.name==='AbortError'?'请求超时（30 秒）':e instanceof TypeError?'浏览器无法连接接口（可能是 CORS 或网络故障）':e.message;weiApiLog({model:a.model,status,result:'失败',preview,detail});throw Error(detail)}finally{clearTimeout(timer)}
+}
 async function testApi(){if(!saveApi())return;let btn=$('testApiBtn');btn.disabled=true;$('apiResult').textContent='正在测试…\n实际请求地址：'+state.api.url;try{let reply=await requestModel([{role:'user',content:'你好，请简短回复一句问候。'}],'请简短回复一句友好的中文问候。');$('apiResult').textContent='连接成功！\n模型回复：'+reply}catch(e){$('apiResult').textContent='连接失败：'+e.message}finally{btn.disabled=false}}
 
 const PU_CHAT_OPTIONS='pocket_universe_chat_options_v38';
@@ -1169,17 +1198,19 @@ function puConversationPrompt(){
 }
 function puParseChatReplies(raw){
  const text=String(raw||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+ if(!text)return [];
  let parts=[];
- try{const obj=JSON.parse(text);if(Array.isArray(obj))parts=obj.filter(x=>typeof x==='string');else if(obj&&Array.isArray(obj.messages))parts=obj.messages.filter(x=>typeof x==='string')}catch(e){}
+ try{const obj=JSON.parse(text);if(Array.isArray(obj))parts=obj.filter(x=>typeof x==='string');else if(obj&&Array.isArray(obj.messages))parts=obj.messages.filter(x=>typeof x==='string');else if(typeof obj==='string')parts=[obj]}catch(e){}
  if(!parts.length)parts=[text];
- if(puChatOptions.mode==='story')return parts;
- const narration=/^(?:[“"'「]?\s*)?(?:[^，。！？\n]{0,14}(?:维持着|指尖|额头|身影|眼眸|脸庞|走廊|声控灯|黑夜|月光|夜色|窗外|空气中|沉默在|死寂|灯光|光晕|呼吸|抬起|垂下|低头|转身|看着|缓缓|忽然|仿佛|似乎|泛着|蔓延|吞没|映出|勾勒|修长的|漆黑的|他的|她的|他|她)[^\n]{7,})/;
+ if(puChatOptions.mode==='story')return parts.map(x=>String(x).trim()).filter(Boolean);
+ const narration=/^(?:[“"'「]?\s*)?(?:[^，。！？\n]{0,14}(?:维持着|指尖|额头|身影|眼眸|脸庞|走廊|声控灯|黑夜|月光|夜色|窗外|空气中|沉默在|死寂|灯光|光晕|呼吸|抬起|垂下|低头|转身|看着|缓缓|忽然|仿佛|似乎|泛着|蔓延|吞没|映出|勾勒|修长的|漆黑的|他的|她的)[^\n]{7,})/;
  const out=[];
- for(let p of parts){p=String(p).trim().replace(/^[\s\-*•\d.、]+/,'');if(!p)continue;
+ for(let p of parts){p=String(p).trim().replace(/^[\s\-*•]+/,'');if(!p)continue;
   if(narration.test(p)||/^(?:\*|（|\()[^\n]{3,}(?:\*|）|\))$/.test(p))continue;
-  if(p.length>120)continue;
   out.push(p);
  }
+ // 模型确实生成了文字但全部被过滤时，优先保留原文，避免付费后只显示省略号。
+ if(!out.length&&parts.length)for(const p of parts){if(String(p).trim())out.push(String(p).trim())}
  const cap=puChatOptions.reply==='one'?1:puChatOptions.reply==='auto'?5:6;
  return out.slice(0,cap);
 }
@@ -1198,17 +1229,17 @@ async function sendMessage(){
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
    reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。' : systemPrompt(recent)+'\n\n'+puConversationPrompt());
   }else reply=localReply(text);
- }catch(e){error=e.message;reply=localReply(text)}
- let parts=puParseChatReplies(reply);
+ }catch(e){error=e.message;reply=''}
+ let parts=error?[]:puParseChatReplies(reply);
  if(puChatOptions.reply==='one')parts=parts.slice(0,1);
- if(!parts.length)parts=[puChatOptions.mode==='chat'?'……':(reply||'嗯')];
+ if(!parts.length){error=error||'模型回复解析后没有有效文本';weiApiLog({model:state.api.model,status:'解析',result:'失败',preview:String(reply).slice(0,220),detail:error})}
  for(let i=0;i<parts.length;i++){
   const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
   await new Promise(r=>setTimeout(r,delay));
   state.messages.push({id:uid(),role:'assistant',content:parts[i],date:now()});persist();renderChat();
   if(i===parts.length-1)$('typing').classList.remove('show');
  }
- if(error){$('chatStatus').textContent='接口失败 · 已回退本地';toast('接口未连通，已改用本地回复：'+error)}
+ if(error){$('typing').classList.remove('show');$('chatStatus').textContent='接口回复失败 · 请查看 API 运行日志';toast('未生成 Char 消息：'+error)}
  sending=false;$('sendBtn').disabled=false;
 }
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
@@ -2765,13 +2796,14 @@ if($id('worldList'))renderWorld();
   const details=body.querySelector('.wei-settings-details');
   const sections=[
    ['App 仓库',[['App 仓库','wrench','unsupported'],['MCP 工具','monitor','unsupported']]],
-   ['通用',[['新手指南','book','guide'],['夜间模式','moon','night'],['主动发消息','message','unsupported'],['表情包管理','grid','stickers'],['聊天 & 生图 API','message','api'],['API 自检','search','api'],['API 报错日志','file','unsupported'],['API 运行日志','chart','unsupported'],['语音 API','mic','unsupported'],['向量 · ASR · 记忆总结','brain','details'],['聊天提示词','message','details'],['外观设置','palette','diy'],['消息提示音','bell','unsupported']]],
+   ['通用',[['新手指南','book','guide'],['夜间模式','moon','night'],['主动发消息','message','unsupported'],['表情包管理','grid','stickers'],['聊天 & 生图 API','message','api'],['API 自检','search','api'],['API 报错日志','file','apiLogs'],['API 运行日志','chart','apiLogs'],['语音 API','mic','unsupported'],['向量 · ASR · 记忆总结','brain','details'],['聊天提示词','message','details'],['外观设置','palette','diy'],['消息提示音','bell','unsupported']]],
    ['数据',[['云备份','cloud','unsupported'],['账号与设备','phone','profile'],['备份数据','upload','backup'],['恢复数据','download','backup'],['清理生成图片','image','unsupported'],['恢复出厂设置','trash','backup']]]
   ];
   const icons={wrench:'⚙',monitor:'▣',book:'ⓘ',moon:'◐',message:'▤',grid:'▦',search:'⌕',file:'▤',chart:'▥',mic:'♩',brain:'⌁',palette:'◉',bell:'♫',cloud:'☁',phone:'▯',upload:'↑',download:'↓',image:'▧',trash:'♜'};
   const frag=document.createDocumentFragment();
   for(const [heading,items] of sections){const section=document.createElement('div');section.className='wei-settings-group';section.innerHTML='<div class="wei-settings-caption">'+safe(heading)+'</div>';
    for(const [name,icon,route] of items){const b=document.createElement('button');b.type='button';b.className='wei-settings-link';b.innerHTML='<span class="wei-setting-icon">'+safe(icons[icon]||'◦')+'</span><span class="wei-setting-label">'+safe(name)+'</span>';b.onclick=()=>{
+    if(route==='apiLogs'){weiShowApiLogs();return}
     if(route==='unsupported'){toast('「'+name+'」尚未在当前版本实现，暂不能使用');return}
     if(route==='guide'){toast('新手指南尚未提供独立页面');return}
     if(route==='night'){const sel=el('diy')?.querySelector('select');go('diy');if(sel)sel.focus();return}
