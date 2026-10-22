@@ -553,7 +553,7 @@ html[data-pu-mode="dark"] .wei-theme-dialog{background:#22242a;color:#f1f1f4}
 html[data-pu-mode="dark"] .wei-theme-dialog button{border-color:#393b43;color:#f1f1f4}
 html[data-pu-mode="dark"] .wei-theme-dialog .wei-theme-cancel{color:#aaaab3}
 
-</style><style>
+#chat .pu-wx-composer:has(textarea:not(:placeholder-shown)) #puPlusBtn{display:inline-flex!important}#chat #puPlusBtn{display:inline-flex!important;flex-shrink:0}#chat #sendBtn{display:inline-flex!important;align-items:center;justify-content:center;min-width:36px;width:36px;height:36px;border-radius:50%;padding:0;font-size:23px}#chat #puStartBtn{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border-radius:50%;font-size:19px;background:var(--primary);color:white;border:0}#chat .pu-quoted{font-size:11px;border-left:3px solid var(--primary);padding:4px 7px;margin-bottom:6px;opacity:.72;white-space:pre-wrap;overflow-wrap:anywhere}#chat .pu-wx-composer textarea:disabled{opacity:.65}</style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
 .pu-story-screen{background:#f5f0e9!important;color:#38312e}.pu-story-screen .bar{background:#f8f4ef;border-bottom:1px solid #e6ddd4}.pu-story-scroll{padding:15px 17px 25px;overflow-y:auto;flex:1}.pu-story-page{padding:20px 18px;margin:0 0 17px;background:#fffdf9;border:1px solid #e9e1d8;border-radius:9px;box-shadow:0 3px 15px #3c30240a;font-size:14px;line-height:2.05;white-space:pre-wrap;overflow-wrap:anywhere}.pu-story-page.user{background:#f3eae2;border-color:#e7d8ca}.pu-story-author{font-size:11px;color:#9b8c81;margin-bottom:11px;letter-spacing:1px}.pu-story-compose{padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:#f8f4ef;border-top:1px solid #e6ddd4;display:flex;flex-direction:column;gap:9px}.pu-story-compose textarea{width:100%;min-height:75px;max-height:145px;resize:vertical;border:1px solid #dfd4c9;background:#fffdf9;border-radius:12px;padding:11px;font-size:13px}.pu-story-compose .btn{align-self:flex-end}.pu-world-group{border:1px solid #e8dce4;border-radius:13px;padding:12px;margin:10px 0;background:#fff}.pu-world-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.pu-world-group-actions{display:flex;gap:6px;flex-wrap:wrap}.pu-world-group-actions button{font-size:11px;padding:6px 9px;border:1px solid #e5c9d7;border-radius:8px;background:#fff}.pu-world-off{opacity:.48}.pu-world-group small{font-size:11px;color:#888}.pu-crop-overlay{position:fixed;inset:0;background:#0009;z-index:9999;display:grid;place-items:center;padding:18px}.pu-crop-overlay[hidden]{display:none}.pu-crop-dialog{width:min(100%,390px);background:#fff;border-radius:19px;padding:18px;color:#333;display:flex;flex-direction:column;gap:12px}.pu-crop-head{display:flex;justify-content:space-between}.pu-crop-head button{border:0;background:transparent;font-size:19px}.pu-crop-dialog p{font-size:12px;color:#777;margin:0}.pu-crop-viewport{width:min(65vw,260px);height:min(65vw,260px);margin:auto;border-radius:15px;overflow:hidden;position:relative;background:#ddd;touch-action:none;cursor:grab}.pu-crop-viewport img{position:absolute;max-width:none;max-height:none;pointer-events:none;user-select:none}.pu-crop-dialog label{font-size:12px;display:flex;align-items:center;gap:12px}.pu-crop-dialog input{flex:1}
@@ -1203,6 +1203,7 @@ async function requestModel(messages,systemOverride,options={}){
  const requestKind=options.kind||(timeoutMs===30000?'API 自检':'模型请求');
  const requestStart=performance.now();
  let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeoutMs),status=null,preview='';
+ if(options.signal){if(options.signal.aborted)ctrl.abort();else options.signal.addEventListener('abort',()=>ctrl.abort(),{once:true});}
  try{
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});
   status=res.status;const raw=await res.text();let data;
@@ -1266,10 +1267,17 @@ function puParseChatReplies(raw){
 function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAvatar').textContent=initial();$('callAvatar').textContent=initial();$('callName').textContent=n;let list=$('chatList');list.innerHTML=puChatOptions.mode==='story'?state.messages.map(m=>`<article class="pu-story-entry ${m.role==='user'?'user':''}"><div class="pu-story-by">${m.role==='user'?'你':esc(n)} · ${esc(m.date||'')}</div>${esc(m.content)}</article>`).join(''):state.messages.map(m=>`<div class="msg ${m.role==='user'?'me':''}"><div class="avatar">${m.role==='user'?'我':esc(initial())}</div><div><div class="bubble">${esc(m.content)}</div></div></div>`).join('');$('chatStatus').textContent=state.api.mode==='remote'?'接口模式 · '+(state.api.model||'未配置模型'):'本地模式 · 关键词回复';scrollChat()}function scrollChat(){setTimeout(()=>{$('chatScroll').scrollTop=$('chatScroll').scrollHeight},30)}function autoMemory(text){let m=text.match(/(?:请)?记住[：:，,\s]*([^\n。！？!?]{2,180})/);if(!m)return;if(state.memories.length>=state.settings.maxMem){toast('检测到“记住”，但长期记忆已达上限');return}let val=m[1].trim();if(!state.memories.some(x=>x.text===val)){state.memories.unshift({id:uid(),text:val,date:now()});persist();toast('已自动记下一件事')}}
 async function maybeSummarize(){if(!state.settings.summary||state.api.mode!=='remote')return;let cut=Math.max(0,state.messages.length-state.settings.context),from=state.summaryUntil||0;if(cut-from<20)return;let batch=state.messages.slice(from,cut).map(x=>({role:x.role,content:x.content}));try{let summary=await requestModel([{role:'user',content:'已有摘要：'+(state.summaryText||'无')+'\n\n需要归纳的旧聊天：\n'+batch.map(x=>x.role+': '+x.content).join('\n')}],'将旧聊天压缩成简洁、准确的长期剧情摘要，保留关系变化、关键事件、未完成事项；不要编造。只输出摘要。');state.summaryText=summary;state.summaryUntil=cut;persist()}catch(e){console.warn('摘要生成失败',e)}}
 let sending=false;
-async function sendMessage(){
- const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;
- input.value='';sending=true;$('sendBtn').disabled=true;
- state.messages.push({id:uid(),role:'user',content:text,date:now()});autoMemory(text);persist();renderChat();
+let puReplyController=null,puReplyStopped=false;
+function puUpdateReplyButtons(){const start=document.getElementById('puStartBtn'),send=document.getElementById('sendBtn'),input=document.getElementById('chatInput');if(start){start.textContent=sending?'■':'▶';start.title=sending?'停止 Char 输出':'开始 Char 回复';start.setAttribute('aria-label',start.title)}if(send)send.disabled=sending;if(input){input.disabled=sending;input.placeholder=sending?'Char 正在回复…':'发送消息…'}}
+function sendMessage(){const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;input.value='';state.messages.push({id:uid(),role:'user',content:text,date:now(),puHandled:false});autoMemory(text);persist();renderChat();puUpdateReplyButtons()}
+function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();$('typing').classList.remove('show');toast('已停止 Char 输出');return;}puGenerateQueuedReply()}
+async function puGenerateQueuedReply(){
+ if(sending)return;
+ const pending=state.messages.filter(m=>m.role==='user' && !m.puHandled);
+ if(!pending.length){toast('请先发送消息');return;}
+ const text=pending.map(m=>m.content).join('\n');
+ pending.forEach(m=>m.puHandled=true);persist();
+ sending=true;puReplyController=new AbortController();puReplyStopped=false;puUpdateReplyButtons();
  $('typing').classList.add('show');scrollChat();
  let reply='',error='';
  try{
@@ -1277,25 +1285,27 @@ async function sendMessage(){
    const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.content}));
    const weiStickerChoices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[];
    const weiStickerGuide=weiStickerChoices.length?'\n你可以根据人设和当前语境偶尔发送表情包，仅在合适时使用。可用表情包：'+JSON.stringify(weiStickerChoices)+'。如需发送，在回复文字最后添加 [STICKER:对应id]，不要编造id；无需发送则不加。':' ';
-   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。如果角色主动转账，在角色消息中使用（转账 52.00）这样的明确标记，金额为人民币元，后面可以接正常台词；只有角色真的决定转账时才使用，不能把User的转账当作角色发起。'+weiStickerGuide : systemPrompt(recent)+'\n\n'+puConversationPrompt()+weiStickerGuide);
+   reply=await requestModel(recent,puChatOptions.mode==='chat' ? puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n最高优先级再次强调：只输出角色本人在手机发送的JSON字符串数组，严禁小说旁白、环境、动作、第三人称描述。如果角色主动转账，在角色消息中使用（转账 52.00）这样的明确标记，金额为人民币元，后面可以接正常台词；只有角色真的决定转账时才使用，不能把User的转账当作角色发起。'+weiStickerGuide : systemPrompt(recent)+'\n\n'+puConversationPrompt()+weiStickerGuide+'\n你可以自然地针对用户某条消息引用回复。需要引用时，在该条回复开头写【引用:用户原消息】；不要每条都引用。',{signal:puReplyController.signal,kind:'Char 聊天'});
   }else reply=localReply(text);
  }catch(e){error=e.message;reply=''}
+ if(puReplyStopped){$('typing').classList.remove('show');sending=false;puUpdateReplyButtons();return;}
  let parts=error?[]:puParseChatReplies(reply);
  if(puChatOptions.reply==='one')parts=parts.slice(0,1);
  if(!parts.length){error=error||'模型回复解析后没有有效文本';weiApiLog({model:state.api.model,status:'解析',result:'失败',preview:String(reply).slice(0,220),detail:error})}
  for(let i=0;i<parts.length;i++){
   const delay=i===0?500:Math.min(1900,650+parts[i].length*35);
   await new Promise(r=>setTimeout(r,delay));
+  if(puReplyStopped)break;
   const stickerMatches=[...parts[i].matchAll(/\[STICKER:([^\]\s]+)\]/g)];
   const cleaned=parts[i].replace(/\[STICKER:[^\]]+\]/g,'').trim();
-  if(cleaned)state.messages.push({id:uid(),role:'assistant',content:cleaned,date:now()});
+  if(cleaned){const match=cleaned.match(/^【引用[:：]([^】]+)】\s*/);state.messages.push({id:uid(),role:'assistant',content:match?cleaned.slice(match[0].length):cleaned,puQuote:match?match[1]:null,date:now()});}
   for(const m of stickerMatches.slice(0,1)){const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(m[1]):null;if(sticker)state.messages.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}
   persist();renderChat();
   if(i===parts.length-1)$('typing').classList.remove('show');
  }
  if(error){$('typing').classList.remove('show');$('chatStatus').textContent='接口回复失败 · 请查看 API 运行日志';toast('未生成 Char 消息：'+error)}
- sending=false;$('sendBtn').disabled=false;
- if(!error && state.api.mode==='remote') Promise.resolve().then(()=>maybeSummarize()).catch(e=>console.warn('后台摘要失败',e));
+ sending=false;puUpdateReplyButtons();
+ if(!error && !puReplyStopped && state.api.mode==='remote') Promise.resolve().then(()=>maybeSummarize()).catch(e=>console.warn('后台摘要失败',e));
 }
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 /* 模拟通话与本地通话记录：不访问真实电话网络 */
@@ -2275,7 +2285,7 @@ window.puStickerUrlsSave=()=>{const raw=$id('puStickerUrlText').value;const foun
 function urlGallery(){let grid=$id('puStickerUrlGrid');if(!grid){grid=document.createElement('div');grid.id='puStickerUrlGrid';grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px';$id('puStickerList').after(grid)}grid.innerHTML=getUrls().map(x=>`<div style="min-width:0;background:#eee;padding:5px"><img loading="lazy" src="${escapeHTML(x.url)}" style="width:100%;height:75px;object-fit:contain"><small style="display:block;overflow:hidden;text-overflow:ellipsis">${escapeHTML(x.name)}</small><button onclick="puStickerUrlDelete('${escapeHTML(x.id)}')">删除</button></div>`).join('')}
 window.puStickerUrlDelete=id=>{localStorage.setItem(stickerKey,JSON.stringify(getUrls().filter(x=>x.id!==id)));urlGallery()};const oldStickerOpen=puStickerManagerOpen;window.puStickerManagerOpen=async()=>{await oldStickerOpen();urlGallery()};
 // Optional Char sticker choice is explicitly constrained to known names and IDs.
-const oldSend=sendMessage;sendMessage=async function(){const before=state.messages.length;await oldSend();const list=getUrls();if(!list.length||state.messages.length===before||state.api.mode!=='remote')return;try{const available=list.slice(0,70).map(x=>`${x.id}=${x.name}`).join('\n');const last=state.messages.slice(-5).map(x=>`${x.role}: ${x.content}`).join('\n');const answer=await requestModel([{role:'user',content:`对话：\n${last}\n可用表情包：\n${available}\n你可以选择不发送表情包。只有非常自然合适时才选择一个。只返回ID或NONE。`}],'你是表情包选择器。只能返回给定ID或NONE，不要输出其他内容。');const found=list.find(x=>x.id===answer.trim());if(found){state.messages.push({id:uid(),role:'assistant',content:`[表情包] ${found.name}`,stickerUrl:found.url,date:now()});persist();renderChat()}}catch(e){/* Sticker suggestions never interrupt ordinary chat */}};
+/* Sticker suggestions are handled within explicit Char generation, not on user send. */
 const oldRenderChat=renderChat;renderChat=function(){oldRenderChat();const list=$id('chatList');if(!list)return;const stickerMessages=state.messages.filter(m=>m.stickerUrl);if(!stickerMessages.length)return;const children=[...list.children];for(let i=0;i<state.messages.length&&i<children.length;i++){const m=state.messages[i];if(!m.stickerUrl)continue;const target=children[i];const img=document.createElement('img');img.src=m.stickerUrl;img.alt=m.content||'表情包';img.style.cssText='max-width:145px;max-height:145px;object-fit:contain;display:block';target.replaceChildren(img)}};
 // Ensure the inbox, rather than the conversation, is the first screen.
 load();closeChat();
@@ -3139,7 +3149,7 @@ const originalSend=window.sendMessage;window.sendMessage=async function(...args)
 const originalOpen=window.puInboxOpen;window.puInboxOpen=function(id,group){if(!group){const r=relation(id);if(r.status==='blocked')return toast('当前 User 已拉黑该角色')}return originalOpen(id,group)};
 // A single, optional bio decision after normal chat. No polling and no updates while blocked.
 let bioBusy=false;
-const sendWithBio=window.sendMessage;window.sendMessage=async function(...args){const id=puChars.current;const before=state.messages?.length||0;const result=await sendWithBio.apply(this,args);const c=char(id);if(!c||!weiRoleAllowed('bio',id)||bioBusy||relation(id).status!=='friend'||(state.messages?.length||0)<=before||state.api?.mode!=='remote')return result;const t=Date.now();if(t-(c.weiBioUpdated||0)<7*24*3600e3)return result;const last=state.messages.slice(-8).map(m=>`${m.role==='user'?'User':'Char'}: ${(m.content||'').slice(0,180)}`).join('\n');if(last.length<90)return result;bioBusy=true;try{const promptText='你正在扮演'+puCharName(c)+'。角色设定：'+(c.data?.persona?.personality||'')+'。当前简介：'+(c.data?.persona?.signature||'')+'。最近对话：\n'+last+'\n只有发生值得公开表达的重大情绪或关系变化时才更新个人简介；不得泄露私人对话、身份或其他 User 的信息。没有必要更新就只输出 KEEP；需要更新只输出新简介（最多50字）。';const ans=await requestModel([{role:'user',content:promptText}],'只输出 KEEP 或简短新简介。');const next=String(ans||'').trim().replace(/^['"“]|['"”]$/g,'').slice(0,60);if(next&&next!=='KEEP'&&!next.includes('KEEP')&&char(id)===c&&relation(id).status==='friend'){c.data.persona.signature=next;c.weiBioUpdated=Date.now();if(puChars.current===id)state.persona.signature=next;puStoreChars();if(puChars.current===id)persist()}}catch(e){console.warn('简介自主更新跳过',e)}finally{bioBusy=false}return result};
+/* Automatic bio changes disabled for queued user messages. */
 window.weiMaybeRequest=maybeRequest;
 // On unfriend, schedule one application decision without contacting blocked users.
 const unfriend=window.weiRemoveFriend;window.weiRemoveFriend=function(){const id=profileId;unfriend();if(relation(id).status==='removed')setTimeout(()=>maybeRequest(id),2000)};
@@ -3417,6 +3427,13 @@ window.weiPromptReset=function(){if(selected!=='custom')return;if(!confirm('清�
 // Append rather than replace the existing protocol: preserve story mode, JSON array, transfers and stickers.
 const originalConversation=puConversationPrompt;
 puConversationPrompt=function(){const original=originalConversation();if(puChatOptions.mode==='story')return original+'\n\n'+common+'\n\n'+getStyle();return original+'\n\n【风格补充（不改变JSON数组格式和用户所选分条模式）】\n'+common+'\n\n'+getStyle()+'\n\n长度提示：原协议中的80字为日常建议而非硬上限，重要道歉、告白、深度沟通可自然写长；仍按当前消息条数设置及JSON字符串数组格式输出。'};
+
+// Quote presentation and pending-message state (preserve existing bubble rendering).
+const puOriginalRenderQuoted=renderChat;
+renderChat=function(){puOriginalRenderQuoted();const nodes=[...$('chatList').children];state.messages.forEach((m,i)=>{if(!m.puQuote||!nodes[i])return;const bubble=nodes[i].querySelector('.bubble');if(!bubble)return;const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+m.puQuote;bubble.prepend(quote)});};
+const puComposer=document.querySelector('#chat .pu-wx-composer');
+if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.style.order='-2';plus.onclick=()=>puToggleExtras();const voice=puComposer.querySelector('button[onclick="puToggleVoice()"]');if(voice)voice.style.display='none';const emoji=puComposer.querySelector('button[onclick="puToggleEmoji()"]');if(emoji)emoji.style.display='none';const send=$('sendBtn');send.textContent='↑';send.title='发送消息';send.setAttribute('aria-label','发送消息');send.style.display='inline-flex';send.style.order='2';const start=document.createElement('button');start.id='puStartBtn';start.type='button';start.className='pu-wx-tool';start.style.order='3';start.onclick=puStartOrStop;send.after(start);puComposer.querySelector('textarea').style.order='1';puUpdateReplyButtons();}
+
 })();
 </script>
 </body></html>
