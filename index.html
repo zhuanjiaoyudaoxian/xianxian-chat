@@ -923,6 +923,25 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #puSocialContent #weiBlackListLink{display:block;margin:17px auto 34px;padding:8px 18px;background:none;border:0;color:#929297;font-size:13px;cursor:pointer}
 #contacts .pu-contacts-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
 </style>
+<style id="pu-refined-reply-buttons">
+/* 统一的聊天操作按钮：短箭头与纯 SVG 播放/停止，避免 emoji 外观 */
+#chat .pu-wx-composer #sendBtn,
+#chat .pu-wx-composer #puStartBtn{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
+  padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;
+  background:#35363a!important;color:#fff!important;box-shadow:none!important;
+  font-size:0!important;line-height:1!important;opacity:1;
+}
+#chat .pu-wx-composer #sendBtn svg,
+#chat .pu-wx-composer #puStartBtn svg{width:19px!important;height:19px!important;display:block!important;flex-shrink:0}
+#chat .pu-wx-composer #sendBtn:disabled,
+#chat .pu-wx-composer #puStartBtn:disabled{opacity:.42!important}
+#chat .pu-wx-composer #puStartBtn:active,
+#chat .pu-wx-composer #sendBtn:active{background:#56585d!important}
+#chat .pu-wx-composer:has(textarea:not(:placeholder-shown)) #puPlusBtn{display:inline-flex!important}
+@media(max-width:370px){#chat .pu-wx-composer{gap:5px!important}#chat .pu-wx-composer #sendBtn,#chat .pu-wx-composer #puStartBtn{flex-basis:32px!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}}
+</style>
 </head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -1268,7 +1287,7 @@ function renderChat(){let n=displayName();$('chatName').textContent=n;$('chatAva
 async function maybeSummarize(){if(!state.settings.summary||state.api.mode!=='remote')return;let cut=Math.max(0,state.messages.length-state.settings.context),from=state.summaryUntil||0;if(cut-from<20)return;let batch=state.messages.slice(from,cut).map(x=>({role:x.role,content:x.content}));try{let summary=await requestModel([{role:'user',content:'已有摘要：'+(state.summaryText||'无')+'\n\n需要归纳的旧聊天：\n'+batch.map(x=>x.role+': '+x.content).join('\n')}],'将旧聊天压缩成简洁、准确的长期剧情摘要，保留关系变化、关键事件、未完成事项；不要编造。只输出摘要。');state.summaryText=summary;state.summaryUntil=cut;persist()}catch(e){console.warn('摘要生成失败',e)}}
 let sending=false;
 let puReplyController=null,puReplyStopped=false;
-function puUpdateReplyButtons(){const start=document.getElementById('puStartBtn'),send=document.getElementById('sendBtn'),input=document.getElementById('chatInput');if(start){start.textContent=sending?'■':'▶';start.title=sending?'停止 Char 输出':'开始 Char 回复';start.setAttribute('aria-label',start.title)}if(send)send.disabled=sending;if(input){input.disabled=sending;input.placeholder=sending?'Char 正在回复…':'发送消息…'}}
+function puUpdateReplyButtons(){const start=document.getElementById('puStartBtn'),send=document.getElementById('sendBtn'),input=document.getElementById('chatInput');if(start){start.innerHTML=sending?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="7.5" width="9" height="9" rx="1.6" fill="currentColor"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.7 17 12l-8 5.3z" fill="currentColor"/></svg>';start.title=sending?'停止 Char 输出':'开始 Char 回复';start.setAttribute('aria-label',start.title)}if(send)send.disabled=sending;if(input){input.disabled=sending;input.placeholder=sending?'Char 正在回复…':'发送消息…'}}
 function sendMessage(){const input=$('chatInput'),text=input.value.trim();if(!text||sending)return;input.value='';state.messages.push({id:uid(),role:'user',content:text,date:now(),puHandled:false});autoMemory(text);persist();renderChat();puUpdateReplyButtons()}
 function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();$('typing').classList.remove('show');toast('已停止 Char 输出');return;}puGenerateQueuedReply()}
 async function puGenerateQueuedReply(){
@@ -3432,7 +3451,7 @@ puConversationPrompt=function(){const original=originalConversation();if(puChatO
 const puOriginalRenderQuoted=renderChat;
 renderChat=function(){puOriginalRenderQuoted();const nodes=[...$('chatList').children];state.messages.forEach((m,i)=>{if(!m.puQuote||!nodes[i])return;const bubble=nodes[i].querySelector('.bubble');if(!bubble)return;const quote=document.createElement('div');quote.className='pu-quoted';quote.textContent='↳ '+m.puQuote;bubble.prepend(quote)});};
 const puComposer=document.querySelector('#chat .pu-wx-composer');
-if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.style.order='-2';plus.onclick=()=>puToggleExtras();const voice=puComposer.querySelector('button[onclick="puToggleVoice()"]');if(voice)voice.style.display='none';const emoji=puComposer.querySelector('button[onclick="puToggleEmoji()"]');if(emoji)emoji.style.display='none';const send=$('sendBtn');send.textContent='↑';send.title='发送消息';send.setAttribute('aria-label','发送消息');send.style.display='inline-flex';send.style.order='2';const start=document.createElement('button');start.id='puStartBtn';start.type='button';start.className='pu-wx-tool';start.style.order='3';start.onclick=puStartOrStop;send.after(start);puComposer.querySelector('textarea').style.order='1';puUpdateReplyButtons();}
+if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.style.order='-2';plus.onclick=()=>puToggleExtras();const voice=puComposer.querySelector('button[onclick="puToggleVoice()"]');if(voice)voice.style.display='none';const emoji=puComposer.querySelector('button[onclick="puToggleEmoji()"]');if(emoji)emoji.style.display='none';const send=$('sendBtn');send.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6m0 0-4.5 4.5M12 6l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';send.title='发送消息';send.setAttribute('aria-label','发送消息');send.classList.add('pu-reply-action');send.style.display='inline-flex';send.style.order='2';const start=document.createElement('button');start.id='puStartBtn';start.type='button';start.className='pu-wx-tool pu-reply-action';start.style.order='3';start.onclick=puStartOrStop;send.after(start);puComposer.querySelector('textarea').style.order='1';puUpdateReplyButtons();}
 
 })();
 </script>
