@@ -1485,11 +1485,19 @@ async function puGenerateQueuedReply(){
  let raw='',saved=0;
  try{
   if(state.api.mode==='remote'){
-   const recent=state.messages.slice(-state.settings.context).map(x=>({role:x.role,content:x.role==='user'?'[消息ID:'+x.id+'] '+x.content:x.content}));
+   // Preserve every unsent user message even when the context limit is small.
+   const contextLimit=Math.max(1,Number(state.settings.context)||16);
+   const firstPendingIndex=state.messages.findIndex(m=>pendingIds.includes(m.id));
+   const startIndex=Math.max(0,Math.min(state.messages.length-contextLimit,firstPendingIndex<0?state.messages.length:firstPendingIndex));
+   const recent=state.messages.slice(startIndex).map(x=>({role:x.role,content:x.role==='user'?'[消息ID:'+x.id+'] '+x.content:x.content}));
    let choices=[];try{choices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[]}catch(e){console.warn('表情包目录加载失败',e)}
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
    let prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   if(puChatOptions.mode==='chat'){
+    const userBatch=pending.map(m=>'[消息ID:'+m.id+'] '+String(m.content||'')).join('\n');
+    prompt+='\n【连续消息与主动引用】本轮用户连续发送的所有未处理消息如下，必须综合理解，不可只回应最后一条：\n'+userBatch+'\n允许根据语境有节制地引用其中一条真实用户消息，尤其当用户撤回、改口、前后矛盾或提出多个问题时。引用必须使用真实消息ID，在对应独立回复的最开头写【引用ID:实际消息ID】，然后紧接回复内容；绝不可虚构ID、引用内容或每条都引用。若无引用必要就正常回复。引用标记属于协议，不要在普通正文解释。';
+   }
    if(puChatOptions.mode==='chat'&&weiExplicitVoiceRequest(text))prompt+='\n【本轮消息类型要求】用户刚刚明确要求语音。本轮至少输出一条以[语音]开头的独立消息，内容是角色实际说出的话。不要只用文字声称发了语音。';
    raw=await requestModel(recent,prompt+weiContentPrompt('online'),{signal:puReplyController.signal,kind:'Char 聊天'});
   }else raw=localReply(text);
