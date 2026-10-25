@@ -1537,7 +1537,7 @@ async function puGenerateQueuedReply(){
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
    let prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
-   if(trCfg.enabled&&trLang)prompt+='\n【跨语言对话·最高输出语言约束】角色的日常聊天消息必须直接以'+trLang+'撰写，无论角色卡、世界书、聊天历史或系统设定是否使用中文。User 输入可能是中文译成外语的文本。不要将角色台词写成中文，也不要在台词中附加中文解释或双语译文；界面会单独翻译显示。保持现有 JSON 数组和特殊消息协议格式，只限制角色实际说出的自然语言内容。';
+   if(trCfg.enabled&&trLang)prompt+='\n【跨语言对话】Char 使用'+trLang+'自然回复，保持角色母语习惯；User 的外语消息是其中文原话的翻译。';
    if(proactive){
     prompt+='\n【Char 主动续聊】本轮 User 没有发送新消息，这是用户主动点击生成键要求 Char 继续互动。根据已有聊天、人设、关系及世界书自然地延续话题、主动关心、提出问题或开启符合情境的新话题。严禁编造 User 本轮的新消息、台词、行动或心理活动；不要机械复述上一条回复。即使上一条消息由 Char 发出，也可以自然继续。';
    }
@@ -1572,25 +1572,6 @@ async function puGenerateQueuedReply(){
    if(cleaned){try{items=weiParseCharOutput(cleaned)}catch(e){console.warn('特殊消息解析失败，保留原文',e)}if(!items.length)items=[{id:uid(),role:'assistant',content:cleaned,date:now()}]}
    // 表情包失败不应阻断文字消息。
    if(stickerMatches.length){try{const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(stickerMatches[0][1]):null;if(sticker)items.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}catch(e){console.warn('表情包读取失败',e)}}
-   // 角色母语兜底：若模型仍返回中文对白，转换为角色语言；保留中文作显示译文。
-   // 不触碰转账、语音、引用等特殊消息协议，翻译失败也不阻塞原消息。
-   if(state.api.mode==='remote'){
-    const trNow=weiTranslationSettings(),langNow=weiTranslationLanguage();
-    if(trNow.enabled&&langNow){
-     for(const item of items){
-      if(item.role!=='assistant'||!weiTranslationEligible(item))continue;
-      const body=String(item.content||'');
-      const han=/[\u3400-\u9fff]/.test(body),kana=/[\u3040-\u30ff]/.test(body),hangul=/[\uac00-\ud7af]/.test(body);
-      const looksChinese=han&&!kana&&!hangul;
-      const needsConversion=looksChinese&&(langNow==='日语'||langNow==='韩语'||langNow==='英语'||langNow==='法语'||langNow==='德语'||langNow==='西班牙语'||langNow==='俄语');
-      if(!needsConversion)continue;
-      try{
-       const foreign=await weiTranslateText(body,langNow,puReplyController.signal);
-       if(foreign&&foreign!==body){item.content=foreign;item.puTranslation=body;item.puTranslatedFor=langNow;}
-      }catch(err){console.warn('角色语言兜底翻译失败，保留模型原文',err)}
-     }
-    }
-   }
    for(let j=0;j<items.length;j++){items[j].puRescueKey=key+':'+i+':'+j;state.messages.push(items[j]);saved++}
    if(!persist())throw Error('消息保存失败，请检查浏览器存储空间');
    try{renderChat()}catch(e){console.error('消息已保存，但界面渲染失败',e)}
@@ -5118,49 +5099,5 @@ window.weiShowStorageEstimate=async function(){
   alert('喂喂机大容量存储（IndexedDB）\n已使用：'+mb(x.usage)+'\n浏览器估算配额：'+mb(x.quota)+'\n\n实际可用空间由浏览器和设备决定；请定期备份重要数据。');
  }catch(e){alert('无法读取存储容量：'+e.message)}
 };
-</script>
-
-<!-- 聊天导航修复：统一使用 Hub 自带的列表和私聊状态机 -->
-<script id="wei-chat-navigation-stable">
-(function(){
- 'use strict';
- function hubHome(tab){
-  const hub=document.getElementById('puHub');
-  if(!hub)return;
-  // 只通过现有关闭函数清理私聊状态，避免页面类名与闭包 insideChat 不同步。
-  try{window.puInboxClose?.()}catch(e){console.error('关闭私聊失败',e)}
-  document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===hub));
-  hub.hidden=false;
-  hub.classList.remove('pu-private-chat-open');
-  const chat=document.getElementById('chat');
-  if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');}
-  const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
-  const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
-  if(typeof window.puHubTab==='function')window.puHubTab(tab||0);
- }
- // 旧入口可能调用 go、puNavigate 或 puSocialOpenChat，全部统一路由。
- const priorGo=window.go;
- window.go=function(id,...args){
-  if(id==='chat'||id==='puHub'){hubHome(0);return;}
-  if(id==='contacts'){hubHome(1);return;}
-  return priorGo.apply(this,[id,...args]);
- };
- // 部分旧脚本使用词法级 go，而不是 window.go；同步更新其入口。
- try{go=window.go}catch(e){console.warn(e)}
- const priorNavigate=window.puNavigate;
- window.puNavigate=function(id,...args){
-  if(id==='chat'||id==='puHub'){hubHome(0);return;}
-  if(id==='contacts'){hubHome(1);return;}
-  return priorNavigate?.apply(this,[id,...args]);
- };
- window.puReturnToInbox=function(){hubHome(0)};
- // 桌面 Chat 只能进入会话列表，不能使用当前选中角色作为默认聊天对象。
- document.querySelectorAll('#home [onclick]').forEach(el=>{
-  const action=el.getAttribute('onclick')||'';
-  if(/puSocialOpenChat\s*\(|puOpenChat\s*\(|go\s*\(\s*['"](?:chat|contacts)['"]\s*\)/.test(action)){
-   el.setAttribute('onclick','go(\'chat\')');
-  }
- });
-})();
 </script>
 </body></html>
