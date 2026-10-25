@@ -5092,34 +5092,41 @@ puParseChatReplies=function(raw){
 </style><script id="wei-chat-navigation-recovery">
 (function(){
  'use strict';
- const oldGo=window.go;
- function inboxView(){
-  const hub=document.getElementById('puHub'), chat=document.getElementById('chat'), inbox=document.getElementById('puInbox');
-  if(!hub||!inbox)return false;
-  // Close the actual conversation first; it resets the private-chat flag and refreshes the list.
-  try{if(typeof window.puInboxClose==='function')window.puInboxClose()}catch(e){console.warn('close conversation',e)}
-  if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index')}
-  const group=document.getElementById('puGroupRoom');if(group)group.classList.remove('open');
-  document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===hub));
-  hub.hidden=false;hub.style.removeProperty('display');
-  inbox.hidden=false;inbox.style.removeProperty('display');
-  const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
-  const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
-  try{if(typeof window.puHubTab==='function')window.puHubTab(0)}catch(e){console.warn('show inbox',e)}
-  return true;
+ // The previous patch required #puInbox, which does not exist in this HTML.
+ // Route to the actual contacts screen, without altering any saved data.
+ function openContacts(){
+   try {
+     const contacts=document.getElementById('contacts');
+     if(!contacts) return false;
+     const hub=document.getElementById('puHub');
+     const chat=document.getElementById('chat');
+     if(hub) hub.classList.remove('active');
+     if(chat) chat.classList.remove('active');
+     document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x===contacts));
+     if(typeof window.puRenderContacts==='function')window.puRenderContacts();
+     if(typeof window.puSocialClose==='function')try{window.puSocialClose()}catch(e){}
+     return true;
+   }catch(err){console.error('Chat contacts navigation:',err);return false}
  }
- window.weiOpenInboxSafely=inboxView;
- window.go=function(id,...args){if(id==='chat'||id==='puHub') {if(inboxView())return}return oldGo.apply(this,[id,...args])};
- window.puReturnToInbox=inboxView;
- // The homepage icon is a generated inline handler; capture it before older nested handlers can enter a default unnamed chat.
+ window.weiOpenInboxSafely=openContacts;
+ window.puReturnToInbox=openContacts;
+ const previousGo=window.go;
+ window.go=function(id,...args){
+   if(id==='chat'||id==='puHub'){
+     if(openContacts())return;
+   }
+   return previousGo.apply(this,[id,...args]);
+ };
  document.addEventListener('click',function(e){
-  const button=e.target.closest && e.target.closest('#home .bloom-icon');
-  if(!button)return;
-  const handler=button.getAttribute('onclick')||'';
-  const label=(button.textContent||'').trim().toLowerCase();
-  if(/go\(['"](?:chat|contacts|puHub)['"]\)/.test(handler)||label==='chat'||label==='聊天'){
-   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();inboxView();
-  }
+   const btn=e.target.closest&&e.target.closest('#home .bloom-icon');
+   if(!btn)return;
+   const handler=btn.getAttribute('onclick')||'';
+   const label=(btn.textContent||'').trim().toLowerCase();
+   if(/go\(['"](?:chat|contacts|puHub)['"]\)/.test(handler)||label==='chat'||label==='聊天'){
+     if(openContacts()){
+       e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+     }
+   }
  },true);
 })();
 </script>
