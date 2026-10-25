@@ -4247,7 +4247,7 @@ window.weiRegexImport=async el=>{const f=el.files?.[0];if(!f)return;try{const ob
 const by=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))||f}catch{return f}};
 let db=read(KEY,{}),presets=read(PKEY,[]),activePage='story',editingId=null,editingTab='styles',busy=false,offlineChar=null;
-const defaults={words:800,pov:'third',pace:'normal',ratio:'balanced',thought:true,speak:false,memory:true,scene:true,temp:false,tempText:'',preset:null};
+const defaults={words:800,pov:'second',pace:'normal',ratio:'balanced',thought:true,speak:false,memory:true,scene:true,temp:false,tempText:'',preset:null};
 function cid(){return String(puChars.current||'default')};
 function data(){let id=offlineChar||cid();return db[id]||(db[id]={settings:{...defaults},sessions:[],current:null})}
 function cfg(){return data().settings||(data().settings={...defaults})}
@@ -4624,12 +4624,20 @@ async function exit(){
  try{renderChat()}catch(e){console.error('恢复聊天内容失败',e);toast('聊天内容加载失败，请重试')}
 }
 
+function weiOfflinePovRule(pov){
+ const rules={
+  first:'【第一人称：必须执行】以 User 角色自身为叙事者，叙述正文使用「我」指代 User，所见所闻和感受从「我」的视角展开。Char 仍用其姓名或「他/她」称呼；不得把 Char 写成「我」，也不得用「你」持续称呼 User 来写第二人称旁白。尊重「不代替 User 决定」的开关，不能借第一人称擅自替 User 做决定。',
+  second:'【第二人称：必须执行】叙述正文始终以「你」指代 User，动作、感受与所见所闻围绕「你」展开；Char 使用姓名或「他/她」称呼。不要把旁白切换为以「我」为主语的第一人称，也不要把 User 持续写成姓名或「她/他」的第三人称。',
+  third:'【第三人称：必须执行】叙述正文用 User 的实际姓名（如有）或「她/他」称呼 User，用 Char 的姓名或「他/她」称呼 Char。不要用「你」称呼 User 来叙述，也不要以「我」作为叙述者。'
+ };
+ return '\n【线下叙事视角最高优先级】\n'+(rules[pov]||rules.second)+'\n以上规则适用于本次生成和所有自动续写；若与导入的预设、世界书中的写作视角指令、之前剧情的叙述习惯相冲突，以当前用户选择的视角为准。只改变新生成的旁白视角，人物对白中的「我」「你」「他/她」按说话者自然使用，不要机械替换对白，也不要改写既有剧情。\n';
+}
 function makePrompt(){let c=cfg(),x=sess(),p=presets.find(q=>q.id===c.preset),recent=(x?.messages||[]).slice(-20),styles=p?p.prompts.filter(q=>q.enabled).map(q=>q.text).join('\n\n'):'';
 const previousMeetings=data().sessions.filter(m=>m.id!==x?.id&&m.status==='ended').slice(0,12).reverse();
 const previousMemory=previousMeetings.map((m,i)=>{const lines=(m.messages||[]).filter(z=>z&&typeof z.text==='string').slice(-10).map(z=>(z.role==='user'?'User':'Char')+'：'+String(z.versions?.[z.selected||0]||z.text).slice(0,750)).join('\n');return '【已结束的第'+(i+1)+'场见面：'+m.title+'】\n'+(m.summary?'历史摘要：'+m.summary.slice(0,1200)+'\n':'')+lines.slice(-5500)}).join('\n\n').slice(-17000);
 let context=offlineChatContext();
 const worldbook=owPrompt();
-return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【之前已结束的见面（仅供长期记忆，不是当前正在发生的场景）】\n'+(previousMemory||'暂无')+'\n【线下专属世界书（已启用条目，作为设定参考）】\n'+(worldbook||'暂无')+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'');}
+return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【之前已结束的见面（仅供长期记忆，不是当前正在发生的场景）】\n'+(previousMemory||'暂无')+'\n【线下专属世界书（已启用条目，作为设定参考）】\n'+(worldbook||'暂无')+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'')+weiOfflinePovRule(c.pov);}
 // Offline word targets are soft goals, not a strict character limit. This path is
 // intentionally isolated from online chat, translation and preset rendering.
 function weiOfflineCount(text){return Array.from(String(text||'').replace(/\s/g,'')).length}
@@ -4645,7 +4653,7 @@ async function weiOfflineGenerateLengthAware(history,prompt,target){
   const messages=turns===0?history:[...history,
    {role:'assistant',content:result},
    {role:'user',content:'请直接从上文最后一句继续写故事正文，不要重复、总结、重开场景或添加标题。当前正文约'+weiOfflineCount(result)+'字，目标约'+goal+'字；本次请自然续写约'+remaining+'字。只输出新增正文。'}];
-  const extra=turns===0?'\n【本次篇幅要求】正文目标约'+goal+'字，请安排足够完整的情节与细节，不要提前结束。':'\n【续写】只输出接续的新正文，不要重述已有正文。';
+  const extra=(turns===0?'\n【本次篇幅要求】正文目标约'+goal+'字，请安排足够完整的情节与细节，不要提前结束。':'\n【续写】只输出接续的新正文，不要重述已有正文。')+weiOfflinePovRule(cfg().pov);
   const piece=offlineResolve(await requestModel(messages,prompt+extra,{timeoutMs:240000,maxTokens:weiOfflineBudget(remaining),kind:turns?'线下剧情续写':'线下剧情生成'}));
   if(!piece.trim())break;
   const before=weiOfflineCount(result);
