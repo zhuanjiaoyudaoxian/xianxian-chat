@@ -1433,20 +1433,31 @@ function weiRescueRecover(){
 function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();toast('正在停止 Char 输出');return;}if(weiRescueRead()?.charId===puChars.current){weiRescueRecover();return}void puGenerateQueuedReply()}
 /* Mixed-media reply parsing: only explicit standalone protocol markers become media. */
 function weiSplitMixedMedia(parts){
- const marker=/(\[(?:语音|VOICE|AUDIO|语音消息|图片|照片|IMAGE|视频|VIDEO)(?:消息)?\]|【(?:语音|语音消息|VOICE|AUDIO|图片|照片|图片消息|视频|视频消息|IMAGE|VIDEO)】)/gi;
+ // Tokenize before creating records. A transfer embedded in a voice segment is
+ // NEVER part of its transcript, and the following text is a separate message.
+ const media=/\[(?:语音|VOICE|AUDIO|语音消息|图片|照片|IMAGE|视频|VIDEO)(?:消息)?\]|【(?:语音|语音消息|VOICE|AUDIO|图片|照片|图片消息|视频|视频消息|IMAGE|VIDEO)】/gi;
+ const transfer=/[【\[（(]\s*(?:向你|给你)?\s*转账\s*[:：]\s*[¥￥]?\s*[\d,]+(?:\.\d{1,2})?\s*(?:元|块钱|块)?\s*(?:[|｜,，;；]\s*(?:转账备注|备注|附言)\s*[:：]\s*[^】\]）)\r\n]{0,100})?\s*[】\]）)]/g;
  const out=[];
  for(const raw of parts){
   const text=String(raw||'').trim();if(!text)continue;
-  const hits=[...text.matchAll(marker)];
-  if(!hits.length){out.push(text);continue}
-  let cursor=0;
-  for(let i=0;i<hits.length;i++){
-   const hit=hits[i],at=hit.index;
-   const before=text.slice(cursor,at).trim();if(before)out.push(before);
-   const end=i+1<hits.length?hits[i+1].index:text.length;
-   const body=text.slice(at+hit[0].length,end).trim();
-   if(body)out.push(hit[0]+body);else out.push(hit[0]);
-   cursor=end;
+  const markers=[];let m;
+  media.lastIndex=0;transfer.lastIndex=0;
+  while((m=media.exec(text)))markers.push({at:m.index,end:media.lastIndex,label:m[0],kind:'media'});
+  while((m=transfer.exec(text)))markers.push({at:m.index,end:transfer.lastIndex,label:m[0],kind:'transfer'});
+  markers.sort((a,b)=>a.at-b.at||b.end-a.end);
+  const valid=[];let occupied=-1;
+  for(const marker of markers){if(marker.at<occupied)continue;valid.push(marker);occupied=marker.end}
+  if(!valid.length){out.push(text);continue}
+  const head=text.slice(0,valid[0].at).trim();if(head)out.push(head);
+  for(let i=0;i<valid.length;i++){
+   const token=valid[i],next=valid[i+1];
+   if(token.kind==='transfer'){
+    out.push(token.label);
+    const after=text.slice(token.end,next?next.at:text.length).trim();if(after)out.push(after);
+   }else{
+    const body=text.slice(token.end,next?next.at:text.length).trim();
+    if(body)out.push(token.label+body);
+   }
   }
  }
  return out;
@@ -1478,7 +1489,7 @@ async function puGenerateQueuedReply(){
    let choices=[];try{choices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[]}catch(e){console.warn('表情包目录加载失败',e)}
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
-   const prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   let prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
    if(puChatOptions.mode==='chat'&&weiExplicitVoiceRequest(text))prompt+='\n【本轮消息类型要求】用户刚刚明确要求语音。本轮至少输出一条以[语音]开头的独立消息，内容是角色实际说出的话。不要只用文字声称发了语音。';
    raw=await requestModel(recent,prompt+weiContentPrompt('online'),{signal:puReplyController.signal,kind:'Char 聊天'});
   }else raw=localReply(text);
@@ -4501,6 +4512,25 @@ puParseChatReplies=function(raw){
   return body?'[语音]'+body:part;
  });
 };
+})();
+</script>
+<script>
+/* Hide only exact adjacent legacy voice transcript duplicates. No stored data changes. */
+(function(){
+ const previous=renderChat;
+ renderChat=function(){
+  const result=previous.apply(this,arguments);
+  const list=document.getElementById('chatList');
+  if(!list)return result;
+  const nodes=[...list.children];
+  for(let i=1;i<state.messages.length;i++){
+   const prev=state.messages[i-1],cur=state.messages[i];
+   if(!prev||!cur||prev.role!=='assistant'||cur.role!=='assistant'||prev.puType!=='voice'||cur.puType||cur.puRecalled)continue;
+   const transcript=String(prev.puVoiceText||prev.content||'').trim();
+   if(transcript&&String(cur.content||'').trim()===transcript&&nodes[i])nodes[i].style.display='none';
+  }
+  return result;
+ };
 })();
 </script>
 </body></html>
