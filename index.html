@@ -1437,7 +1437,7 @@ async function puGenerateQueuedReply(){
    let choices=[];try{choices=typeof weiStickerCatalog==='function'?await weiStickerCatalog():[]}catch(e){console.warn('表情包目录加载失败',e)}
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
-   const prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔最多200000元，每日累计最多200000元，超过额度不要发起转账。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   const prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
    raw=await requestModel(recent,prompt,{signal:puReplyController.signal,kind:'Char 聊天'});
   }else raw=localReply(text);
   if(puReplyStopped)return;
@@ -2705,8 +2705,39 @@ function puMoneyStatusLabel(m){const labels=m.puType==='transfer'?{pending:'待�
 function puMoneyFind(id){return state.messages.find(m=>m.id===id)}
 function puMoneyClose(){document.getElementById('puMoneyOverlay').hidden=true}
 function puMoneyDialog(html){document.getElementById('puMoneySheet').innerHTML=html;document.getElementById('puMoneyOverlay').hidden=false}
-function puMoneyCompose(type){if(type!=='transfer')return toast('红包功能已停用');puToggleExtras(false);const label=type==='gift'?'红包':'转账';puMoneyDialog(`<h3>发送${label}</h3><label>金额（元）</label><input id="puMoneyAmount" inputmode="decimal" type="number" min="0.01" max="200000" step="0.01" placeholder="0.00"><label>${type==='gift'?'祝福语':'转账备注'}</label><input id="puMoneyNote" maxlength="100" placeholder="${type==='gift'?'恭喜发财，大吉大利':'转账'}"><div class="pu-money-actions"><button onclick="puMoneyClose()">取消</button><button onclick="puMoneySend('${type}')">发送</button></div>`)}
-async function puMoneySend(type){if(type!=='transfer')return toast('红包功能已停用');if(sending)return toast('请等待回复完成');const raw=document.getElementById('puMoneyAmount').value;const amount=Number(raw);if(!raw||!Number.isFinite(amount)||amount<.01||amount>200000||Math.abs(Math.round(amount*100)-amount*100)>0.00001)return toast('单笔转账限额为200,000元');if(amount>weiMoneyRemaining('user'))return toast('今日转账累计已达限额，剩余额度 ¥'+weiMoneyRemaining('user').toFixed(2));const w=puMoneyWallet();if(amount>w.balance)return toast('余额不足');const note=document.getElementById('puMoneyNote').value.trim().slice(0,100);w.balance=Math.round((w.balance-amount)*100)/100;const id=uid();w.records.push({id,amount:-amount,note:'发送'+(type==='gift'?'红包':'转账'),date:now()});try{puMoneySave(w)}catch(e){return toast('钱包保存失败')};const m={id,role:'user',date:now(),puType:type,puAmount:amount.toFixed(2),puNote:note,puStatus:'pending',content:`[${type==='gift'?'红包':'转账'} ¥${amount.toFixed(2)}] ${note}`};state.messages.push(m);persist();renderChat();puMoneyClose();await puReplyToRichMessage(m.content+'。你可以根据人设决定接受或退还，不必机械接受。')}
+function puMoneyCompose(type){if(type!=='transfer')return toast('红包功能已停用');puToggleExtras(false);const label=type==='gift'?'红包':'转账';puMoneyDialog(`<h3>发送${label}</h3><label>金额（元）</label><input id="puMoneyAmount" inputmode="decimal" type="number" min="0.01" max="99999.99" step="0.01" placeholder="0.00"><label>${type==='gift'?'祝福语':'转账备注'}</label><input id="puMoneyNote" maxlength="100" placeholder="${type==='gift'?'恭喜发财，大吉大利':'转账'}"><div id="puMoneyError" role="alert" style="color:#b54b4b;font-size:12px;min-height:18px;margin:8px 0"></div><div class="pu-money-actions"><button onclick="puMoneyClose()">取消</button><button type="button" onclick="puMoneySend('${type}')">发送</button></div>`)}
+async function puMoneySend(type){
+ const errorEl=document.getElementById('puMoneyError');
+ const fail=msg=>{if(errorEl)errorEl.textContent=msg;else toast(msg);return false};
+ if(type!=='transfer')return fail('红包功能已停用');
+ if(sending)return fail('请等待当前回复完成后再转账');
+ const amountEl=document.getElementById('puMoneyAmount'),noteEl=document.getElementById('puMoneyNote');
+ if(!amountEl||!noteEl)return fail('转账页面加载异常，请重新打开');
+ const raw=amountEl.value.trim(),amount=Number(raw),cents=Math.round(amount*100);
+ if(!raw||!Number.isFinite(amount)||amount<.01||amount>99999.99||Math.abs(cents-amount*100)>.00001)return fail('单笔转账金额须为 0.01～99,999.99 元');
+ const remaining=weiMoneyRemaining('user');
+ if(amount>remaining)return fail('今日剩余转账额度 ¥'+remaining.toFixed(2));
+ const w=puMoneyWallet();
+ if(amount>w.balance)return fail('模拟钱包余额不足（当前 ¥'+w.balance.toFixed(2)+'），请先在钱包中调整余额');
+ const note=noteEl.value.trim().slice(0,100),id=uid(),date=now();
+ const m={id,role:'user',date,puType:'transfer',puAmount:amount.toFixed(2),puNote:note,puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+'] '+note};
+ const originalBalance=w.balance;
+ w.balance=Math.round((originalBalance-amount)*100)/100;
+ w.records.push({id,amount:-amount,note:'发送转账',date});
+ try{
+  puMoneySave(w);
+  state.messages.push(m);
+  persist();renderChat();puMoneyClose();
+ }catch(e){
+  state.messages=state.messages.filter(x=>x.id!==id);
+  w.balance=originalBalance;w.records=w.records.filter(x=>x.id!==id);
+  try{puMoneySave(w)}catch(_){}
+  return fail('转账保存失败：'+(e&&e.message||'未知错误'));
+ }
+ try{await puReplyToRichMessage(m.content+'。你可以根据人设决定接受或退还，不必机械接受。')}
+ catch(e){toast('转账已发送，但角色回复失败：'+(e&&e.message||'未知错误'))}
+ return true;
+}
 function puMoneyOpen(id){const m=puMoneyFind(id);if(!m||!['gift','transfer'].includes(m.puType))return;const incoming=m.role==='assistant';const status=puMoneyStatusLabel(m);const action=m.puStatus==='pending'&&incoming?`<button onclick="puMoneyResolve('${m.id}','returned')">退还</button><button onclick="puMoneyResolve('${m.id}','received')">${m.puType==='gift'?'拆红包':'确认收款'}</button>`:`<button onclick="puMoneyClose()">关闭</button>`;puMoneyDialog(`<div class="wei-receipt"><div class="wei-receipt-head"><span>PAYMENT RECEIPT</span><button type="button" onclick="puMoneyClose()" aria-label="关闭转账详情">×</button></div><div class="wei-receipt-main"><small>${m.puType==='gift'?'红包详情':'转账详情'}</small><strong>¥${esc(Number(m.puAmount||0).toFixed(2))}</strong><span>✓ ${esc(status)}</span></div><div class="wei-receipt-fields"><div><span>交易类型</span><b>${m.puType==='gift'?'红包':'转账'}</b></div><div><span>转账备注</span><b>${esc(m.puNote||'无')}</b></div><div><span>当前状态</span><b>${esc(status)}</b></div></div><div class="pu-money-actions wei-receipt-actions">${action}</div></div>`)}
 function puMoneyResolve(id,status){
  const m=puMoneyFind(id);
@@ -3693,7 +3724,7 @@ window.sendMessage=function(...args){const before=state.messages.length;const re
 // Fictional in-app transfer policy: ¥200,000 per transfer and per calendar day,
 // counted separately for each sender in this conversation. Pending/returned
 // transfers still consume initiation quota; receipts are never counted.
-const WEI_TRANSFER_DAY_CAP=200000;
+const WEI_TRANSFER_DAY_CAP=99999.99;
 function weiMoneyDay(value){
  const raw=String(value||'');const date=raw.match(/^(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
  if(date)return date[1]+'-'+date[2].padStart(2,'0')+'-'+date[3].padStart(2,'0');
@@ -3718,11 +3749,11 @@ function weiParseCharOutput(raw){
  for(const token of tokens){
   if(token.type==='text'){if(token.value.trim()){output.push({id:uid(),role:'assistant',content:token.value.trim(),date:now(),...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false}}
   else{const amount=Number(token.amount),cents=Math.round(amount*100);
-   if(amount>=.01&&Number.isFinite(cents)&&cents<=20000000&&cents<=remainingCents){
+   if(amount>=.01&&Number.isFinite(cents)&&cents<=9999999&&cents<=remainingCents){
     remainingCents-=cents;
     output.push({id:uid(),role:'assistant',date:now(),puType:'transfer',puAmount:amount.toFixed(2),puNote:(token.note||'').slice(0,100),puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+']',...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false;
    }else{
-    const reason=cents>20000000?'单笔超过 ¥200,000 限额':'今日累计转账超过 ¥200,000 限额';
+    const reason=cents>9999999?'单笔超过 ¥99,999.99 限额':'今日累计转账超过 ¥99,999.99 限额';
     output.push({id:uid(),role:'assistant',date:now(),content:'[转账未发出：'+reason+']',...(first&&quoteId?{puQuoteId:quoteId}:{})});first=false;
    }
   }
@@ -3770,7 +3801,7 @@ function weiNormalizeTransferMessage(message){
  const tokens=weiTransferTokens(message.content);
  if(tokens.length!==1||tokens[0].type!=='transfer')return false;
  const t=tokens[0],amount=Number(t.amount);
- if(!Number.isFinite(amount)||amount<.01||amount>999999999.99)return false;
+ if(!Number.isFinite(amount)||amount<.01||amount>99999.99)return false;
  message.puType='transfer';message.puAmount=amount.toFixed(2);
  message.puNote=t.note||'';message.puStatus=message.puStatus||'pending';
  message.content='[转账 ¥'+amount.toFixed(2)+']';
@@ -3814,6 +3845,9 @@ window.weiStickerImportLinks=async function(single=false){
   get('weiStickerCount').textContent=(existing.length+batch.length)+' 张　›';
  }catch(e){get('weiStickerFeedback').textContent='保存失败：'+e.message}
 };
+// Keep the model informed of the same transaction limit used by the UI.
+const weiTransferPromptBeforeLimit=puConversationPrompt;
+puConversationPrompt=function(){return weiTransferPromptBeforeLimit()+'\n【转账金额硬性规则】单笔转账必须在0.01～99999.99元之间，今日累计最多99999.99元。绝不生成131400、520000等超额转账；想表达131400的寓意可选择1314或13140等合法金额。格式严格使用【转账:1314.00|备注:想你了】，备注由你依角色性格和情境自行决定。不要把超额金额自动截断为99999.99。';};
 // Unified transfer protocol v3: tokenize all amounts and multiple inline markers.
 // Do not treat free-form prose as a transfer: only explicit delimited instructions.
 weiTransferTokens=function(source){
@@ -3822,7 +3856,7 @@ weiTransferTokens=function(source){
  let last=0,m;
  while((m=marker.exec(text))!==null){
   const amount=Number(m[1].replace(/,/g,''));
-  if(!Number.isFinite(amount)||amount<.01||amount>999999999.99)continue;
+  if(!Number.isFinite(amount)||amount<.01||amount>99999.99)continue;
   if(m.index>last)tokens.push({type:'text',value:text.slice(last,m.index)});
   tokens.push({type:'transfer',amount:amount.toFixed(2),note:(m[2]||'').trim()});
   last=marker.lastIndex;
