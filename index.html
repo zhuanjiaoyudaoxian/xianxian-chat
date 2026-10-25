@@ -1348,7 +1348,7 @@ async function requestModel(messages,systemOverride,options={}){
  let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeoutMs),status=null,preview='';
  if(options.signal){if(options.signal.aborted)ctrl.abort();else options.signal.addEventListener('abort',()=>ctrl.abort(),{once:true});}
  try{
-  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.key},body:JSON.stringify({model:a.model,temperature:a.temperature,...(Number.isFinite(options.maxTokens)&&options.maxTokens>0?{max_tokens:Math.floor(options.maxTokens)}:{}),messages:[{role:'system',content:systemOverride||systemPrompt(messages)},...messages]}),signal:ctrl.signal});
   status=res.status;const raw=await res.text();let data;
   try{data=JSON.parse(raw)}catch{throw Error('接口返回的不是 JSON（HTTP '+res.status+'）')}
   if(!res.ok){const detail=String(data.error?.message||data.message||'未知错误').slice(0,180);throw Error('HTTP '+res.status+'：'+detail)}
@@ -4630,9 +4630,34 @@ const previousMemory=previousMeetings.map((m,i)=>{const lines=(m.messages||[]).f
 let context=offlineChatContext();
 const worldbook=owPrompt();
 return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【之前已结束的见面（仅供长期记忆，不是当前正在发生的场景）】\n'+(previousMemory||'暂无')+'\n【线下专属世界书（已启用条目，作为设定参考）】\n'+(worldbook||'暂无')+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'');}
+// Offline word targets are soft goals, not a strict character limit. This path is
+// intentionally isolated from online chat, translation and preset rendering.
+function weiOfflineCount(text){return Array.from(String(text||'').replace(/\s/g,'')).length}
+function weiOfflineBudget(remaining){return Math.min(16000,Math.max(1200,Math.ceil(remaining*2.4+700)))}
+async function weiOfflineGenerateLengthAware(history,prompt,target){
+ const remote=state.api.mode==='remote';
+ if(!remote)return offlineResolve(localReply(history[history.length-1].content));
+ const goal=Math.max(100,Math.min(12000,Number(target)||800));
+ const threshold=Math.floor(goal*0.86);
+ let result='',turns=0;
+ while(turns<4){
+  const remaining=Math.max(0,goal-weiOfflineCount(result));
+  const messages=turns===0?history:[...history,
+   {role:'assistant',content:result},
+   {role:'user',content:'请直接从上文最后一句继续写故事正文，不要重复、总结、重开场景或添加标题。当前正文约'+weiOfflineCount(result)+'字，目标约'+goal+'字；本次请自然续写约'+remaining+'字。只输出新增正文。'}];
+  const extra=turns===0?'\n【本次篇幅要求】正文目标约'+goal+'字，请安排足够完整的情节与细节，不要提前结束。':'\n【续写】只输出接续的新正文，不要重述已有正文。';
+  const piece=offlineResolve(await requestModel(messages,prompt+extra,{timeoutMs:240000,maxTokens:weiOfflineBudget(remaining),kind:turns?'线下剧情续写':'线下剧情生成'}));
+  if(!piece.trim())break;
+  const before=weiOfflineCount(result);
+  result+=(result&&!/^\s/.test(piece)?'\n\n':'')+piece.trim();
+  turns++;
+  if(weiOfflineCount(result)>=threshold||weiOfflineCount(result)-before<Math.max(60,Math.floor(goal*0.04)))break;
+ }
+ return result;
+}
 async function generate(regen=-1){await owInit;if(busy)return;let x=sess();if(!x||x.status==='ended')return toast('本次见面已结束，请开始新见面');busy=true;let start=Date.now(),typing=by('woTyping');if(typing)typing.hidden=false;let send=by('puStorySend');if(send)send.disabled=true;
 try{let history=x.messages.slice(-20).map(m=>({role:m.role==='user'?'user':'assistant',content:offlineResolve(m.versions?.[m.selected||0]||m.text)}));if(history.length&&history[history.length-1].role==='assistant')history.push({role:'user',content:'请继续当前场景，保持连贯，不重复前文。'});if(!history.length)history.push({role:'user',content:'这是新的一次线下见面。记得之前已结束见面的事实和关系变化，但不要直接续写上一场结束时的动作。结合当前线上聊天、约定和人物关系自然开始本次见面。\n'+offlineChatContext()});
-if(weiExt.regex)history=history.map((m,i)=>({...m,content:weiExtRules(m.content,m.role==='user'?1:0,history.length-1-i)}));let answer=state.api.mode==='remote'?await requestModel(history,makePrompt(),{timeoutMs:180000,kind:'线下剧情生成'}):localReply(history[history.length-1].content);answer=offlineResolve(answer);let duration=Date.now()-start;
+if(weiExt.regex)history=history.map((m,i)=>({...m,content:weiExtRules(m.content,m.role==='user'?1:0,history.length-1-i)}));let answer=await weiOfflineGenerateLengthAware(history,makePrompt(),cfg().words);answer=offlineResolve(answer);let duration=Date.now()-start;
 if(regen>=0&&x.messages[regen]){let m=x.messages[regen];m.versions=m.versions||[m.text];m.versions.push(answer);m.selected=m.versions.length-1;m.duration=duration}else{x.messages.push({id:'wo_'+Date.now(),role:'assistant',text:answer,versions:[answer],selected:0,duration,date:new Date().toLocaleString()})}entries();const stored=await offlineFlush();if(stored===false)offlineSaveWarning();
 }catch(e){toast('线下生成失败：'+e.message)}finally{busy=false;let t=by('woTyping');if(t)t.hidden=true;let b=by('puStorySend');if(b)b.disabled=false}}
 async function send(){let inp=by('puStoryInput'),t=inp?.value.trim(),x=sess();if(!t||busy)return;if(x?.status==='ended')return toast('本次见面已结束');x.messages.push({id:'wo_'+Date.now(),role:'user',text:t,date:new Date().toLocaleString()});inp.value='';entries();const stored=await offlineFlush();if(stored===false)offlineSaveWarning();await generate()}
