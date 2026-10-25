@@ -5197,4 +5197,132 @@ const dialog=document.getElementById('weiUserVoiceDialog');
 dialog?.addEventListener('click',e=>{if(e.target===dialog)weiCloseUserVoice()});
 })();
 </script>
+<script id="wei-quote-codec-fix">
+/* Quote/JSON codec guard. Display repair never mutates stored history. */
+(function(){
+ const quoteRe=/^\s*[【\[]\s*引用ID\s*[:：]\s*([^】\]\r\n]+)\s*[】\]]\s*/i;
+ function unpack(value){
+  let t=String(value??'').trim();
+  t=t.replace(/^```(?:json|python)?\s*/i,'').replace(/\s*```$/,'').trim();
+  // Some model gateways return Python-style unicode string lists: [u"...", u"..."].
+  if(/^\[\s*(?:u|U)?["']/.test(t)){
+   const normalized=t.replace(/([\[, ]\s*)[uU](?=["'])/g,'$1');
+   try{const parsed=JSON.parse(normalized);if(Array.isArray(parsed)&&parsed.every(x=>typeof x==='string'))return parsed}catch(e){}
+   const values=[];const re=/(?:[uU])?"(?:\\.|[^"\\])*"/g;let m;
+   while((m=re.exec(t))){try{values.push(JSON.parse(m[0].replace(/^[uU]/,'')))}catch(e){}}
+   if(values.length)return values;
+  }
+  if(/^"(?:\\.|[^"\\])*"$/.test(t)){try{return [JSON.parse(t)]}catch(e){}}
+  if(/\\u[0-9a-fA-F]{4}/.test(t))t=t.replace(/(?:\\u[0-9a-fA-F]{4})+/g,run=>{
+   try{return JSON.parse('"'+run+'"')}catch(e){return run}
+  });
+  return [t];
+ }
+ function clean(raw){
+  const decoded=unpack(raw);return decoded.map(v=>{
+   const nested=unpack(v);return nested.length===1?nested[0]:nested.join('\n');
+  });
+ }
+ const oldParse=window.puParseChatReplies||puParseChatReplies;
+ puParseChatReplies=function(raw){
+  const parts=clean(raw);
+  // Only normalize malformed transport encodings. Keep normal JSON and existing protocol unchanged.
+  if(parts.length===1&&parts[0]===String(raw||'').trim())return oldParse(raw);
+  const merged=JSON.stringify(parts);
+  return oldParse(merged);
+ };
+ const oldCharParse=weiParseCharOutput;
+ weiParseCharOutput=function(raw){
+  const decoded=clean(raw);const out=[];
+  for(const part of decoded){
+   const m=String(part).match(quoteRe);const content=m?String(part).slice(m[0].length):String(part);
+   const items=oldCharParse((m?m[0]:'')+content);
+   if(items.length)out.push(...items);
+  }
+  return out;
+ };
+ const oldRender=renderChat;
+ renderChat=function(){
+  const result=oldRender.apply(this,arguments);
+  const list=document.getElementById('chatList');if(!list)return result;
+  const nodes=Array.from(list.children);
+  state.messages.forEach((msg,i)=>{
+   if(!msg||msg.role!=='assistant'||typeof msg.content!=='string')return;
+   const raw=msg.content;
+   if(!/^\s*(?:\[\s*[uU]?["']|[uU]["']|[【\[]\s*引用ID\s*[:：])/.test(raw)&&!/\\u[0-9a-fA-F]{4}/.test(raw))return;
+   const parts=clean(raw);let display=parts.join('\n');
+   const qm=display.match(quoteRe);if(qm)display=display.slice(qm[0].length);
+   const node=nodes[i];if(!node)return;
+   const bubble=node.querySelector('.pu-msg-content')||node.querySelector('.bubble');if(!bubble)return;
+   // Do not touch translation and existing quote widgets; only replace raw-text nodes.
+   const walker=document.createTreeWalker(bubble,NodeFilter.SHOW_TEXT);const textNodes=[];let n;
+   while((n=walker.nextNode()))if(!n.parentElement?.closest('.wei-translated-line,.pu-quoted'))textNodes.push(n);
+   if(!textNodes.length)return;
+   const originalText=textNodes.map(x=>x.nodeValue).join('');
+   if(originalText.includes('[u"')||originalText.includes('\\u')||quoteRe.test(originalText)){
+    textNodes[0].nodeValue=display;
+    textNodes.slice(1).forEach(x=>x.nodeValue='');
+   }
+   const id=msg.puQuoteId||qm?.[1];
+   if(id&&!bubble.querySelector('.pu-quoted')){
+    const target=state.messages.find(x=>String(x.id)===String(id).trim());
+    if(target){const q=document.createElement('div');q.className='pu-quoted';q.textContent='↳ '+(target.role==='user'?(window.puUser?.name||'我'):(state.persona?.remark||'Char'))+'：'+String(target.content||target.puVoiceText||'').slice(0,150);bubble.prepend(q)}
+   }
+  });
+  return result;
+ };
+ window.weiQuoteCodecTest={unpack,clean};
+})();
+</script>
+<script id="wei-quote-multi-message-fix">
+/* Preserve message boundaries before extracting a quote; no history migration. */
+(function(){'use strict';
+ const previous=puParseChatReplies;
+ const marker=/^\s*([【\[]\s*引用ID\s*[:：]\s*[^】\]\r\n]+\s*[】\]])\s*/i;
+ function parseArray(source){
+  let t=String(source||'').trim().replace(/^```(?:json|python)?\s*/i,'').replace(/\s*```$/,'').trim();
+  // Some gateways use Python unicode string syntax.
+  if(/^\[\s*[uU]?["']/.test(t)){
+   let normalized=t.replace(/([\[, ]\s*)[uU](?=["'])/g,'$1');
+   try{const a=JSON.parse(normalized);if(Array.isArray(a)&&a.every(v=>typeof v==='string'))return a}catch(e){}
+   // Safely handle Python single-quoted arrays without evaluating source code.
+   if(/^\[\s*'/.test(normalized)){
+    const result=[];let i=1,valid=true;
+    while(i<normalized.length){while(/[\s,]/.test(normalized[i]||''))i++;if(normalized[i]===']')break;
+     const q=normalized[i];if(q!=="'"&&q!=='"'){valid=false;break}i++;
+     let val='',closed=false;
+     while(i<normalized.length){const ch=normalized[i++];if(ch===q){closed=true;break}if(ch==='\\'&&i<normalized.length){const next=normalized[i++];if(next==='u'&&/^[0-9a-fA-F]{4}$/.test(normalized.slice(i,i+4))){val+=String.fromCharCode(parseInt(normalized.slice(i,i+4),16));i+=4}else if(next==='n')val+='\n';else if(next==='t')val+='\t';else val+=next}else val+=ch}
+     if(!closed){valid=false;break}result.push(val);
+    }
+    if(valid&&result.length&&normalized.slice(i).trim()===']')return result;
+   }
+  }
+  try{const a=JSON.parse(t);if(Array.isArray(a)&&a.every(v=>typeof v==='string'))return a;if(a&&Array.isArray(a.messages)&&a.messages.every(v=>typeof v==='string'))return a.messages}catch(e){}
+  return null;
+ }
+ function split(raw){
+  const text=String(raw||'').trim();if(!text)return [];
+  // A model sometimes places one quote protocol before the *whole* array.
+  // Attach it only to the first bubble, never to the whole batch.
+  const prefix=text.match(marker);const body=prefix?text.slice(prefix[0].length).trim():text;
+  let items=parseArray(body);
+  if(!items&&prefix){
+   const lines=body.split(/\r?\n+/).map(v=>v.trim()).filter(Boolean);
+   if(lines.length>1)items=lines;
+  }
+  if(!items)return previous(raw);
+  const result=[];
+  for(let i=0;i<items.length;i++){
+   let item=String(items[i]||'').trim();if(!item)continue;
+   // Each JSON array element is one independent message, even when quoted.
+   if(i===0&&prefix&&!marker.test(item))item=prefix[1]+item;
+   result.push(item);
+  }
+  const mode=typeof puChatOptions==='object'?puChatOptions.reply:'auto';
+  return result.slice(0,mode==='one'?1:mode==='auto'?5:6);
+ }
+ puParseChatReplies=split;
+ window.weiQuoteMultiMessageTest={parseArray,split};
+})();
+</script>
 </body></html>
