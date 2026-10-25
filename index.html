@@ -995,7 +995,15 @@ html:not([data-pu-mode="dark"]) .pu-contact-row{background:#fffdfb;color:#383532
 #diy .pu-main-tabs,#diy #puBeautyManage,#diy #puBeautyOld,
 #diy .diy-actionbar,#diy #diyTabs,#diy .wbm-legacy,
 #diy .pu-avatar-style-card:not(#weiBeautyModern .pu-avatar-style-card){display:none!important}
-</style></head>
+</style><style id="wei-chat-beauty-fix">
+/* The previous WeChat-style !important declarations overrode saved customization. */
+#chat #chatList .msg .bubble{font-size:var(--diy-font,14px)!important;border-radius:var(--diy-radius,17px)!important;line-height:1.6!important}
+#chat #chatList .msg.me .bubble{background:var(--diy-self-bg,#e6e1da)!important;color:var(--diy-self-color,#383532)!important}
+#chat #chatList .msg:not(.me) .bubble{background:var(--diy-other-bg,#f1eeea)!important;color:var(--diy-other-color,#383532)!important}
+#chat #chatList .msg .bubble.image-bubble{background:transparent!important;border-image-source:var(--bubble-image)!important;border-image-slice:var(--bubble-slice) fill!important;border-image-width:var(--bubble-width)!important;border-image-repeat:stretch!important;padding:var(--bubble-padding)!important}
+#chat #chatList .msg .bubble.image-bubble::before{display:none!important}
+</style>
+</head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
@@ -3229,13 +3237,46 @@ by('weiCharCoverInput').addEventListener('change',async function(){const f=this.
 window.weiBlock=()=>{const c=currentChar();if(!c)return;const old=relation(c.id);const blocked=old.status!=='blocked';if(!confirm(blocked?'仅当前 User 拉黑「'+puCharName(c)+'」？':'解除当前 User 对此角色的拉黑？'))return;change(c.id,r=>({...r,status:blocked?'blocked':r.beforeBlock||'friend',beforeBlock:blocked?r.status:undefined}));menu=false;renderProfile();toast(blocked?'已加入当前身份黑名单':'已解除拉黑')};
 window.weiRemoveFriend=()=>{const c=currentChar();if(!c)return;if(!confirm('仅删除当前 User 与「'+puCharName(c)+'」的好友关系？聊天和记忆将保留。'))return;change(c.id,r=>({...r,status:'removed',removedAt:Date.now()}));menu=false;renderProfile();toast('已删除好友，角色仍保留')};
 window.weiDeleteChar=()=>{if(!confirm('删除角色会影响所有 User 身份，确定继续吗？'))return;puSelectedChar=profileId;const before=puChars.list.length;puDeleteSelectedChar();if(puChars.list.length!==before){by('weiCharProfile').hidden=true;puHubTab(1)}else renderProfile()};
-window.weiProfileMessage=()=>{const r=relation(profileId);if(r.status==='blocked')return toast('请先解除拉黑');if(r.status==='removed')return toast('当前不是好友，请等待好友申请');by('weiCharProfile').hidden=true;puSelectedChar=profileId;puInboxOpen(profileId,false)};
+window.weiProfileMessage=()=>{const r=relation(profileId);if(r.status==='blocked')return toast('请先解除拉黑');if(r.status==='removed')return weiUserApply(profileId);by('weiCharProfile').hidden=true;puSelectedChar=profileId;puInboxOpen(profileId,false)};
+// User -> Char: outgoing applications are independently recorded and judged by the character.
+const weiApprovalBusy=new Set();
+window.weiUserApply=function(id){
+ const r=relation(id);if(r.status==='blocked')return toast('请先解除拉黑');
+ if(r.status==='friend')return toast('已经是好友');
+ if((r.userApplications||[]).some(q=>q.status==='pending'))return toast('好友申请已发送，等待角色回应');
+ const message=prompt('填写好友申请验证消息（可以留空）','');if(message===null)return;
+ const at=Date.now();change(id,x=>({...x,userApplications:[...(x.userApplications||[]),{id:'user_'+at,message:message.trim().slice(0,160),status:'pending',at}],userApplicationNextAt:at+60000}));
+ toast('申请已发送，角色会根据人设决定');renderProfile();
+ setTimeout(()=>weiDecideUserApplication(id),60000);
+};
+async function weiDecideUserApplication(id){
+ const r=relation(id),c=char(id),q=(r.userApplications||[]).find(x=>x.status==='pending');
+ if(!c||!q||r.status==='blocked'||weiApprovalBusy.has(id)||Date.now()<(r.userApplicationNextAt||0))return;
+ if(state.api?.mode!=='remote'||typeof requestModel!=='function')return;
+ weiApprovalBusy.add(id);
+ try{
+  const persona=[c.data?.persona?.personality,c.data?.persona?.description,c.data?.persona?.signature].filter(Boolean).join('\n').slice(0,3500);
+  const history=(r.userApplications||[]).slice(-8).map(x=>({message:x.message,result:x.status,reason:x.reason||''}));
+  const ask=`User向你发送好友申请，验证消息：${q.message||'（无）'}。你们曾经是好友，后来被删除。参考角色性格、矛盾、过往拒绝经历，判断同意、拒绝或暂缓；拒绝必须给出符合人设的自然理由，可以口是心非。历史：${JSON.stringify(history)}。仅返回JSON：{"decision":"accept或reject或wait","reason":"拒绝理由","waitMinutes":30}。`;
+  const out=await requestModel([{role:'user',content:ask}],`你是${puCharName(c)}。${persona}`);
+  const raw=typeof out==='string'?out:typeof out?.content==='string'?out.content:'';
+  let d;try{d=JSON.parse(raw.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim())}catch(e){const m=raw.match(/\{[\s\S]*?\}/);if(m)try{d=JSON.parse(m[0])}catch(_){}}
+  if(!d)return;
+  const fresh=relation(id);if(fresh.status==='blocked'||!(fresh.userApplications||[]).some(x=>x.id===q.id&&x.status==='pending'))return;
+  if(d.decision==='wait'){change(id,x=>({...x,userApplicationNextAt:Date.now()+Math.max(5,Math.min(1440,Number(d.waitMinutes)||30))*60000}));return}
+  if(!['accept','reject'].includes(d.decision))return;
+  const accepted=d.decision==='accept',reason=accepted?'':String(d.reason||'现在还不想加回来。').slice(0,180);
+  change(id,x=>({...x,status:accepted?'friend':'removed',userApplications:(x.userApplications||[]).map(a=>a.id===q.id?{...a,status:accepted?'accepted':'rejected',reason,decidedAt:Date.now(),seen:false}:a)}));
+  toast(accepted?puCharName(c)+'通过了好友申请':puCharName(c)+'拒绝了好友申请');
+  if(!by('weiPendingPage').hidden)weiOpenPending();renderProfile();
+ }catch(e){console.warn('好友申请审批失败',e)}finally{weiApprovalBusy.delete(id)}
+}
 function pending(){return Object.entries(read()).flatMap(([id,r])=>(r.requests||[]).filter(x=>x.status==='pending').map(x=>({...x,charId:id}))) }
 function unseen(){return pending().filter(x=>!x.seen).length}
 function updateBadge(){const b=document.querySelector('#puInbox .wei-inbox-trigger');if(!b)return;const n=unseen();b.innerHTML='•••'+(n?`<span class="wei-inbox-badge">${n>99?'99+':n}</span>`:'')}
-window.weiOpenPending=()=>{const list=pending();by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>待处理消息</b><span>${list.filter(x=>!x.seen).length} 条未读</span></div>${list.map(x=>`<div class="wei-pending-item"><b>${clean(puCharName(char(x.charId))||'角色')} · 好友申请</b><p>${clean(x.message)}</p><button class="wei-accept" onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',true)">同意</button><button onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',false)">拒绝</button></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">暂无待处理消息</p>'}`;const r=read();for(const x of Object.values(r))for(const q of x.requests||[])if(q.status==='pending')q.seen=true;write(r);updateBadge()};
+window.weiOpenPending=()=>{const list=pending();const outgoing=Object.entries(read()).flatMap(([id,r])=>(r.userApplications||[]).map(x=>({...x,charId:id}))).sort((a,b)=>b.at-a.at).slice(0,30);by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>待处理消息</b><span>${list.filter(x=>!x.seen).length} 条未读</span></div>${list.map(x=>`<div class="wei-pending-item"><b>${clean(puCharName(char(x.charId))||'角色')} · 好友申请</b><p>${clean(x.message)}</p><button class="wei-accept" onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',true)">同意</button><button onclick="weiResolveRequest('${clean(x.charId)}','${clean(x.id)}',false)">拒绝</button></div>`).join('')+outgoing.map(x=>`<div class="wei-pending-item"><b>向 ${clean(puCharName(char(x.charId))||'角色')} 发送的申请</b><p>${clean(x.message||'（无验证消息）')}</p><p>${x.status==='accepted'?'对方已同意':x.status==='rejected'?'对方已拒绝：'+clean(x.reason||'未说明理由'):'等待对方回应'}</p></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">暂无待处理消息</p>'}`;const r=read();for(const x of Object.values(r))for(const q of x.requests||[])if(q.status==='pending')q.seen=true;write(r);updateBadge()};
 window.weiClosePending=()=>{by('weiPendingPage').hidden=true;drawInbox()};
-window.weiResolveRequest=(id,rid,accept)=>{change(id,r=>({...r,status:accept?'friend':'removed',lastRejected:accept?0:Date.now(),requests:(r.requests||[]).map(q=>q.id===rid?{...q,status:accept?'accepted':'rejected',seen:true}:q)}));weiOpenPending();toast(accept?'已添加好友':'已拒绝申请')};
+window.weiResolveRequest=(id,rid,accept)=>{change(id,r=>({...r,status:accept?'friend':'removed',lastRejected:accept?0:Date.now(),requests:(r.requests||[]).map(q=>q.id===rid?{...q,status:accept?'accepted':'rejected',seen:true}:q)}));weiOpenPending();toast(accept?'已添加好友':'已拒绝申请');if(!accept)setTimeout(()=>maybeRequest(id),90*1000)};
 window.weiOpenBlacklist=()=>{const all=Object.entries(read()).filter(([id,r])=>r.status==='blocked'&&char(id));by('weiPendingPage').hidden=false;by('weiPendingPage').innerHTML=`<div class="wei-page-head"><button onclick="weiClosePending()">‹</button><b>黑名单</b><span></span></div>${all.map(([id])=>`<div class="wei-pending-item"><b>${clean(puCharName(char(id)))}</b><button onclick="weiUnblockFromList('${clean(id)}')">解除拉黑</button></div>`).join('')||'<p style="text-align:center;color:#aaa;margin-top:70px">黑名单为空</p>'}`};
 window.weiUnblockFromList=id=>{change(id,r=>({...r,status:r.beforeBlock||'friend',beforeBlock:undefined}));weiOpenBlacklist()};
 const originalDraw=window.drawInbox; if(typeof originalDraw==='function'){window.drawInbox=function(...args){const result=originalDraw(...args);const b=document.querySelector('#puInbox .pu-inbox-profile button');if(b){b.setAttribute('onclick','weiOpenPending()');b.classList.add('wei-inbox-trigger');updateBadge()}return result}}
@@ -3256,7 +3297,40 @@ const oldMom=window.renderMoments;window.renderMoments=async function(...args){c
 const oldCancel=window.puCancelCreateChar;window.puCancelCreateChar=function(){const was=puCreatingChar;oldCancel?.();if(was&&!puCreatingChar){puHubTab(1);const hub=document.getElementById("puHub");if(hub)hub.classList.add("active")}};
 const oldSave=window.savePersona;window.savePersona=function(...args){const was=puCreatingChar;const result=oldSave?.(...args);if(was&&!puCreatingChar){puHubTab(1);const hub=document.getElementById("puHub");if(hub)hub.classList.add("active")};return result};
 // Friend request is event-driven and rate-limited; never bypass a block.
-async function maybeRequest(id){const c=char(id),r=relation(id),t=Date.now();if(!c||r.status!=='removed'||t-(r.lastRequest||0)<24*3600e3||t-(r.lastRejected||0)<72*3600e3)return;let message='我想重新加你为好友，可以吗？';try{if(state.api?.mode==='remote'&&typeof requestModel==='function'){const out=await requestModel([{role:'user',content:'你曾经与对方是好友，后来被删除好友。根据你的角色人设，写一条简短自然、不重复、不强迫对方的好友申请语，最多60字。只输出申请语。'}],`你是${puCharName(c)}。${c.data?.persona?.personality||''}`);if(typeof out==='string'&&out.trim())message=out.trim().slice(0,100)}}catch(e){console.warn('好友申请生成失败',e)}if(relation(id).status!=='removed')return;change(id,r=>({...r,lastRequest:Date.now(),requests:[...(r.requests||[]),{id:'req_'+Date.now(),message,status:'pending',seen:false}]}));updateBadge()}
+// 好友申请由角色性格与历史拒绝记录共同决定，拒绝不会永久封锁后续申请。
+const weiRequestBusy=new Set();
+async function maybeRequest(id){
+ if(!id||weiRequestBusy.has(id))return;
+ const c=char(id),r=relation(id),now=Date.now();
+ if(!c||r.status!=='removed'||(r.requests||[]).some(q=>q.status==='pending'))return;
+ // 最短间隔是防刷屏保护，不代表到时间就必然再次申请。
+ if(now-(r.lastDecision||0)<60*1000)return;
+ if(state.api?.mode!=='remote'||typeof requestModel!=='function')return;
+ weiRequestBusy.add(id);
+ try{
+  const history=(r.requests||[]).slice(-12).map(q=>({result:q.status,message:String(q.message||'').slice(0,100),time:q.at||q.id}));
+  const persona=[c.data?.persona?.personality,c.data?.persona?.description,c.data?.persona?.signature].filter(Boolean).join('\n').slice(0,3500);
+  const prompt=`你正在扮演「${puCharName(c)}」，你和用户原本是好友，现在已不是好友。请依据人物性格、关系及过去申请的结果，自主判断此刻是否适合再次发好友申请。拒绝不是永久禁止，但尊重明确的拒绝，不要纠缠、刷屏或无理由重复。过去申请：${JSON.stringify(history)}。距离上次申请已经过去${Math.round((now-(r.lastRequest||r.removedAt||now))/60000)}分钟；请考虑离线期间剧情时间流逝。上次拒绝时间：${r.lastRejected?new Date(r.lastRejected).toLocaleString():'无'}。只能输出严格 JSON：{"send":true或false,"message":"申请语","delayMinutes":数字}，delayMinutes表示下次尝试前的剧情间隔分钟数，可为数分钟至数天。如果不适合就 send:false；若申请，语气自然且与旧申请不同，最多60字。`;
+  const out=await requestModel([{role:'user',content:prompt}],`你是${puCharName(c)}。${persona}`);
+  const raw=typeof out==='string'?out:typeof out?.content==='string'?out.content:'';
+  let decision=null;
+  try{decision=JSON.parse(raw.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim())}catch(e){const m=raw.match(/\{[\s\S]*?\}/);if(m)try{decision=JSON.parse(m[0])}catch(_){}}
+  if(relation(id).status!=='removed')return;
+  change(id,x=>({...x,lastDecision:Date.now(),nextRequestAt:Date.now()+Math.max(2,Math.min(4320,Number(decision?.delayMinutes)||30))*60000}));
+  if(decision?.send!==true||typeof decision.message!=='string'||!decision.message.trim())return;
+  const fresh=relation(id);
+  if(fresh.status!=='removed'||(fresh.requests||[]).some(q=>q.status==='pending'))return;
+  const message=decision.message.trim().slice(0,100);
+  if((fresh.requests||[]).slice(-3).some(q=>q.message===message))return;
+  const ts=Date.now();
+  change(id,x=>({...x,lastRequest:ts,requests:[...(x.requests||[]),{id:'req_'+ts,message,status:'pending',seen:false,at:ts,direction:'char'}]}));
+  updateBadge();
+ }catch(e){console.warn('好友申请决策失败',e)}finally{weiRequestBusy.delete(id)}
+}
+function weiCheckReapplications(){for(const [id,r] of Object.entries(read()))if(r.status==='removed'){if((r.userApplications||[]).some(q=>q.status==='pending'))void weiDecideUserApplication(id);else if(Date.now()>=(r.nextRequestAt||0))void maybeRequest(id)}}
+// 返回应用或重新打开时检查，避免只在第一次删除好友后触发一次。
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)weiCheckReapplications()});
+setTimeout(weiCheckReapplications,4000);
 const originalSend=window.sendMessage;window.sendMessage=async function(...args){const id=puChars.current;if(relation(id).status!=='friend'){toast(relation(id).status==='blocked'?'已拉黑该角色':'当前不是好友');return}const ret=await originalSend.apply(this,args);if(relation(id).status==='removed')maybeRequest(id);return ret};
 const originalOpen=window.puInboxOpen;window.puInboxOpen=function(id,group){if(!group){const r=relation(id);if(r.status==='blocked')return toast('当前 User 已拉黑该角色')}return originalOpen(id,group)};
 // A single, optional bio decision after normal chat. No polling and no updates while blocked.
@@ -4066,4 +4140,17 @@ const oldEnd=window.endCall;window.endCall=function(){oldEnd();document.getEleme
 const pages=document.getElementById('bloomPages'),dots=document.getElementById('bloomDots');if(pages&&dots){let raf=0;const sync=()=>{raf=0;const n=Math.max(0,Math.min(pages.children.length-1,Math.round(pages.scrollLeft/Math.max(1,pages.clientWidth))));dots.querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('on',i===n);b.setAttribute('aria-current',i===n?'page':'false')})};pages.addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(sync)},{passive:true});pages.addEventListener('touchend',()=>setTimeout(sync,300),{passive:true});window.addEventListener('resize',sync);sync()}
 })();
 </script>
-</body></html>
+<script id="wei-chat-beauty-sync">
+(function(){
+ const list=document.getElementById('chatList');if(!list)return;
+ let scheduled=false;
+ const sync=()=>{scheduled=false;if(typeof diySaved==='undefined'||typeof diyBubbleElement!=='function')return;
+  for(const el of list.querySelectorAll('.msg .bubble')){
+   const b=diySaved.bubble[el.closest('.msg').classList.contains('me')?'me':'other'];
+   diyBubbleElement(el,b,diyAssetUrl(b.asset));
+  }
+ };
+ new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(sync)}}).observe(list,{childList:true,subtree:true});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});sync();
+})();
+</script></body></html>
