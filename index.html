@@ -5119,4 +5119,41 @@ window.weiShowStorageEstimate=async function(){
  }catch(e){alert('无法读取存储容量：'+e.message)}
 };
 </script>
+
+<!-- 修复：聊天入口始终先进入会话列表；返回时恢复 Hub 导航状态 -->
+<script id="wei-chat-navigation-recovery">
+(function(){
+  'use strict';
+  const previousGo=window.go;
+  window.go=function(id,...args){
+    if(id==='chat'||id==='contacts'){
+      const hub=document.getElementById('puHub');
+      const chat=document.getElementById('chat');
+      if(hub && typeof window.puHubTab==='function'){
+        document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s===hub));
+        hub.hidden=false;hub.style.removeProperty('display');
+        if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index');}
+        const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
+        const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
+        const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
+        hub.classList.remove('pu-private-chat-open');
+        try{window.puHubTab(id==='contacts'?1:0)}catch(e){console.error('聊天列表打开失败',e)}
+        return;
+      }
+    }
+    return previousGo.apply(this,[id,...args]);
+  };
+  window.puReturnToInbox=function(){
+    const hub=document.getElementById('puHub');
+    const chat=document.getElementById('chat');
+    if(typeof window.puInboxClose==='function'){try{window.puInboxClose()}catch(e){console.warn(e)}}
+    if(hub){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s===hub));hub.hidden=false;hub.style.removeProperty('display');hub.classList.remove('pu-private-chat-open')}
+    if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index')}
+    const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
+    const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
+    const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
+    if(typeof window.puHubTab==='function')try{window.puHubTab(0)}catch(e){console.error(e)}
+  };
+})();
+</script>
 </body></html>
