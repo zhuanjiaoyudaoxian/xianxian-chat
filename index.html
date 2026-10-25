@@ -2468,7 +2468,33 @@ function closeChat(){insideChat=false;const chat=$id('chat');chat.classList.remo
 window.puInboxClose=closeChat;
 window.puGroupClose=function(){room=null;groupRoom.classList.remove('open');drawInbox()};
 function avatarHTML(c){try{return puCharAvatar(c)||svg('user')}catch(e){return svg('user')}}
-function entries(){let list=puChars.list.map(c=>({id:c.id,name:puCharName(c),char:c,group:false,last:c.data?.messages?.at(-1)?.content||'暂无消息',date:c.data?.messages?.at(-1)?.date||''}));list.push(...groups.map(g=>({id:g.id,name:g.name,group:true,last:g.messages.at(-1)?.text||'暂无消息',date:g.messages.at(-1)?.date||''})));return list}
+function weiInboxPreview(m){
+ if(!m)return '暂无消息';
+ if(m.puRecalled)return (m.role==='user'?'你':'对方')+'撤回了一条消息';
+ const type=String(m.puType||'').toLowerCase();
+ if(type==='voice'||/^\s*(?:\[语音\]|【语音】)/.test(m.content||'')){
+  const transcript=String(m.puVoiceText||m.content||'').replace(/^\s*(?:\[语音\]|【语音】)\s*/,'');
+  const seconds=Math.min(60,Math.max(1,Math.ceil(transcript.length/4)));
+  return '[语音] '+seconds+'″';
+ }
+ if(type==='image_description')return '[图片]';
+ if(type==='video_description')return '[视频]';
+ if(type==='transfer')return '[转账]';
+ if(type==='receipt'||type==='return_receipt')return '[转账通知]';
+ if(type==='sticker'||type==='emoji')return '[表情包]';
+ const t=String(m.content||m.text||'').trim();
+ return t?t.slice(0,55):'暂无消息';
+}
+function entries(){
+ let list=puChars.list.map(c=>{
+  // The active chat is held in state; use it rather than a possibly stale saved snapshot.
+  const messages=(c.id===puChars.current&&Array.isArray(state.messages))?state.messages:(c.data?.messages||[]);
+  const last=messages.length?messages[messages.length-1]:null;
+  return {id:c.id,name:puCharName(c),char:c,group:false,last:weiInboxPreview(last),date:last?.date||''};
+ });
+ list.push(...groups.map(g=>({id:g.id,name:g.name,group:true,last:g.messages.at(-1)?.text||'暂无消息',date:g.messages.at(-1)?.date||''})));
+ return list;
+}
 function openEntry(id,isGroup){
  if(isGroup){room=groups.find(g=>g.id===id);if(!room)return;insideChat=false;$id('chat').classList.remove('pu-inbox-visible');groupRoom.classList.add('open');drawRoom();return}
  const target=puChars.list.find(c=>String(c.id)===String(id));
@@ -4546,19 +4572,26 @@ puParseChatReplies=function(raw){
 })();
 </script>
 <script>
-/* Hide only exact adjacent legacy voice transcript duplicates. No stored data changes. */
+/* Voice transcript display: legacy duplicate cleanup without altering saved history. */
 (function(){
  const previous=renderChat;
+ function clean(value){
+  return String(value||'').replace(/^\s*(?:\[(?:语音|VOICE|AUDIO|语音消息)\]|【(?:语音|语音消息)】)\s*/i,'')
+   .replace(/^[\s“”"'「」]+|[\s“”"'「」]+$/g,'').replace(/\s+/g,'').trim();
+ }
  renderChat=function(){
   const result=previous.apply(this,arguments);
   const list=document.getElementById('chatList');
-  if(!list)return result;
-  const nodes=[...list.children];
+  if(!list||!Array.isArray(state.messages))return result;
+  const nodes=Array.from(list.children);
   for(let i=1;i<state.messages.length;i++){
-   const prev=state.messages[i-1],cur=state.messages[i];
-   if(!prev||!cur||prev.role!=='assistant'||cur.role!=='assistant'||prev.puType!=='voice'||cur.puType||cur.puRecalled)continue;
-   const transcript=String(prev.puVoiceText||prev.content||'').trim();
-   if(transcript&&String(cur.content||'').trim()===transcript&&nodes[i])nodes[i].style.display='none';
+   const current=state.messages[i],voice=state.messages[i-1];
+   if(!current||!voice||current.role!=='assistant'||voice.role!=='assistant'||
+      voice.puType!=='voice'||current.puType||current.puRecalled)continue;
+   const spoken=clean(voice.puVoiceText||voice.content);
+   const plain=clean(current.content);
+   // Only suppress an adjacent identical transcription, never independent dialogue.
+   if(spoken&&plain&&spoken===plain&&nodes[i])nodes[i].style.display='none';
   }
   return result;
  };
