@@ -1537,6 +1537,11 @@ async function puGenerateQueuedReply(){
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
    let prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   if(puChatOptions.mode==='chat'){
+    const current=new Date(),fmt=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+    const last=state.messages.filter(m=>m.role==='user'||m.role==='assistant').slice(-8).map(m=>({role:m.role,time:m.puReceivedAt?new Date(m.puReceivedAt).toLocaleString('zh-CN'):m.date||'时间未知'}));
+    prompt+='\n【真实聊天时间】当前设备本地时间：'+fmt.format(current)+'。最近消息的记录时间：'+JSON.stringify(last)+'。可以根据真实间隔和昼夜自然回应，但不要每次刻意报时；不知道 User 的真实作息和日程，禁止猜测。线下剧情时间不受此规则影响。';
+   }
    if(trCfg.enabled&&trLang)prompt+='\n【跨语言对话，强制语言规则】本轮 Char 的每条普通聊天消息必须以'+trLang+'原创撰写，不能以中文生成原文，不能在原文后附中文翻译。即使人设、世界书、上下文及用户原始文字是中文，也只把它们当作背景资料；你是角色本人，用'+trLang+'自然说话。若回复采用 JSON 数组格式，则数组中每个字符串的自然语言正文也必须是'+trLang+'。引用协议标记只能使用【引用ID:实际消息ID】并放在回复最开头，不得使用方括号格式。User 的外语消息是其中文原话的翻译，不能因此改用中文。';
    if(proactive){
     prompt+='\n【Char 主动续聊】本轮 User 没有发送新消息，这是用户主动点击生成键要求 Char 继续互动。根据已有聊天、人设、关系及世界书自然地延续话题、主动关心、提出问题或开启符合情境的新话题。严禁编造 User 本轮的新消息、台词、行动或心理活动；不要机械复述上一条回复。即使上一条消息由 Char 发出，也可以自然继续。';
@@ -1572,9 +1577,23 @@ async function puGenerateQueuedReply(){
    if(cleaned){try{items=weiParseCharOutput(cleaned)}catch(e){console.warn('特殊消息解析失败，保留原文',e)}if(!items.length)items=[{id:uid(),role:'assistant',content:cleaned,date:now()}]}
    // 表情包失败不应阻断文字消息。
    if(stickerMatches.length){try{const sticker=typeof weiStickerLookup==='function'?await weiStickerLookup(stickerMatches[0][1]):null;if(sticker)items.push({id:uid(),role:'assistant',content:'',puType:'sticker',puImage:sticker.url,date:now()})}catch(e){console.warn('表情包读取失败',e)}}
-   for(let j=0;j<items.length;j++){items[j].puRescueKey=key+':'+i+':'+j;state.messages.push(items[j]);saved++}
-   if(!persist())throw Error('消息保存失败，请检查浏览器存储空间');
-   try{renderChat()}catch(e){console.error('消息已保存，但界面渲染失败',e)}
+   // Preserve the generated messages individually and reveal them at a human-like pace.
+   for(let j=0;j<items.length;j++){
+    if(puReplyStopped||puReplyController?.signal.aborted)break;
+    const item=items[j];
+    if(saved>0&&puChatOptions.mode==='chat'){
+     const previous=state.messages[state.messages.length-1];
+     const length=Array.from(String(previous?.content||'').replace(/\[STICKER:[^\]]+\]/g,'')).length;
+     const wait=Math.min(8000,Math.max(700,Math.round(550+length*105)));
+     await new Promise(resolve=>{const timer=setTimeout(resolve,wait);puReplyController?.signal.addEventListener('abort',()=>{clearTimeout(timer);resolve()},{once:true})});
+     if(puReplyStopped||puReplyController?.signal.aborted)break;
+    }
+    item.puRescueKey=key+':'+i+':'+j;
+    item.puReceivedAt=Date.now();
+    state.messages.push(item);saved++;
+    if(!persist())throw Error('消息保存失败，请检查浏览器存储空间');
+    try{renderChat();const nodes=document.querySelectorAll('#chatList .msg');const node=nodes[nodes.length-1];if(node)node.classList.add('wei-chat-pop')}catch(e){console.error('消息已保存，但界面渲染失败',e)}
+   }
   }
   if(saved){pending.forEach(m=>m.puHandled=true);if(!persist())throw Error('回复已显示，但处理标记保存失败');weiRescueClear();}
    // 回复先安全落盘，再翻译；译文只保存在 puTranslation，不覆盖外语原文。
@@ -3517,6 +3536,7 @@ function relation(id){const r=read();return r[id]||{status:'friend',requests:[],
 function change(id,fn){const r=read();r[id]=fn(r[id]||{status:'friend',requests:[],lastRequest:0});write(r);return r[id]}
 let previous='contacts',profileId='',menu=false,returnScroll=0;
 function currentChar(){return char(profileId)}
+window.weiGetProfileChar=()=>currentChar();
 function openProfile(id,origin){const c=char(id);if(!c)return;profileId=id;previous=origin||'contacts';menu=false;returnScroll=by('chatScroll')?.scrollTop||0;renderProfile();by('weiCharProfile').hidden=false}
 window.weiOpenCharProfile=openProfile;
 window.weiCloseCharProfile=function(){by('weiCharProfile').hidden=true;menu=false;if(previous==='chat'){if(typeof openEntry==='function')openEntry(profileId,false);else if(typeof puInboxOpen==='function')puInboxOpen(profileId,false);requestAnimationFrame(()=>{if(by('chatScroll'))by('chatScroll').scrollTop=returnScroll})}else{if(typeof puHubTab==='function')puHubTab(1)}};
@@ -3536,7 +3556,7 @@ if(banner){
  }catch(e){/* Keep neutral gradient */}};
  img.src=banner;
 }
-by('weiCharProfile').innerHTML=`<div class="wei-page-head"><button onclick="weiCloseCharProfile()" aria-label="返回">‹</button><b>PERSONAL SPACE</b><button onclick="weiToggleMenu()" aria-label="更多操作">···</button></div>${menu?`<div class="wei-menu-backdrop" onclick="weiToggleMenu()"><div class="wei-menu" onclick="event.stopPropagation()"><div class="wei-menu-handle"></div><div class="wei-menu-title">角色操作</div><button onclick="weiRemoveFriend()">删除好友</button><button onclick="weiBlock()">${r.status==='blocked'?'解除拉黑':'加入黑名单'}</button><button style="color:#c44" onclick="weiDeleteChar()">删除角色</button><button class="wei-menu-cancel" onclick="weiToggleMenu()">取消</button></div></div>`:''}<div class="wei-profile-card"><div class="wei-cover" style="${banner?'background-image:url(\''+banner+'\')':''}"><button onclick="weiPickCover()">${banner?'更换封面':'上传封面'}</button></div><div class="wei-profile-inner"><div class="wei-profile-avatar">${avatar?`<img src="${clean(avatar)}" alt="角色头像">`:'♙'}</div><h2>${clean(puCharName(c))}</h2><small>@${clean(c.id)}</small><div class="wei-profile-bio">${clean(bio)}</div><div class="wei-profile-title"><b>他的动态</b><span style="color:#999;font-size:12px">PERSONAL MOMENTS</span></div><div class="wei-profile-tiles"><div>暂无动态</div><div>✦</div><div>✦</div></div></div></div><button class="wei-profile-action" onclick="weiProfileMessage()">${r.status==='blocked'?'已拉黑':r.status==='removed'?'申请添加好友':'发消息'}</button>`}
+by('weiCharProfile').innerHTML=`<div class="wei-page-head"><button onclick="weiCloseCharProfile()" aria-label="返回">‹</button><b>PERSONAL SPACE</b><button onclick="weiToggleMenu()" aria-label="更多操作">···</button></div>${menu?`<div class="wei-menu-backdrop" onclick="weiToggleMenu()"><div class="wei-menu" onclick="event.stopPropagation()"><div class="wei-menu-handle"></div><div class="wei-menu-title">角色操作</div><button onclick="weiEditCharRemark()">修改备注</button><button onclick="weiRemoveFriend()">删除好友</button><button onclick="weiBlock()">${r.status==='blocked'?'解除拉黑':'加入黑名单'}</button><button style="color:#c44" onclick="weiDeleteChar()">删除角色</button><button class="wei-menu-cancel" onclick="weiToggleMenu()">取消</button></div></div>`:''}<div class="wei-profile-card"><div class="wei-cover" style="${banner?'background-image:url(\''+banner+'\')':''}"><button onclick="weiPickCover()">${banner?'更换封面':'上传封面'}</button></div><div class="wei-profile-inner"><div class="wei-profile-avatar">${avatar?`<img src="${clean(avatar)}" alt="角色头像">`:'♙'}</div><h2>${clean(puCharName(c))}</h2><small>@${clean(c.id)}</small><div class="wei-profile-bio">${clean(bio)}</div><div class="wei-profile-title"><b>他的动态</b><span style="color:#999;font-size:12px">PERSONAL MOMENTS</span></div><div class="wei-profile-tiles"><div>暂无动态</div><div>✦</div><div>✦</div></div></div></div><button class="wei-profile-action" onclick="weiProfileMessage()">${r.status==='blocked'?'已拉黑':r.status==='removed'?'申请添加好友':'发消息'}</button>`}
 window.weiToggleMenu=()=>{menu=!menu;renderProfile()};
 window.weiPickCover=()=>by('weiCharCoverInput').click();
 by('weiCharCoverInput').addEventListener('change',async function(){const f=this.files?.[0];this.value='';if(!f)return;if(!f.type.startsWith('image/'))return toast('请选择图片');const c=currentChar();if(!c)return;const u=URL.createObjectURL(f);try{const img=new Image();img.src=u;await img.decode();const cv=document.createElement('canvas');cv.width=960;cv.height=380;const ctx=cv.getContext('2d'),ratio=Math.max(cv.width/img.width,cv.height/img.height),w=img.width*ratio,h=img.height*ratio;ctx.drawImage(img,(cv.width-w)/2,(cv.height-h)/2,w,h);c.weiCover=cv.toDataURL('image/jpeg',.72);puStoreChars();if(typeof persist==='function')persist();renderProfile();toast('封面已保存')}catch(e){toast('封面保存失败，请换一张图片')}finally{URL.revokeObjectURL(u)}});
@@ -5410,6 +5430,138 @@ dialog?.addEventListener('click',e=>{if(e.target===dialog)weiCloseUserVoice()});
   // Character generation stays under the existing manual generation control.
  };
  dlg.addEventListener('click',e=>{if(e.target===dlg)weiUserStickerClose()});
+})();
+</script>
+<style>
+@keyframes weiMessageAppear{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+#chatList .wei-chat-pop{animation:weiMessageAppear .28s cubic-bezier(.2,.75,.25,1) both}
+@media(prefers-reduced-motion:reduce){#chatList .wei-chat-pop{animation:none}}
+#chatList .wei-chat-time{text-align:center;color:#929298;font-size:11px;padding:12px 4px 8px;line-height:1.5;user-select:none}
+</style>
+<script>
+(function(){
+ 'use strict';
+ const remarkKey='wei_char_remarks_v1';
+ function remarks(){try{return JSON.parse(localStorage.getItem(remarkKey)||'{}')||{}}catch(e){return {}}}
+ function remark(c){return c?.id?String(remarks()[c.id]||'').trim():''}
+ const originalName=puCharName;
+ puCharName=function(c){return remark(c)||originalName(c)};
+ window.weiEditCharRemark=function(){
+  const c=typeof puChars!=='undefined'?puChars.list.find(x=>x.id===document.getElementById('weiCharProfile')?.dataset?.characterId):null;
+  const active=c||(typeof puChars!=='undefined'?puChars.list.find(x=>x.id===window.weiActiveProfileId):null);
+  // Profile module owns its currentChar closure; selected profile is exposed below.
+  const target=active||(typeof window.weiGetProfileChar==='function'?window.weiGetProfileChar():null);
+  if(!target)return;
+  const existing=remark(target);
+  const result=prompt('修改备注（留空恢复原名）',existing);
+  if(result===null)return;
+  const name=result.trim().slice(0,40),all=remarks();
+  if(name)all[target.id]=name;else delete all[target.id];
+  try{localStorage.setItem(remarkKey,JSON.stringify(all))}catch(e){toast('备注保存失败');return}
+  if(typeof weiToggleMenu==='function')weiToggleMenu();
+  if(typeof renderChat==='function')renderChat();
+  if(typeof drawInbox==='function')drawInbox();
+  if(typeof toast==='function')toast(name?'备注已保存':'已恢复原名');
+ };
+ function stamp(m){
+  if(Number.isFinite(Number(m.puReceivedAt))&&Number(m.puReceivedAt)>1000000000000)return Number(m.puReceivedAt);
+  if(!m.date)return NaN;
+  const parsed=Date.parse(String(m.date).replace(/年|\//g,'-').replace(/月/g,'-').replace(/日/g,''));
+  return Number.isFinite(parsed)?parsed:NaN;
+ }
+ function label(t,previous){
+  const d=new Date(t),today=new Date(),start=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
+  const day=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  const hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  if(day===start)return(previous===undefined?'今天 ':'')+hh;
+  if(day===new Date(today.getFullYear(),today.getMonth(),today.getDate()-1).getTime())return '昨天 '+hh;
+  return (d.getFullYear()!==today.getFullYear()?d.getFullYear()+'年':'')+(d.getMonth()+1)+'月'+d.getDate()+'日 '+hh;
+ }
+ const oldRender=renderChat;
+ renderChat=function(){
+  const out=oldRender.apply(this,arguments),list=document.getElementById('chatList');
+  if(!list||puChatOptions.mode==='story')return out;
+  const messages=state.messages||[],nodes=[...list.children].filter(n=>n.classList.contains('msg'));
+  let last=NaN;
+  for(let i=0;i<messages.length&&i<nodes.length;i++){
+   const time=stamp(messages[i]);if(!Number.isFinite(time))continue;
+   if(!Number.isFinite(last)||time-last>=5*60*1000||new Date(time).toDateString()!==new Date(last).toDateString()){
+    const mark=document.createElement('div');mark.className='wei-chat-time';mark.textContent=label(time,Number.isFinite(last)?last:undefined);nodes[i].before(mark);
+   }
+   last=time;
+  }
+  const c=typeof puChars!=='undefined'?puChars.list.find(x=>x.id===puChars.current):null;
+  if(c&&remark(c)){
+   const name=remark(c);const title=document.getElementById('chatName');if(title)title.textContent=name;
+  }
+  return out;
+ };
+})();
+</script>
+<style>
+@keyframes weiMessageAppear{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+#chatList .wei-chat-pop{animation:weiMessageAppear .28s cubic-bezier(.2,.75,.25,1) both}
+@media(prefers-reduced-motion:reduce){#chatList .wei-chat-pop{animation:none}}
+#chatList .wei-chat-time{text-align:center;color:#929298;font-size:11px;padding:12px 4px 8px;line-height:1.5;user-select:none}
+</style>
+<script>
+(function(){
+ 'use strict';
+ const remarkKey='wei_char_remarks_v1';
+ function remarks(){try{return JSON.parse(localStorage.getItem(remarkKey)||'{}')||{}}catch(e){return {}}}
+ function remark(c){return c?.id?String(remarks()[c.id]||'').trim():''}
+ const originalName=puCharName;
+ puCharName=function(c){return remark(c)||originalName(c)};
+ window.weiEditCharRemark=function(){
+  const c=typeof puChars!=='undefined'?puChars.list.find(x=>x.id===document.getElementById('weiCharProfile')?.dataset?.characterId):null;
+  const active=c||(typeof puChars!=='undefined'?puChars.list.find(x=>x.id===window.weiActiveProfileId):null);
+  // Profile module owns its currentChar closure; selected profile is exposed below.
+  const target=active||(typeof window.weiGetProfileChar==='function'?window.weiGetProfileChar():null);
+  if(!target)return;
+  const existing=remark(target);
+  const result=prompt('修改备注（留空恢复原名）',existing);
+  if(result===null)return;
+  const name=result.trim().slice(0,40),all=remarks();
+  if(name)all[target.id]=name;else delete all[target.id];
+  try{localStorage.setItem(remarkKey,JSON.stringify(all))}catch(e){toast('备注保存失败');return}
+  if(typeof weiToggleMenu==='function')weiToggleMenu();
+  if(typeof renderChat==='function')renderChat();
+  if(typeof drawInbox==='function')drawInbox();
+  if(typeof toast==='function')toast(name?'备注已保存':'已恢复原名');
+ };
+ function stamp(m){
+  if(Number.isFinite(Number(m.puReceivedAt))&&Number(m.puReceivedAt)>1000000000000)return Number(m.puReceivedAt);
+  if(!m.date)return NaN;
+  const parsed=Date.parse(String(m.date).replace(/年|\//g,'-').replace(/月/g,'-').replace(/日/g,''));
+  return Number.isFinite(parsed)?parsed:NaN;
+ }
+ function label(t,previous){
+  const d=new Date(t),today=new Date(),start=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
+  const day=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  const hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  if(day===start)return(previous===undefined?'今天 ':'')+hh;
+  if(day===new Date(today.getFullYear(),today.getMonth(),today.getDate()-1).getTime())return '昨天 '+hh;
+  return (d.getFullYear()!==today.getFullYear()?d.getFullYear()+'年':'')+(d.getMonth()+1)+'月'+d.getDate()+'日 '+hh;
+ }
+ const oldRender=renderChat;
+ renderChat=function(){
+  const out=oldRender.apply(this,arguments),list=document.getElementById('chatList');
+  if(!list||puChatOptions.mode==='story')return out;
+  const messages=state.messages||[],nodes=[...list.children].filter(n=>n.classList.contains('msg'));
+  let last=NaN;
+  for(let i=0;i<messages.length&&i<nodes.length;i++){
+   const time=stamp(messages[i]);if(!Number.isFinite(time))continue;
+   if(!Number.isFinite(last)||time-last>=5*60*1000||new Date(time).toDateString()!==new Date(last).toDateString()){
+    const mark=document.createElement('div');mark.className='wei-chat-time';mark.textContent=label(time,Number.isFinite(last)?last:undefined);nodes[i].before(mark);
+   }
+   last=time;
+  }
+  const c=typeof puChars!=='undefined'?puChars.list.find(x=>x.id===puChars.current):null;
+  if(c&&remark(c)){
+   const name=remark(c);const title=document.getElementById('chatName');if(title)title.textContent=name;
+  }
+  return out;
+ };
 })();
 </script>
 </body></html>
