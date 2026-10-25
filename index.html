@@ -4042,6 +4042,46 @@ if(puComposer){const plus=$('puPlusBtn');plus.style.display='inline-flex';plus.s
 <style id="wei-functional-repairs">.wei-quote-bar{display:flex;align-items:center;gap:9px;padding:8px 14px;background:var(--panel);font-size:12px;border-top:1px solid var(--line);color:var(--muted)}.wei-quote-bar[hidden]{display:none!important}.wei-quote-bar span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wei-quote-bar button{border:0;background:transparent;font-size:21px;color:var(--ink)}.pu-quoted{padding:6px 9px;margin-bottom:7px;border-left:3px solid #a6a6ae;background:#88888813;border-radius:4px;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}.wei-quote-flash{outline:2px solid #9aa7c7;outline-offset:3px;border-radius:9px}</style><script id="wei-offline-script">
 (function(){'use strict';
 const KEY='wei_offline_v1',PKEY='wei_offline_presets_v1';
+// Display-only SillyTavern-style regex rules, kept separately from story records.
+const REGKEY='wei_offline_regex_v1';
+let weiRegexRules=[];
+try{const r=JSON.parse(localStorage.getItem(REGKEY)||'[]');if(Array.isArray(r))weiRegexRules=r;}catch(e){console.warn('正则配置读取失败',e)}
+function weiRegexSave(){try{localStorage.setItem(REGKEY,JSON.stringify(weiRegexRules));return true}catch(e){toast('正则设置保存失败：存储空间不足');return false}}
+function weiRegexNormalize(x,i){
+ const source=String(x.findRegex??x.find??x.regex??'');
+ const replacement=String(x.replaceString??x.replace??x.replacement??'');
+ return {id:String(x.id||('wr_'+Date.now()+'_'+i)),name:String(x.scriptName||x.name||('正则 '+(i+1))),find:source,replace:replacement,enabled:x.disabled===true?false:x.enabled!==false,flags:String(x.flags||'g'),placement:Array.isArray(x.placement)?x.placement:[],markdownOnly:!!x.markdownOnly};
+}
+function weiRegexApply(raw){
+ let out=String(raw??'');
+ for(const rule of weiRegexRules){if(!rule.enabled||!rule.find)continue;
+  // SillyTavern placement 2 = AI output; 0/1 = prompts, not display.
+  if(rule.placement.length&&!rule.placement.includes(2))continue;
+  try{
+   let pattern=rule.find,flags=rule.flags||'g';
+   const literal=pattern.match(/^\/(.*)\/([gimsuy]*)$/s);
+   if(literal){pattern=literal[1];flags=literal[2]||'g'}
+   if(pattern.length>3000||out.length>250000)continue;
+   const re=new RegExp(pattern,flags);
+   out=out.replace(re,(...args)=>{
+    const match=args[0],captures=args.slice(1,-2),groups=args.at(-1);
+    return rule.replace.replace(/\$\$|\$&|\$([0-9]{1,2})|\$<([^>]+)>/g,(token,num,key)=>token==='$$'?'$':token==='$&'?match:num?String(captures[+num-1]??''):String(groups&&typeof groups==='object'?groups[key]??'':'') );
+   });
+  }catch(e){console.warn('跳过不兼容的正则',rule.name,e)}
+ }
+ return out;
+}
+function weiRegexPage(){
+ const list=weiRegexRules.map((r,i)=>'<div class="wo-block"><label class="wo-row"><b>'+safe(r.name)+'</b><input type="checkbox" '+(r.enabled?'checked':'')+' onchange="weiRegexToggle('+i+',this.checked)"></label><div class="wo-small">'+safe(r.find.slice(0,130))+'</div><div class="wo-btns"><button class="wo-btn" onclick="weiRegexEdit('+i+')">编辑</button><button class="wo-btn" onclick="weiRegexMove('+i+',-1)">上移</button><button class="wo-btn" onclick="weiRegexMove('+i+',1)">下移</button><button class="wo-btn" onclick="weiRegexDelete('+i+')">删除</button></div></div>').join('');
+ return '<div class="wo-subpage"><p class="wo-small">兼容常见酒馆正则 JSON（findRegex、replaceString、placement）。仅在显示 AI 剧情时替换，不修改存档或发送给 AI 的原文。复杂扩展脚本不支持。</p><label class="wo-block" style="display:block">导入酒馆正则 JSON<input type="file" accept=".json,application/json" onchange="weiRegexImport(this)" style="margin-top:10px"></label>'+list+'<button class="wo-btn dark" onclick="weiRegexAdd()">新增规则</button></div>';
+}
+window.weiRegexToggle=(i,v)=>{if(weiRegexRules[i]){weiRegexRules[i].enabled=v;weiRegexSave();render()}};
+window.weiRegexMove=(i,d)=>{const j=i+d;if(j<0||j>=weiRegexRules.length)return;[weiRegexRules[i],weiRegexRules[j]]=[weiRegexRules[j],weiRegexRules[i]];weiRegexSave();render()};
+window.weiRegexDelete=i=>{if(!confirm('删除这条正则规则？'))return;weiRegexRules.splice(i,1);weiRegexSave();render()};
+window.weiRegexAdd=()=>{const find=prompt('查找正则表达式（不含两侧斜杠也可以）');if(find===null||!find.trim())return;const replace=prompt('替换文本','');if(replace===null)return;weiRegexRules.push(weiRegexNormalize({name:'自定义规则',find,replace},weiRegexRules.length));weiRegexSave();render()};
+window.weiRegexEdit=i=>{const r=weiRegexRules[i];if(!r)return;const name=prompt('规则名称',r.name);if(name===null)return;const find=prompt('查找正则',r.find);if(find===null)return;const replace=prompt('替换内容',r.replace);if(replace===null)return;Object.assign(r,{name,find,replace});weiRegexSave();render()};
+window.weiRegexImport=async el=>{const f=el.files?.[0];if(!f)return;try{const obj=JSON.parse(await f.text());let arr=Array.isArray(obj)?obj:Array.isArray(obj.scripts)?obj.scripts:Array.isArray(obj.regex)?obj.regex:Array.isArray(obj.regexScripts)?obj.regexScripts:(obj.findRegex||obj.find?[obj]:[]);arr=arr.filter(x=>x&&typeof x==='object'&&(x.findRegex||x.find||x.regex));if(!arr.length)throw Error('没有找到可兼容的正则规则');const rules=arr.map(weiRegexNormalize);weiRegexRules.push(...rules);weiRegexSave();render();toast('已导入 '+rules.length+' 条正则')}catch(e){toast('导入失败：'+e.message)}finally{el.value=''}};
+
 const by=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))||f}catch{return f}};
 let db=read(KEY,{}),presets=read(PKEY,[]),activePage='story',editingId=null,editingTab='styles',busy=false,offlineChar=null;
@@ -4076,7 +4116,49 @@ function offlineFlush(){
  try{localStorage.setItem(KEY,JSON.stringify(snapshot))}catch(_){/* retain in-memory records */}
  });
 }
-function save(){offlineFlush();try{localStorage.setItem(PKEY,JSON.stringify(presets))}catch(e){console.warn('线下预设保存失败',e)}}
+// Presets are stored independently in IndexedDB: story history and image data can exhaust localStorage.
+// Preserve the legacy localStorage copy; never delete it automatically.
+let presetReady=false, presetDirty=false, presetWriteQueue=Promise.resolve(), presetStoreFailed=false;
+function presetStoreAction(mode,value){return offlineOpenStore().then(database=>new Promise((resolve,reject)=>{
+ try{const tx=database.transaction('records',mode==='read'?'readonly':'readwrite');
+ const request=mode==='read'?tx.objectStore('records').get('presets'):tx.objectStore('records').put(value,'presets');
+ let result;request.onsuccess=()=>{result=request.result};
+ tx.oncomplete=()=>{database.close();resolve(result)};
+ tx.onerror=()=>{database.close();reject(tx.error||Error('Preset transaction failed'))};
+ tx.onabort=()=>{database.close();reject(tx.error||Error('Preset transaction aborted'))};
+ }catch(e){database.close();reject(e)}
+}))}
+function persistPresets(){
+ if(!presetReady){presetDirty=true;return Promise.resolve(false)}
+ let snapshot;try{snapshot=JSON.parse(JSON.stringify(presets))}catch(e){return Promise.reject(e)}
+ presetWriteQueue=presetWriteQueue.catch(()=>{}).then(()=>presetStoreAction('write',snapshot)).then(()=>{
+  presetStoreFailed=false;return true;
+ }).catch(e=>{
+  console.warn('线下预设 IndexedDB 保存失败',e);presetStoreFailed=true;
+  try{localStorage.setItem(PKEY,JSON.stringify(snapshot));return true}catch(f){
+   console.warn('线下预设备用存储失败',f);toast('预设未能保存！请先导出原文件备份');return false;
+  }
+ });
+ return presetWriteQueue;
+}
+function initializePresets(){
+ presetStoreAction('read').then(stored=>{
+  if(Array.isArray(stored)){
+   // An import performed while the database was loading must never be discarded.
+   const merged=new Map(stored.filter(p=>p&&p.id).map(p=>[p.id,p]));
+   for(const p of presets)if(p&&p.id)merged.set(p.id,p);
+   presets=[...merged.values()];
+  }
+  presetReady=true;
+  if(presetDirty||!Array.isArray(stored))persistPresets();
+  if(activePage==='presets'||activePage==='editor')render();
+ }).catch(e=>{
+  console.warn('线下预设数据库读取失败',e);presetReady=true;presetStoreFailed=true;
+  if(presetDirty)persistPresets();
+ });
+}
+function save(){offlineFlush();persistPresets()}
+
 function offlineInitializeStore(){
  offlineStoreAction('read').then(stored=>{
  if(stored&&typeof stored==='object'&&!Array.isArray(stored)){
@@ -4119,9 +4201,11 @@ let html='';if(activePage==='settings'){
 let c=cfg(),select=(key,opts)=>'<select onchange="weiOfflineSetting(\''+key+'\',this.value)">'+opts.map(([v,t])=>'<option value="'+v+'" '+(c[key]===v?'selected':'')+'>'+t+'</option>').join('')+'</select>';
 html='<div class="wo-subpage"><div class="wo-row"><b>目标生成字数</b><span>'+c.words+' 字</span></div><input type="range" min="100" max="3000" step="100" value="'+c.words+'" oninput="weiOfflineSetting(\'words\',+this.value)"><div class="wo-btns">'+[300,500,800,1200,2000].map(n=>'<button class="wo-btn" onclick="weiOfflineSetting(\'words\','+n+')">'+n+'</button>').join('')+'</div><div class="wo-row">叙事视角'+select('pov',[['first','第一人称'],['second','第二人称'],['third','第三人称']])+'</div><div class="wo-row">剧情节奏'+select('pace',[['slow','慢节奏'],['normal','正常'],['fast','快节奏']])+'</div><div class="wo-row">对白与描写比例'+select('ratio',[['talk','对白较多'],['balanced','均衡'],['description','描写较多']])+'</div>';
 html+='<label class="wo-row"><span><b>自动格式渲染</b><small style="display:block;color:#999;font-size:11px">HTML · Markdown · 折叠摘要（仅改变显示）</small></span><input type="checkbox" '+(c.richRender!==false?'checked':'')+' onchange="weiOfflineSetting(\'richRender\',this.checked)"></label>';
+html+='<div class="wo-block" onclick="weiOfflinePage(\'regex\')">酒馆正则管理 <span style="float:right">›</span><div class="wo-small">导入 JSON · 启用与排序 · 编辑显示替换规则</div></div>';
 for(let [k,t] of [['thought','Char 内心描写'],['speak','允许 Char 抢话'],['memory','剧情记忆摘要'],['scene','场景状态记录'],['temp','临时剧情指令']])html+='<label class="wo-row">'+t+'<input type="checkbox" '+(c[k]?'checked':'')+' onchange="weiOfflineSetting(\''+k+'\',this.checked)"></label>';
 if(c.temp)html+='<textarea rows="3" placeholder="本次剧情的临时指令" onchange="weiOfflineSetting(\'tempText\',this.value)">'+safe(c.tempText)+'</textarea>';
 html+='<div class="wo-block" onclick="weiOfflinePage(\'presets\')">预设管理 <span style="float:right">›</span><div class="wo-small">导入预设 · 文风开关 · 编辑提示词</div></div></div>';
+}else if(activePage==='regex'){html=weiRegexPage();
 }else if(activePage==='history'){
 html='<div class="wo-subpage">'+(data().sessions.length?data().sessions.map(x=>'<div class="wo-block"><b>'+safe(x.title)+'</b><span class="wo-small" style="float:right">'+(x.status==='ended'?'已结束':'进行中')+'</span><div class="wo-small">'+safe(x.place)+' · '+x.messages.length+' 楼 · '+safe(x.created)+'</div><div class="wo-btns" style="margin-top:10px"><button class="wo-btn" onclick="weiOfflineResume(\''+safe(x.id)+'\')">'+(x.status==='ended'?'查看记录':'继续本次见面')+'</button><button class="wo-btn" onclick="weiOfflineRename(\''+safe(x.id)+'\')">重命名</button></div></div>').join(''):'<div class="wo-small">暂无见面记录</div>')+'<button class="wo-btn dark" onclick="weiOfflineNew()">开始新一次见面</button></div>';
 }else if(activePage==='menu'){
@@ -4133,7 +4217,7 @@ html='<div class="wo-subpage"><label class="wo-block" style="display:block;text-
 }else if(activePage==='editor'){
 let p=presets.find(x=>x.id===editingId);html='<div class="wo-subpage">'+(p?'<b>'+safe(p.name)+'</b><div class="wo-small">每条提示词独立开关，开启后参与后续生成</div><div class="wo-btns" style="margin:12px 0"><button class="wo-btn" onclick="weiOfflineTab(\'styles\')">文风</button><button class="wo-btn" onclick="weiOfflineTab(\'all\')">全部提示词</button></div><input placeholder="搜索提示词" id="woSearch" oninput="weiOfflineRenderPrompts()"><div id="woPrompts"></div><button class="wo-btn dark" onclick="weiOfflinePage(\'presets\')">保存并返回</button>':'预设不存在')+'</div>';
 }
-let title={settings:'生成设置',history:'线下记录',menu:'更多操作',presets:'预设管理',import:'导入预设',editor:'编辑预设'}[activePage]||'线下模式',back={settings:'story',history:'story',menu:'story',presets:'settings',import:'presets',editor:'presets'}[activePage]||'story';root.innerHTML=heading(title,back)+html;if(activePage==='editor')renderPrompts();}
+let title={settings:'生成设置',regex:'酒馆正则管理',history:'线下记录',menu:'更多操作',presets:'预设管理',import:'导入预设',editor:'编辑预设'}[activePage]||'线下模式',back={settings:'story',regex:'settings',history:'story',menu:'story',presets:'settings',import:'presets',editor:'presets'}[activePage]||'story';root.innerHTML=heading(title,back)+html;if(activePage==='editor')renderPrompts();}
 // Offline story display-only rich text: the original message is never rewritten.
 function weiOfflineRich(text){
  const raw=String(text??'');
@@ -4141,7 +4225,7 @@ function weiOfflineRich(text){
   const esc=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   if(cfg().richRender===false)return esc(raw);
   const code=[];
-  let src=raw.replace(/```([^\n`]*)\n([\s\S]*?)```/g,(_,lang,body)=>{const key='WEICODEPLACEHOLDER'+code.length+'END';code.push('<pre><code>'+esc(body)+'</code></pre>');return key});
+  let src=weiRegexApply(raw).replace(/```([^\n`]*)\n([\s\S]*?)```/g,(_,lang,body)=>{const key='WEICODEPLACEHOLDER'+code.length+'END';code.push('<pre><code>'+esc(body)+'</code></pre>');return key});
   src=src.replace(/<!--([\s\S]*?)-->/g,'');
   // Convert Markdown only in text runs, leaving genuine HTML tags intact.
   const parts=src.split(/(<\/?[a-zA-Z][^>]*>)/g);
@@ -4250,7 +4334,7 @@ function togglePrompt(i,v){let p=presets.find(x=>x.id===editingId);if(p?.prompts
 function editPrompt(i){let p=presets.find(x=>x.id===editingId),x=p?.prompts[i];if(!x)return;let v=prompt('编辑完整提示词（较长内容建议先复制备份）',x.text);if(v!==null){x.text=v;save();renderPrompts()}}
 function movePrompt(i,d){let p=presets.find(x=>x.id===editingId),j=i+d;if(!p||j<0||j>=p.prompts.length)return;[p.prompts[i],p.prompts[j]]=[p.prompts[j],p.prompts[i]];save();renderPrompts()}
 async function importPreset(el){let f=el.files?.[0];if(!f)return;try{let txt=await f.text(),prompts=[];if(/\.json$/i.test(f.name)){let obj=JSON.parse(txt);let arr=Array.isArray(obj.prompts)?obj.prompts:Array.isArray(obj)?obj:[];let order=Array.isArray(obj.prompt_order)?obj.prompt_order:[];let enabledMap=new Map();for(let group of order)for(let x of group.order||[])enabledMap.set(x.identifier,!!x.enabled);for(let [i,x] of arr.entries()){let content=x.content??x.prompt??x.text??'';if(typeof content!=='string'||!content.trim())continue;prompts.push({name:x.name||x.identifier||'提示词 '+(i+1),text:content,enabled:enabledMap.has(x.identifier)?enabledMap.get(x.identifier):x.enabled!==false})}if(!prompts.length){let content=obj.content||obj.prompt||obj.text;if(typeof content==='string')prompts=[{name:f.name,text:content,enabled:true}]} }else{prompts=[{name:'文风',text:txt,enabled:true}]}
-if(!prompts.length)throw Error('文件中没有可读取的提示词');let p={id:'preset_'+Date.now(),name:f.name.replace(/\.(json|txt)$/i,''),prompts};presets.push(p);cfg().preset=p.id;save();editingId=p.id;page('editor');toast('已导入 '+prompts.length+' 条提示词')}catch(e){toast('导入失败：'+e.message)}}
+if(!prompts.length)throw Error('文件中没有可读取的提示词');let p={id:'preset_'+Date.now(),name:f.name.replace(/\.(json|txt)$/i,''),prompts};presets.push(p);cfg().preset=p.id;save();editingId=p.id;page('editor');persistPresets().then(ok=>toast(ok?'已导入并保存 '+prompts.length+' 条提示词':'导入成功，但保存失败，请保留原预设文件'))}catch(e){toast('导入失败：'+e.message)}}
 function renamePreset(id){let p=presets.find(x=>x.id===id);if(!p)return;let n=prompt('预设名称',p.name);if(n){p.name=n;save();render()}}
 function deletePreset(id){if(!confirm('删除此预设？'))return;presets=presets.filter(x=>x.id!==id);for(let d of Object.values(db))if(d.settings?.preset===id)d.settings.preset=null;save();render()}
 function invite(text){let overlay=by('weiInviteOverlay');if(overlay)overlay.remove();overlay=document.createElement('div');overlay.id='weiInviteOverlay';overlay.innerHTML='<div class="wo-invite"><div class="wo-invite-top"><span>✉ 线下见面邀请</span><span>INVITATION</span></div><hr style="border:0;border-top:1px solid #eee;margin:12px 0"><div class="wo-invite-profile">'+avatar(false)+'<div><b>'+safe(name())+'</b><div style="font-size:12px;color:#999;margin-top:8px">向你发来一封见面邀请</div></div></div><div class="wo-invite-quote"><small style="color:#aaa">TO YOU</small><div style="margin-top:8px">'+safe(text||'“要不要找个时间见一面？”')+'</div></div><div class="wo-invite-buttons"><button onclick="weiOfflineReject()">拒绝</button><button onclick="weiOfflineAccept()">接受</button></div></div>';document.querySelector('.app')?.appendChild(overlay)}
@@ -4310,7 +4394,7 @@ let oldOpen=window.puOpenChat;window.puOpenChat=function(){oldOpen.apply(this,ar
 let oldRender=window.renderChat;window.renderChat=function(){let r=oldRender.apply(this,arguments);addButton();return r};
 let oldGo=window.go;window.go=function(screen){let r=oldGo.apply(this,arguments);if(screen==='chat')addButton();return r};
 let oldReturn=window.puReturnToChat;window.puReturnToChat=function(){save();return oldReturn.apply(this,arguments)};
-let story=by('puStory');if(story){story.innerHTML='';story.classList.add('wei-offline-ready')}addButton();detectInvite();
+let story=by('puStory');if(story){story.innerHTML='';story.classList.add('wei-offline-ready')}addButton();initializePresets();detectInvite();
 })();
 </script><script id="wei-beauty-upgrade-js">
 (function(){'use strict';
