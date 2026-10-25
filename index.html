@@ -1771,7 +1771,7 @@ puApplyMode();
 const puCharFields=['persona','messages','memories','world','summary'];
 function puCaptureChar(){let x={};for(let k of puCharFields)if(state[k]!==undefined)x[k]=JSON.parse(JSON.stringify(state[k]));return x}
 let puChars=puJson(PU_CHARS,null);
-if(!puChars||!Array.isArray(puChars.list)||!puChars.list.length){puChars={current:'char_initial',list:[{id:'char_initial',data:puCaptureChar()}]};localStorage.setItem(PU_CHARS,JSON.stringify(puChars))}
+if(!puChars||!Array.isArray(puChars.list)||!puChars.list.length){puChars={current:'char_initial',list:[{id:'char_initial',data:puCaptureChar()}]};try{localStorage.setItem(PU_CHARS,JSON.stringify(puChars))}catch(e){console.warn('旧角色缓存已满；等待数据库恢复',e)}}
 let puSelectedChar=puChars.current;
 function puCharName(c){return c.data?.persona?.name||'未命名角色'}
 function puStoreChars(){try{const next=JSON.stringify(puChars);if(localStorage.getItem(PU_CHARS)===next)return true;localStorage.setItem(PU_CHARS,next);return true}catch(e){console.warn('角色存储写入失败，原有数据未被主动清除',e);if(!window.__weiQuotaWarned){window.__weiQuotaWarned=true;toast('本地存储空间不足，请先备份，勿清除网站数据')}return false}}
@@ -2346,7 +2346,7 @@ if(!accounts.some(a=>a.id===activeId))activeId=accounts[0].id;
 const current=()=>accounts.find(a=>a.id===activeId)||accounts[0];
 function saveAccounts(){try{localStorage.setItem(LAST_KEY,activeId)}catch(e){}puBigCommit()}
 function capture(){const a=current();if(!a)return;const char=puChars.list.find(x=>x.id===puChars.current);if(char)char.data=puCaptureChar();a.profile=clone(puUser);a.banner=localStorage.getItem(PU_X_BANNER)||'';a.chars=clone(puChars);a.activeChar=puChars.current;a.moments=clone(state.moments||[]);}
-let restoring=false;function restore(a){restoring=true;puUser=clone(a.profile);puUser.id=a.id;localStorage.setItem(PU_USER,JSON.stringify(puUser));if(a.banner)localStorage.setItem(PU_X_BANNER,a.banner);else localStorage.removeItem(PU_X_BANNER);puChars=clone(a.chars);puChars.current=a.activeChar||puChars.current;const char=puChars.list.find(c=>c.id===puChars.current)||puChars.list[0];if(char){puChars.current=char.id;puSelectedChar=char.id;for(const k of puCharFields){if(char.data[k]!==undefined)state[k]=clone(char.data[k]);else if(['messages','memories','world'].includes(k))state[k]=[];}}state.moments=Array.isArray(a.moments)?clone(a.moments):[];try{puStoreChars()}catch(e){}restoring=false;}
+let restoring=false;function restore(a){restoring=true;puUser=clone(a.profile);puUser.id=a.id;try{localStorage.setItem(PU_USER,JSON.stringify(puUser))}catch(e){console.warn('用户信息缓存已满，使用数据库副本',e)}if(a.banner){try{localStorage.setItem(PU_X_BANNER,a.banner)}catch(e){console.warn('封面缓存已满',e)}}else localStorage.removeItem(PU_X_BANNER);puChars=clone(a.chars);puChars.current=a.activeChar||puChars.current;const char=puChars.list.find(c=>c.id===puChars.current)||puChars.list[0];if(char){puChars.current=char.id;puSelectedChar=char.id;for(const k of puCharFields){if(char.data[k]!==undefined)state[k]=clone(char.data[k]);else if(['messages','memories','world'].includes(k))state[k]=[];}}state.moments=Array.isArray(a.moments)?clone(a.moments):[];restoring=false;}
 // On startup, recover the account last used, not the old shared chat cache.
 restore(current());
 // Migrate once without deleting the old data. Wait for the database read before writing anything.
@@ -2358,8 +2358,28 @@ puBigDB.read('snapshot').then(saved=>{
   restore(current());
   try{renderChat();puRenderUser();if(typeof puInboxRefresh==='function')puInboxRefresh()}catch(e){console.warn('界面恢复',e)}
  }
- puBigReady=true;puBigCommit();
+ puBigReady=true;if(!saved||puBigPending)puBigCommit();
 }).catch(e=>{console.error('IndexedDB 初始化失败',e);toast('大容量存储不可用，请先备份数据');});
+// Shared worldbooks live in IndexedDB. Never erase the legacy localStorage copy automatically.
+let weiWorldQueue=Promise.resolve();
+window.weiWorldDbReady=false;
+window.weiSaveSharedWorld=function(world){
+ const copy=clone(world||[]);
+ weiWorldQueue=weiWorldQueue.catch(()=>{}).then(()=>puBigDB.write('shared_world',copy));
+ weiWorldQueue.catch(e=>{console.error('世界书数据库保存失败',e);toast('世界书未能保存，请导出备份')});
+ return true;
+};
+puBigDB.read('shared_world').then(async stored=>{
+ if(Array.isArray(stored))state.world=stored;
+ else{
+  let legacy=[];try{legacy=JSON.parse(localStorage.getItem('weiwei_shared_world_v1')||'[]')}catch(e){}
+  if(!Array.isArray(legacy))legacy=[];
+  if(legacy.length)state.world=legacy;
+  await puBigDB.write('shared_world',clone(state.world||[]));
+ }
+ window.weiWorldDbReady=true;
+ if(typeof renderWorld==='function')renderWorld();
+}).catch(e=>{console.error('世界书迁移失败',e);toast('世界书数据库未就绪，请勿删除旧数据')});
 const originalPersist=persist;
 persist=function(){if(!restoring){capture();saveAccounts()}return true};
 // 兼容旧模块在初始化时缓存的 puOriginalPersist 引用：统一转入 IndexedDB，避免每次进入聊天重复写入巨大的 localStorage 快照。
@@ -3109,14 +3129,14 @@ if($id('worldList'))renderWorld();
  function getStored(){try{const x=JSON.parse(localStorage.getItem(storeKey)||'[]');return Array.isArray(x)?x:[]}catch(e){return []}}
  function keyOf(w){return [String(w.title||'').trim().toLowerCase(),String(w.content||'').trim()].join('\u0000')}
  function mergeInto(target,items){for(const w of (items||[])){if(!w||typeof w!=='object')continue;if(!target.some(x=>x.id===w.id||keyOf(x)===keyOf(w)))target.push(JSON.parse(JSON.stringify(w)))}}
- function sync(){const saved=getStored();if(saved.length){state.world=saved}else{localStorage.setItem(storeKey,JSON.stringify(state.world||[]))}}
+ function sync(){if(window.weiWorldDbReady){return}const saved=getStored();if(saved.length){state.world=saved}}
  // One-time migration from old character-specific worldbook snapshots.
- if(localStorage.getItem(storeKey)===null){const all=[];mergeInto(all,state.world);try{for(const c of puChars.list)mergeInto(all,c.data?.world)}catch(e){}state.world=all;localStorage.setItem(storeKey,JSON.stringify(all))}
+ if(localStorage.getItem(storeKey)===null){const all=[];mergeInto(all,state.world);try{for(const c of puChars.list)mergeInto(all,c.data?.world)}catch(e){}state.world=all}
  sync();
  // Worldbooks belong to the library, not to individual Char snapshots.
  const index=puCharFields.indexOf('world');if(index!==-1)puCharFields.splice(index,1);
  const oldPersist=window.persist;
- if(typeof oldPersist==='function')window.persist=function(){localStorage.setItem(storeKey,JSON.stringify(state.world||[]));return oldPersist.apply(this,arguments)};
+ if(typeof oldPersist==='function')window.persist=function(){if(typeof window.weiSaveSharedWorld==='function')window.weiSaveSharedWorld(state.world||[]);return oldPersist.apply(this,arguments)};
  const oldActivate=window.puActivateSelectedChar;
  if(typeof oldActivate==='function')window.puActivateSelectedChar=function(){const result=oldActivate.apply(this,arguments);sync();return result};
  const oldDelete=window.puDeleteSelectedChar;
