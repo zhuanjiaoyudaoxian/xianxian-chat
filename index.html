@@ -1774,7 +1774,7 @@ let puChars=puJson(PU_CHARS,null);
 if(!puChars||!Array.isArray(puChars.list)||!puChars.list.length){puChars={current:'char_initial',list:[{id:'char_initial',data:puCaptureChar()}]};localStorage.setItem(PU_CHARS,JSON.stringify(puChars))}
 let puSelectedChar=puChars.current;
 function puCharName(c){return c.data?.persona?.name||'未命名角色'}
-function puStoreChars(){try{localStorage.setItem(PU_CHARS,JSON.stringify(puChars));return true}catch(e){toast('角色存储空间不足');return false}}
+function puStoreChars(){try{const next=JSON.stringify(puChars);if(localStorage.getItem(PU_CHARS)===next)return true;localStorage.setItem(PU_CHARS,next);return true}catch(e){console.warn('角色存储写入失败，原有数据未被主动清除',e);if(!window.__weiQuotaWarned){window.__weiQuotaWarned=true;toast('本地存储空间不足，请先备份，勿清除网站数据')}return false}}
 function puSaveActiveChar(){let c=puChars.list.find(x=>x.id===puChars.current);if(c)c.data=puCaptureChar();puStoreChars()}
 const puOriginalPersist=persist;persist=function(){const ok=puOriginalPersist();if(ok)puSaveActiveChar();return ok};
 function puCharAvatar(c){const v=c?.data?.persona?.avatar;return v?`<img alt="" src="${v}">`:`<span>${esc(puCharName(c).slice(0,1))}</span>`}
@@ -1788,7 +1788,7 @@ function puRenderContactDetails(id){
  $('puCharCarousel')?.querySelectorAll('.pu-char-card').forEach(b=>{const chosen=b.dataset.char===id;b.classList.toggle('selected',chosen);b.setAttribute('aria-current',chosen?'true':'false')});
 }
 function puRenderContacts(){
- puSaveActiveChar();
+ // Rendering a contact list must not write large character data to storage.
  const carousel=$('puCharCarousel');if(!carousel)return;
  carousel.innerHTML=puChars.list.map(c=>`<button class="pu-char-card" data-char="${c.id}" onclick="puSelectChar('${c.id}')" aria-label="选择${esc(puCharName(c))}"><span class="pu-char-picture">${puCharAvatar(c)}</span></button>`).join('');
  $('puContactList').innerHTML=puChars.list.map(c=>`<button class="pu-contact-row" onclick="puSelectChar('${c.id}');puOpenChat()"><span class="pu-contact-avatar">${puCharAvatar(c)}</span><span><b>${esc(puCharName(c))}</b><small>${esc((c.data?.messages?.at(-1)?.content||'点击开始聊天').slice(0,36))}</small></span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m9 18 6-6-6-6"/></svg></button>`).join('');
@@ -5092,40 +5092,41 @@ puParseChatReplies=function(raw){
 </style><script id="wei-chat-navigation-recovery">
 (function(){
  'use strict';
- // The previous patch required #puInbox, which does not exist in this HTML.
- // Route to the actual contacts screen, without altering any saved data.
- function openContacts(){
-   try {
-     const contacts=document.getElementById('contacts');
-     if(!contacts) return false;
+ // The real inbox is created dynamically inside #puHubChatPane.
+ // Never navigate to the legacy #contacts page from the desktop Chat icon.
+ function openInbox(){
+   try{
      const hub=document.getElementById('puHub');
+     if(!hub)return false;
+     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s===hub));
      const chat=document.getElementById('chat');
-     if(hub) hub.classList.remove('active');
-     if(chat) chat.classList.remove('active');
-     document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x===contacts));
-     if(typeof window.puRenderContacts==='function')window.puRenderContacts();
-     if(typeof window.puSocialClose==='function')try{window.puSocialClose()}catch(e){}
+     const inbox=document.getElementById('puInbox');
+     if(typeof window.puInboxClose==='function' && inbox){
+       window.puInboxClose();
+     }else if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden')}
+     if(typeof window.puHubTab==='function')window.puHubTab(0);
+     if(inbox)inbox.hidden=false;
+     if(typeof window.drawInbox==='function')window.drawInbox();
      return true;
-   }catch(err){console.error('Chat contacts navigation:',err);return false}
+   }catch(err){console.error('Chat inbox navigation failed',err);return false}
  }
- window.weiOpenInboxSafely=openContacts;
- window.puReturnToInbox=openContacts;
- const previousGo=window.go;
+ window.weiOpenInboxSafely=openInbox;
+ window.puReturnToInbox=openInbox;
+ const originalGo=window.go;
  window.go=function(id,...args){
-   if(id==='chat'||id==='puHub'){
-     if(openContacts())return;
+   if(id==='chat'||id==='puHub'||id==='contacts'){
+     if(openInbox())return;
    }
-   return previousGo.apply(this,[id,...args]);
+   return originalGo.apply(this,[id,...args]);
  };
  document.addEventListener('click',function(e){
    const btn=e.target.closest&&e.target.closest('#home .bloom-icon');
    if(!btn)return;
    const handler=btn.getAttribute('onclick')||'';
+   const app=(btn.getAttribute('data-app-id')||'').toLowerCase();
    const label=(btn.textContent||'').trim().toLowerCase();
-   if(/go\(['"](?:chat|contacts|puHub)['"]\)/.test(handler)||label==='chat'||label==='聊天'){
-     if(openContacts()){
-       e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-     }
+   if(/go\(['"](?:chat|contacts|puHub)['"]\)/.test(handler)||['chat','contacts','puhub'].includes(app)||label==='chat'||label==='聊天'){
+     if(openInbox()){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}
    }
  },true);
 })();
