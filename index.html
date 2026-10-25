@@ -5120,40 +5120,47 @@ window.weiShowStorageEstimate=async function(){
 };
 </script>
 
-<!-- 修复：聊天入口始终先进入会话列表；返回时恢复 Hub 导航状态 -->
-<script id="wei-chat-navigation-recovery">
+<!-- 聊天导航修复：统一使用 Hub 自带的列表和私聊状态机 -->
+<script id="wei-chat-navigation-stable">
 (function(){
-  'use strict';
-  const previousGo=window.go;
-  window.go=function(id,...args){
-    if(id==='chat'||id==='contacts'){
-      const hub=document.getElementById('puHub');
-      const chat=document.getElementById('chat');
-      if(hub && typeof window.puHubTab==='function'){
-        document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s===hub));
-        hub.hidden=false;hub.style.removeProperty('display');
-        if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index');}
-        const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
-        const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
-        const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
-        hub.classList.remove('pu-private-chat-open');
-        try{window.puHubTab(id==='contacts'?1:0)}catch(e){console.error('聊天列表打开失败',e)}
-        return;
-      }
-    }
-    return previousGo.apply(this,[id,...args]);
-  };
-  window.puReturnToInbox=function(){
-    const hub=document.getElementById('puHub');
-    const chat=document.getElementById('chat');
-    if(typeof window.puInboxClose==='function'){try{window.puInboxClose()}catch(e){console.warn(e)}}
-    if(hub){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s===hub));hub.hidden=false;hub.style.removeProperty('display');hub.classList.remove('pu-private-chat-open')}
-    if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index')}
-    const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
-    const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
-    const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
-    if(typeof window.puHubTab==='function')try{window.puHubTab(0)}catch(e){console.error(e)}
-  };
+ 'use strict';
+ function hubHome(tab){
+  const hub=document.getElementById('puHub');
+  if(!hub)return;
+  // 只通过现有关闭函数清理私聊状态，避免页面类名与闭包 insideChat 不同步。
+  try{window.puInboxClose?.()}catch(e){console.error('关闭私聊失败',e)}
+  document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===hub));
+  hub.hidden=false;
+  hub.classList.remove('pu-private-chat-open');
+  const chat=document.getElementById('chat');
+  if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');}
+  const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=false;
+  const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
+  if(typeof window.puHubTab==='function')window.puHubTab(tab||0);
+ }
+ // 旧入口可能调用 go、puNavigate 或 puSocialOpenChat，全部统一路由。
+ const priorGo=window.go;
+ window.go=function(id,...args){
+  if(id==='chat'||id==='puHub'){hubHome(0);return;}
+  if(id==='contacts'){hubHome(1);return;}
+  return priorGo.apply(this,[id,...args]);
+ };
+ // 部分旧脚本使用词法级 go，而不是 window.go；同步更新其入口。
+ try{go=window.go}catch(e){console.warn(e)}
+ const priorNavigate=window.puNavigate;
+ window.puNavigate=function(id,...args){
+  if(id==='chat'||id==='puHub'){hubHome(0);return;}
+  if(id==='contacts'){hubHome(1);return;}
+  return priorNavigate?.apply(this,[id,...args]);
+ };
+ window.puReturnToInbox=function(){hubHome(0)};
+ // 桌面 Chat 只能进入会话列表，不能使用当前选中角色作为默认聊天对象。
+ document.querySelectorAll('#home [onclick]').forEach(el=>{
+  const action=el.getAttribute('onclick')||'';
+  if(/puSocialOpenChat\s*\(|puOpenChat\s*\(|go\s*\(\s*['"](?:chat|contacts)['"]\s*\)/.test(action)){
+   el.setAttribute('onclick','go(\'chat\')');
+  }
+ });
 })();
 </script>
 </body></html>
