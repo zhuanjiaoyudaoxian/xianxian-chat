@@ -4092,6 +4092,8 @@ function cfg(){return data().settings||(data().settings={...defaults})}
 // Offline records use IndexedDB when available. Startup never waits on storage.
 // Legacy localStorage remains untouched as a recovery copy.
 let offlineStoreReady=false, offlineStoreDirty=false, offlineStoreQueue=Promise.resolve(), offlineStoreError=false;
+let offlineReadyResolve;const offlineReadyPromise=new Promise(resolve=>{offlineReadyResolve=resolve});
+let offlineStoreRevision=0, offlineStoreCommitted=0, offlineStoreWarned=false;
 function offlineOpenStore(){return new Promise((resolve,reject)=>{try{
  if(!window.indexedDB){reject(Error('IndexedDB unavailable'));return;}
  const req=indexedDB.open('wei_offline_stories_v2',1);
@@ -4108,13 +4110,20 @@ function offlineStoreAction(mode,value){return offlineOpenStore().then(database=
  tx.onabort=()=>{database.close();reject(tx.error||Error('Transaction aborted'))};
  }catch(e){database.close();reject(e)}
 }))}
+function offlineSaveWarning(){if(!offlineStoreWarned){offlineStoreWarned=true;toast('新剧情尚未保存成功，请先复制或备份，暂勿刷新网页')}}
 function offlineFlush(){
- if(!offlineStoreReady){offlineStoreDirty=true;return;}
- let snapshot;try{snapshot=JSON.parse(JSON.stringify(db))}catch(e){console.error('线下剧情序列化失败',e);return;}
- offlineStoreQueue=offlineStoreQueue.catch(()=>{}).then(()=>offlineStoreAction('write',snapshot)).then(()=>{offlineStoreError=false}).catch(e=>{
- console.error('线下剧情保存失败',e);offlineStoreError=true;
- try{localStorage.setItem(KEY,JSON.stringify(snapshot))}catch(_){/* retain in-memory records */}
+ offlineStoreRevision++;
+ if(!offlineStoreReady){offlineStoreDirty=true;return new Promise(resolve=>{const started=Date.now();const check=()=>{if(offlineStoreReady){offlineFlush().then(resolve);return;}if(Date.now()-started>12000){offlineSaveWarning();resolve(false);return;}setTimeout(check,80)};check()});}
+ let snapshot;try{snapshot=JSON.parse(JSON.stringify(db))}catch(e){console.error('线下剧情序列化失败',e);offlineSaveWarning();return Promise.resolve(false)}
+ const revision=offlineStoreRevision;
+ offlineStoreQueue=offlineStoreQueue.catch(()=>{}).then(()=>offlineStoreAction('write',snapshot)).then(()=>{
+  offlineStoreCommitted=revision;offlineStoreError=false;offlineStoreWarned=false;return true;
+ }).catch(e=>{
+  console.error('线下剧情 IndexedDB 保存失败',e);offlineStoreError=true;
+  try{localStorage.setItem(KEY,JSON.stringify(snapshot))}catch(f){console.error('线下剧情备用存储也失败',f)}
+  offlineSaveWarning();return false
  });
+ return offlineStoreQueue;
 }
 // Presets are stored independently in IndexedDB: story history and image data can exhaust localStorage.
 // Preserve the legacy localStorage copy; never delete it automatically.
@@ -4159,15 +4168,34 @@ function initializePresets(){
 }
 function save(){offlineFlush();persistPresets()}
 
+// IndexedDB is the single authoritative source once a story snapshot exists.
+// Never merge old localStorage messages into it: that resurrects deleted entries.
 function offlineInitializeStore(){
- offlineStoreAction('read').then(stored=>{
- if(stored&&typeof stored==='object'&&!Array.isArray(stored)){
-  // Do not replace a live session or overwrite a newer in-memory record.
-  for(const [id,entry] of Object.entries(stored))if(!Object.prototype.hasOwnProperty.call(db,id))db[id]=entry;
- }
- offlineStoreReady=true;
- if(offlineStoreDirty||!stored)offlineFlush();
- }).catch(e=>{console.warn('线下存储降级为本地模式',e);offlineStoreReady=true;offlineStoreError=true;});
+ const revisionAtStart=offlineStoreRevision;
+ offlineStoreAction('read').then(async stored=>{
+  if(stored&&typeof stored==='object'&&!Array.isArray(stored)){
+   if(!offlineStoreDirty&&offlineStoreRevision===revisionAtStart){
+    db=stored;
+   }else{
+    // A write began during startup: preserve the live data and do not replay stale records.
+    for(const [id,entry] of Object.entries(stored)){
+     if(!Object.prototype.hasOwnProperty.call(db,id))db[id]=entry;
+    }
+   }
+  }else{
+   // One-time legacy migration. Never replay this backup on subsequent launches.
+   offlineStoreDirty=true;
+  }
+  offlineStoreReady=true;
+  if(offlineStoreDirty){offlineStoreDirty=false;await offlineFlush()}
+  offlineReadyResolve();
+  if(activePage==='story'||activePage==='history')render();
+ }).catch(e=>{
+  console.warn('线下 IndexedDB 读取失败',e);
+  offlineStoreReady=true;offlineStoreError=true;
+  offlineReadyResolve();
+  toast('线下数据库读取失败，请备份数据，暂勿删除或刷新');
+ });
 }
 // Schedule storage setup after initial page scripts, preventing initialization failures from blanking the desktop.
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',offlineInitializeStore,{once:true});
@@ -4316,9 +4344,12 @@ function weiOfflineRich(text){
 }
 function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+weiOfflineRich(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
 function setting(k,v){cfg()[k]=v;save();render()}
-function open(){offlineChar=cid();ensure();page('story');document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));}
-function exit(){
- save();
+async function open(){await offlineReadyPromise;offlineChar=cid();ensure();page('story');document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));}
+async function exit(){
+ const committed=await offlineFlush();
+ const presetCommitted=await persistPresets();
+ if(committed!==true){offlineSaveWarning();toast('剧情保存失败，暂时不能安全退出；请先复制新剧情备份');return;}
+ if(presetCommitted===false)console.warn('预设本次未确认保存');
  // 聊天界面嵌套在 puHub 中，必须恢复外层容器；单独激活 #chat 会造成白屏。
  const hub=document.getElementById('puHub');
  const chat=document.getElementById('chat');
@@ -4350,14 +4381,14 @@ return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下
 async function generate(regen=-1){if(busy)return;let x=sess();if(!x||x.status==='ended')return toast('本次见面已结束，请开始新见面');busy=true;let start=Date.now(),typing=by('woTyping');if(typing)typing.hidden=false;let send=by('puStorySend');if(send)send.disabled=true;
 try{let history=x.messages.slice(-20).map(m=>({role:m.role==='user'?'user':'assistant',content:offlineResolve(m.versions?.[m.selected||0]||m.text)}));if(history.length&&history[history.length-1].role==='assistant')history.push({role:'user',content:'请继续当前场景，保持连贯，不重复前文。'});if(!history.length)history.push({role:'user',content:'紧接以下线上聊天最后一条消息继续写线下剧情。不要重启故事，不要擅自更改地点或已发生事件。\n'+offlineChatContext()});
 let answer=state.api.mode==='remote'?await requestModel(history,makePrompt(),{timeoutMs:180000,kind:'线下剧情生成'}):localReply(history[history.length-1].content);answer=offlineResolve(answer);let duration=Date.now()-start;
-if(regen>=0&&x.messages[regen]){let m=x.messages[regen];m.versions=m.versions||[m.text];m.versions.push(answer);m.selected=m.versions.length-1;m.duration=duration}else{x.messages.push({id:'wo_'+Date.now(),role:'assistant',text:answer,versions:[answer],selected:0,duration,date:new Date().toLocaleString()})}save();entries();
+if(regen>=0&&x.messages[regen]){let m=x.messages[regen];m.versions=m.versions||[m.text];m.versions.push(answer);m.selected=m.versions.length-1;m.duration=duration}else{x.messages.push({id:'wo_'+Date.now(),role:'assistant',text:answer,versions:[answer],selected:0,duration,date:new Date().toLocaleString()})}entries();const stored=await offlineFlush();if(stored===false)offlineSaveWarning();
 }catch(e){toast('线下生成失败：'+e.message)}finally{busy=false;let t=by('woTyping');if(t)t.hidden=true;let b=by('puStorySend');if(b)b.disabled=false}}
-async function send(){let inp=by('puStoryInput'),t=inp?.value.trim(),x=sess();if(!t||busy)return;if(x?.status==='ended')return toast('本次见面已结束');x.messages.push({id:'wo_'+Date.now(),role:'user',text:t,date:new Date().toLocaleString()});inp.value='';save();entries();await generate()}
+async function send(){let inp=by('puStoryInput'),t=inp?.value.trim(),x=sess();if(!t||busy)return;if(x?.status==='ended')return toast('本次见面已结束');x.messages.push({id:'wo_'+Date.now(),role:'user',text:t,date:new Date().toLocaleString()});inp.value='';entries();const stored=await offlineFlush();if(stored===false)offlineSaveWarning();await generate()}
 function resize(el){el.style.height='34px';el.style.height=Math.min(120,Math.max(34,el.scrollHeight))+'px'}
 function version(i,dir){let m=sess()?.messages[i];if(!m)return;m.selected=Math.min((m.versions||[m.text]).length-1,Math.max(0,(m.selected||0)+dir));save();entries()}
 function copy(i){let m=sess()?.messages[i];if(m)navigator.clipboard?.writeText(m.versions?.[m.selected||0]||m.text).then(()=>toast('已复制')).catch(()=>toast('复制失败'))}
 function edit(i){let m=sess()?.messages[i];if(!m)return;let t=prompt('编辑这一楼的内容',m.versions?.[m.selected||0]||m.text);if(t===null)return;if(m.versions)m.versions[m.selected||0]=t;else m.text=t;save();entries()}
-function del(i){if(!confirm('删除这一楼的内容？'))return;sess().messages.splice(i,1);save();entries()}
+async function del(i){if(!confirm('删除这一楼的内容？'))return;await offlineReadyPromise;const x=sess();if(!x||!x.messages[i])return;const removed=x.messages.splice(i,1)[0];entries();const ok=await offlineFlush();if(ok!==true){x.messages.splice(i,0,removed);entries();toast('删除未能保存，已恢复该楼，请备份后重试')}}
 function regen(i){let m=sess()?.messages[i];if(m?.role==='assistant')generate(i)}
 function fresh(){let d=data();d.current=null;ensure();page('story')}
 function resume(id){data().current=id;save();page('story')}
