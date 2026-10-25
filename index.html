@@ -4060,7 +4060,33 @@ let title={settings:'生成设置',history:'线下记录',menu:'更多操作',pr
 function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+safe(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
 function setting(k,v){cfg()[k]=v;save();render()}
 function open(){offlineChar=cid();ensure();page('story');document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));}
-function exit(){save();const target=document.getElementById('chat');if(!target){console.error('未找到聊天页面');return;}try{puChatOptions.mode='chat';localStorage.setItem(PU_CHAT_OPTIONS,JSON.stringify(puChatOptions))}catch(e){console.warn('保存聊天模式失败',e)}document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===target));target.hidden=false;target.style.removeProperty('display');target.style.removeProperty('visibility');try{puSyncModeUI()}catch(e){console.warn('同步聊天模式失败',e)}try{renderChat()}catch(e){console.error('恢复聊天页面失败',e)}requestAnimationFrame(()=>{if(!target.classList.contains('active')){document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===target))}})}
+function exit(){
+ save();
+ // 聊天界面嵌套在 puHub 中，必须恢复外层容器；单独激活 #chat 会造成白屏。
+ const hub=document.getElementById('puHub');
+ const chat=document.getElementById('chat');
+ if(!hub||!chat){console.error('线下返回失败：缺少聊天容器');toast('返回聊天失败，请重试');return;}
+ try{
+  puChatOptions.mode='chat';
+  localStorage.setItem(PU_CHAT_OPTIONS,JSON.stringify(puChatOptions));
+ }catch(e){console.warn('保存聊天模式失败',e)}
+ document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===hub||el===chat));
+ hub.hidden=false;
+ hub.style.removeProperty('display');
+ chat.hidden=false;
+ chat.classList.remove('pu-inbox-hidden');
+ chat.classList.add('pu-inbox-visible','active');
+ chat.style.display='flex';
+ chat.style.pointerEvents='auto';
+ chat.style.zIndex='20';
+ const inbox=document.getElementById('puInbox');if(inbox)inbox.hidden=true;
+ const nav=document.getElementById('puHubNav');if(nav)nav.style.visibility='hidden';
+ hub.classList.add('pu-private-chat-open');
+ try{if(typeof puHubTab==='function')puHubTab(0)}catch(e){console.warn('切换聊天标签失败',e)}
+ try{puSyncModeUI()}catch(e){console.warn('同步聊天模式失败',e)}
+ try{renderChat()}catch(e){console.error('恢复聊天内容失败',e);toast('聊天内容加载失败，请重试')}
+}
+
 function makePrompt(){let c=cfg(),x=sess(),p=presets.find(q=>q.id===c.preset),recent=(x?.messages||[]).slice(-20),styles=p?p.prompts.filter(q=>q.enabled).map(q=>q.text).join('\n\n'):'';
 let context=offlineChatContext();
 return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'');}
@@ -4097,52 +4123,49 @@ function reject(){by('weiInviteOverlay')?.remove();toast('已拒绝邀请，继�
 function addButton(){by('weiOfflineEntry')?.remove()}
  window.weiOfflineFromExtras=function(){try{puToggleExtras(false)}catch(e){by('puChatExtras')?.setAttribute('hidden','')}offlineChar=cid();invite('“要不要找个时间见一面？”')}
 function detectInvite(){
- // 每个角色只对新到达的 Char 消息判断，避免打开旧聊天时重弹。
+ // 只观察当前聊天中新到达的消息；分段后的语音、视频和文字作为同一轮判断。
  const seen=new Map();let pending=null;
- const textOf=m=>String(m?.content||m?.text||'').trim();
- const idOf=m=>String(m?.id||m?.date||'')+'|'+textOf(m).slice(0,50);
- const positive=/(?:见(?:一|个)?面|碰(?:个)?面|约会|来(?:你|我)?家|去(?:你|我)?家|到(?:你|我)?家|找你|接你|去接你|来接你|见你|去见你|过来|过去|出发|在路上|在车上|快到了|马上到|就要到|已经到了|我到了|到楼下|在楼下|到门口|在门口|到车库|地下车库|电梯(?:已经|都|刚)?(?:按|到|上)|上楼了|敲门|开门|到你那|到你这|到你身边|在你家楼下)/;
- const action=/(?:我|咱们|我们|现在|马上|已经|刚刚|这就|等我|给我|来|去|到|车|楼|门|电梯|见|接|约|一起)/;
- const neg=/(?:不(?:想|要|会|能|打算|可能|准备)(?:去|来|见|约|出发|过去|过来)|没(?:有|打算)(?:去|来|见)|别(?:来|过来|见)|取消(?:见面|约会)|改天|下次再|以后再|梦里|假如|如果|曾经|昨天|上次|回忆|小说里|电影里)/;
+ const msNow=()=>Array.isArray(state.messages)?state.messages:[];
+ const msgId=m=>String(m?.id||m?.date||'')+'|'+String(m?.content||'').slice(0,24);
+ const latestKey=ms=>ms.length?msgId(ms[ms.length-1]):'';
+ const textOf=m=>String(m?.puTranscript||m?.puText||m?.content||m?.text||'');
+ const relevant=m=>m&&m.role==='assistant'&&!['transfer','receipt','return_receipt','sticker'].includes(m.puType);
+ const neg=/(?:别来|不要过来|取消见面|不见了|别见了|改天再|下次再|以后再|如果|假如|梦里|昨天|上次|曾经)/;
+ const strong=/(?:我(?:这就|现在|马上|立刻|立即|准备|已经|正要|就要|待会|一会儿|等下)(?:去|来|出门|出发|过去|过来|到)|我(?:去|来)(?:你家|你那|你这|找你|接你)|我(?:出门了|出发了|在路上|到楼下了|到门口了|快到了|马上到了|已经到了)|(?:我|咱们|我们).{0,12}(?:去你家|来你家|见你|找你|接你)|(?:你把门开|给我开门|开门等我|等我到|等我过去)|(?:我在|已经到|马上到|快到)(?:你家|楼下|门口)|(?:我来|我去)(?:找你|接你))/;
+ const proposal=/(?:要不要|能不能|可不可以|好不好|愿不愿意|一起|我们|咱们).{0,22}(?:见面|见一面|约会|出去|去你家|来我家|找你|接你)|(?:见面|见一面|约会|来我家|去你家).{0,16}(?:吗|吧|好不好|怎么样)/;
  function check(){
   if(!by('chat')?.classList.contains('active')||by('weiInviteOverlay')||by('puStory')?.classList.contains('active'))return;
-  const char=cid(),ms=Array.isArray(state.messages)?state.messages:[];
-  const latest=ms[ms.length-1];if(!latest)return;
-  const key=idOf(latest),prior=seen.get(char);
-  if(prior===undefined){seen.set(char,key);return}
-  if(prior===key)return;
+  const char=cid(),ms=msNow(),key=latestKey(ms),prev=seen.get(char);
+  if(prev===undefined){seen.set(char,key);return}
+  if(prev===key)return;
   seen.set(char,key);
-  if(latest.role==='user')return;
-  const t=textOf(latest);if(!t||!positive.test(t)||!action.test(t)||neg.test(t))return;
-  // 多条 Char 连发时等待一小段时间，以最近的上下文判断是否真的赴约。
-  const recent=ms.slice(-9).map(textOf).join(' ');
-  if(/(?:别来|不要过来|取消见面|不见了|别见了)/.test(t))return;
+  const tail=ms.slice(-12),last=tail[tail.length-1];
+  if(!relevant(last))return;
+  // 将同一轮连续 Char 消息合并检查，兼容语音条、转账、普通文字拆分。
+  const batch=[];
+  for(let i=tail.length-1;i>=0;i--){if(tail[i].role==='user')break;if(relevant(tail[i]))batch.unshift(tail[i])}
+  const t=batch.map(textOf).join(' ').replace(/\[(?:语音|图片|视频|VOICE|VIDEO|IMAGE)\]/gi,' ').trim();
+  if(!t||neg.test(t)||!(strong.test(t)||proposal.test(t)))return;
   const sceneKey='wei_invite_scene_'+char;
-  let last=null;try{last=JSON.parse(sessionStorage.getItem(sceneKey)||'null')}catch(e){}
-  // 同一场见面被拒绝或接受后，至少六小时内不再重复弹窗。
-  if(last&&Date.now()-Number(last.at||0)<6*3600000)return;
-  const strong=/(?:在车上|已经出发|出发了|马上到|快到了|我到了|已经到了|楼下|门口|地下车库|电梯|敲门|开门|来接你|去接你|来找你|去找你|来你家|去你家|见你)/.test(t);
-  const proposal=/(?:见面|见一面|见个面|约会|一起出去|出来见|找你|接你|过来)/.test(t)&&/(?:吗|吧|要不要|好不好|可以|想|一起|现在|今晚|明天|周末|什么时候|几点)/.test(t);
-  if(!strong&&!proposal)return;
+  let previous=null;try{previous=JSON.parse(sessionStorage.getItem(sceneKey)||'null')}catch(e){}
+  if(previous&&Date.now()-Number(previous.at||0)<6*3600000)return;
   if(pending)clearTimeout(pending);
   pending=setTimeout(()=>{
    pending=null;
    if(cid()!==char||!by('chat')?.classList.contains('active')||by('weiInviteOverlay'))return;
-   const current=state.messages||[];
-   const recentChar=[...current].reverse().find(m=>m.role!=='user');
-   if(!recentChar||idOf(recentChar)!==key)return;
-   if(!strong&&!/(?:见面|约会|来|去|到|见你|找你|接你)/.test(recent))return;
+   const current=msNow();if(!current.length||current[current.length-1].role==='user')return;
+   const recent=[];for(let i=current.length-1;i>=0;i--){if(current[i].role==='user')break;if(relevant(current[i]))recent.unshift(current[i])}
+   const full=recent.map(textOf).join(' ').trim();
+   if(!full||neg.test(full)||!(strong.test(full)||proposal.test(full)))return;
    offlineChar=char;
-   try{sessionStorage.setItem(sceneKey,JSON.stringify({at:Date.now(),message:key}))}catch(e){}
-   invite(t.slice(0,250));
-  },900);
+   try{sessionStorage.setItem(sceneKey,JSON.stringify({at:Date.now(),message:latestKey(current)}))}catch(e){}
+   invite(full.slice(0,250));
+  },1100);
  }
- setInterval(check,1000);
- // 页面内切换角色或重新打开聊天时重新建立观察基线。
+ setInterval(check,700);
  const old=window.puOpenChat;
- if(typeof old==='function')window.puOpenChat=function(){const r=old.apply(this,arguments);const ms=state.messages||[];const m=ms[ms.length-1];if(m)seen.set(cid(),idOf(m));return r};
+ if(typeof old==='function')window.puOpenChat=function(){const r=old.apply(this,arguments);seen.set(cid(),latestKey(msNow()));return r};
 }
-
 window.weiOfflinePage=page;window.weiOfflineSetting=setting;window.weiOfflineResize=resize;window.weiOfflineSend=send;window.weiOfflineContinue=()=>generate();window.weiOfflineVersion=version;window.weiOfflineCopy=copy;window.weiOfflineEdit=edit;window.weiOfflineDelete=del;window.weiOfflineRegenerate=regen;window.weiOfflineExit=exit;window.weiOfflineEnd=end;window.weiOfflineNew=fresh;window.weiOfflineResume=resume;window.weiOfflineRename=rename;window.weiOfflineSelectPreset=choose;window.weiOfflineEditPreset=ep;window.weiOfflineTab=tab;window.weiOfflineRenderPrompts=renderPrompts;window.weiOfflinePromptToggle=togglePrompt;window.weiOfflinePromptEdit=editPrompt;window.weiOfflinePromptMove=movePrompt;window.weiOfflineImport=importPreset;window.weiOfflineRenamePreset=renamePreset;window.weiOfflineDeletePreset=deletePreset;window.weiOfflineInvite=()=>invite();window.weiOfflineAccept=accept;window.weiOfflineReject=reject;
 window.puOpenStory=open;window.puSendStory=send;
 let oldSet=window.puSetChatMode;window.puSetChatMode=function(mode){if(mode==='story'){by('puModePanel').hidden=true;open()}else oldSet(mode)};
