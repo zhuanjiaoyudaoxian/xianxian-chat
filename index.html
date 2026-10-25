@@ -5089,4 +5089,38 @@ puParseChatReplies=function(raw){
 .wei-book-toggle input:checked{background:#7e9693}
 .wei-book-toggle input:before{content:'';position:absolute;width:19px;height:19px;border-radius:50%;background:white;left:3px;top:3px;box-shadow:0 1px 3px #0002;transition:transform .18s}
 .wei-book-toggle input:checked:before{transform:translateX(17px)}
-</style></body></html>
+</style><script id="wei-chat-navigation-recovery">
+(function(){
+ 'use strict';
+ const oldGo=window.go;
+ function inboxView(){
+  const hub=document.getElementById('puHub'), chat=document.getElementById('chat'), inbox=document.getElementById('puInbox');
+  if(!hub||!inbox)return false;
+  // Close the actual conversation first; it resets the private-chat flag and refreshes the list.
+  try{if(typeof window.puInboxClose==='function')window.puInboxClose()}catch(e){console.warn('close conversation',e)}
+  if(chat){chat.classList.remove('active','pu-inbox-visible');chat.classList.add('pu-inbox-hidden');chat.style.removeProperty('display');chat.style.removeProperty('pointer-events');chat.style.removeProperty('z-index')}
+  const group=document.getElementById('puGroupRoom');if(group)group.classList.remove('open');
+  document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===hub));
+  hub.hidden=false;hub.style.removeProperty('display');
+  inbox.hidden=false;inbox.style.removeProperty('display');
+  const nav=document.getElementById('puHubNav');if(nav)nav.style.removeProperty('visibility');
+  const pane=document.getElementById('puHubChatPane');if(pane)pane.style.removeProperty('z-index');
+  try{if(typeof window.puHubTab==='function')window.puHubTab(0)}catch(e){console.warn('show inbox',e)}
+  return true;
+ }
+ window.weiOpenInboxSafely=inboxView;
+ window.go=function(id,...args){if(id==='chat'||id==='puHub') {if(inboxView())return}return oldGo.apply(this,[id,...args])};
+ window.puReturnToInbox=inboxView;
+ // The homepage icon is a generated inline handler; capture it before older nested handlers can enter a default unnamed chat.
+ document.addEventListener('click',function(e){
+  const button=e.target.closest && e.target.closest('#home .bloom-icon');
+  if(!button)return;
+  const handler=button.getAttribute('onclick')||'';
+  const label=(button.textContent||'').trim().toLowerCase();
+  if(/go\(['"](?:chat|contacts|puHub)['"]\)/.test(handler)||label==='chat'||label==='聊天'){
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();inboxView();
+  }
+ },true);
+})();
+</script>
+</body></html>
