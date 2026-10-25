@@ -1054,7 +1054,7 @@ html[data-chat-bubble-tail="off"] #chat #chatList .msg .bubble::before{display:n
 .wei-decor-thumb{display:flex;align-items:center;justify-content:center;width:115px;height:130px;background:#f5f5f5;color:#aaa;font-size:11px;box-shadow:5px 5px 0 #e9e6e2;margin:12px 0}
 .wei-decor-thumb img{width:100%;height:100%;object-fit:cover}
 </style><style id="weiOfflineRichStyles">#puStory .wo-content h1,#puStory .wo-content h2,#puStory .wo-content h3{font-size:1.12em;margin:.8em 0 .3em;font-weight:700}#puStory .wo-content p{margin:.45em 0}#puStory .wo-content blockquote{border-left:3px solid #ccc;padding:4px 12px;margin:8px 0;color:#777}#puStory .wo-content details{border:1px solid #e5e5e5;border-radius:7px;padding:9px 12px;margin:10px 0;background:#fafafa}#puStory .wo-content summary{cursor:pointer;font-weight:600}#puStory .wo-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f5f5;padding:10px;border-radius:5px}#puStory .wo-content code{font-size:.9em;background:#f5f5f5;padding:1px 3px}#puStory .wo-content table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto}#puStory .wo-content td,#puStory .wo-content th{border:1px solid #ddd;padding:5px}#puStory .wo-content hr{border:0;border-top:1px solid #ddd;margin:12px 0}#puStory .wo-content .wo-md-item{padding-left:12px}#puStory .wo-content{white-space:normal}#puStory .wo-content details summary{white-space:normal}</style>
-</head>
+<style id="weiOfflineThinkingFix">#puStory .wo-thinking{margin:0 0 12px;border:1px solid #e5e5e5;border-radius:10px;background:#f8f8f8;color:#666;font-size:12px}#puStory .wo-thinking summary{padding:10px 12px;cursor:pointer;list-style:revert}#puStory .wo-thinking-body{padding:0 12px 12px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow-y:auto}#puStory .wo-ext-frame{width:100%;min-height:120px}</style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
 <section class="screen active" id="lock"><div class="lock-date" id="lockDate"></div><div class="lock-time" id="lockTime"></div><div class="lock-quote" id="lockQuote">今天也有值得期待的事。</div><div class="lock-hint">请输入密码解锁</div><div class="pu-pin-dots" id="puPinDots"><i></i><i></i><i></i><i></i></div><div class="pu-pin-error" id="puPinError"></div><div class="pu-keypad" id="puKeypad"><button type="button" onclick="puPressPin('1')" aria-label="1">1</button><button type="button" onclick="puPressPin('2')" aria-label="2">2</button><button type="button" onclick="puPressPin('3')" aria-label="3">3</button><button type="button" onclick="puPressPin('4')" aria-label="4">4</button><button type="button" onclick="puPressPin('5')" aria-label="5">5</button><button type="button" onclick="puPressPin('6')" aria-label="6">6</button><button type="button" onclick="puPressPin('7')" aria-label="7">7</button><button type="button" onclick="puPressPin('8')" aria-label="8">8</button><button type="button" onclick="puPressPin('9')" aria-label="9">9</button><span></span><button type="button" onclick="puPressPin('0')" aria-label="0">0</button><button type="button" onclick="puPressPin('back')" aria-label="删除">⌫</button></div></section>
@@ -4320,7 +4320,8 @@ window.weiExtRaw=weiExtRaw;
 function weiExtHtmlBlocks(raw,depth){
  const rendered=weiExtRules(raw,2,depth);const blocks=[];
  // Keep the prose as prose; HTML fenced blocks become isolated frames.
- const prose=rendered.replace(/```html\s*\n([\s\S]*?)```/gi,(_,html)=>{blocks.push(html);return '\nWEIHTMLBLOCK'+(blocks.length-1)+'END\n'});
+ let prose=rendered.replace(/```(?:html|htm)\s*\n([\s\S]*?)```/gi,(_,html)=>{blocks.push(html);return '\nWEIHTMLBLOCK'+(blocks.length-1)+'END\n'});
+ if(!blocks.length&&/^\s*(?:<!doctype\s+html|<html\b)/i.test(prose)){blocks.push(prose);prose='WEIHTMLBLOCK0END'}
  return {prose,blocks};
 }
 function weiExtEntryRender(raw,index,depth){
@@ -4464,6 +4465,26 @@ function weiOfflineRich(text){
   code.forEach((fragment,i)=>{html=html.replace('WEICODEPLACEHOLDER'+i+'END',fragment)});
   return html;
  }catch(e){console.warn('线下富文本渲染已降级',e);return String(raw).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+}
+// Offline output presentation: preserve originals, separate reasoning and metadata.
+function weiOfflineSplitOutput(raw){
+ let text=String(raw??''),thought=[];
+ text=text.replace(/<(think|thinking|reasoning|analysis)\b[^>]*>([\s\S]*?)<\/\1>/gi,(_,tag,body)=>{thought.push(body.trim());return '\n'});
+ text=text.replace(/(?:^|\n)```(?:thinking|reasoning|analysis)\s*\n([\s\S]*?)```/gi,(_,body)=>{thought.push(body.trim());return '\n'});
+ // Some presets emit a complete JSON status object before/after the prose.
+ text=text.replace(/```(?:json)\s*\n([\s\S]*?)```/gi,(full,body)=>{try{const o=JSON.parse(body);if(o&&typeof o==='object'&&!Array.isArray(o)){const story=typeof o.story==='string'?o.story:typeof o.narrative==='string'?o.narrative:typeof o正文==='string'?o正文:null;return story?'\n'+story+'\n':'\n'}}catch(e){}return full});
+ // A whole JSON response can contain a prose field.
+ try{const o=JSON.parse(text.trim());if(o&&typeof o==='object'&&!Array.isArray(o)){const prose=['story','narrative','正文','content','text'].map(k=>o[k]).find(v=>typeof v==='string'&&v.trim());text=prose||''}}catch(e){}
+ // Suppress echoed prompt sections only when they appear as an obvious instruction block.
+ text=text.replace(/(?:^|\n)\[(?:世界公理|输入解构|基本要求|输出规则|续写规则|系统指令)\][\s\S]*?(?=\n\n\n|$)/g,'\n');
+ return {text:text.trim(),thought:thought.filter(Boolean).join('\n\n')};
+}
+function weiOfflineVisible(raw,index){
+ const result=weiOfflineSplitOutput(raw),filtered=weiExtRules(result.text,2,index);
+ // Reuse the extension renderer; it supports isolated HTML frames.
+ const main=weiExtEntryRender(result.text,index,index);
+ const thought=result.thought?'<details class="wo-thinking"><summary>思考过程 · 已完成</summary><div class="wo-thinking-body">'+weiOfflineRich(result.thought)+'</div></details>':'';
+ return thought+main;
 }
 function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+weiOfflineRich(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button>'+(u?'':'<button onclick="weiExtRaw('+i+')">查看原文</button>')+'</div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight;weiExtMountFrames()}
 function setting(k,v){cfg()[k]=v;save();render()}
