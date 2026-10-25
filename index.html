@@ -2705,12 +2705,13 @@ function puMoneyStatusLabel(m){const labels=m.puType==='transfer'?{pending:'待�
 function puMoneyFind(id){return state.messages.find(m=>m.id===id)}
 function puMoneyClose(){document.getElementById('puMoneyOverlay').hidden=true}
 function puMoneyDialog(html){document.getElementById('puMoneySheet').innerHTML=html;document.getElementById('puMoneyOverlay').hidden=false}
-function puMoneyCompose(type){if(type!=='transfer')return toast('红包功能已停用');puToggleExtras(false);const label=type==='gift'?'红包':'转账';puMoneyDialog(`<h3>发送${label}</h3><label>金额（元）</label><input id="puMoneyAmount" inputmode="decimal" type="number" min="0.01" max="99999.99" step="0.01" placeholder="0.00"><label>${type==='gift'?'祝福语':'转账备注'}</label><input id="puMoneyNote" maxlength="100" placeholder="${type==='gift'?'恭喜发财，大吉大利':'转账'}"><div id="puMoneyError" role="alert" style="color:#b54b4b;font-size:12px;min-height:18px;margin:8px 0"></div><div class="pu-money-actions"><button onclick="puMoneyClose()">取消</button><button type="button" onclick="puMoneySend('${type}')">发送</button></div>`)}
-async function puMoneySend(type){
+function puMoneyCompose(type){if(type!=='transfer')return toast('红包功能已停用');puToggleExtras(false);const label=type==='gift'?'红包':'转账';puMoneyDialog(`<h3>发送${label}</h3><label>金额（元）</label><input id="puMoneyAmount" inputmode="decimal" type="number" min="0.01" max="99999.99" step="0.01" placeholder="0.00"><label>${type==='gift'?'祝福语':'转账备注'}</label><input id="puMoneyNote" maxlength="100" placeholder="${type==='gift'?'恭喜发财，大吉大利':'转账'}"><div id="puMoneyError" role="alert" aria-live="assertive" style="color:#b54b4b;font-size:12px;min-height:18px;margin:8px 0"></div><div class="pu-money-actions"><button onclick="puMoneyClose()">取消</button><button type="button" id="puMoneySendButton" onclick="window.puMoneySend('transfer')">发送</button></div>`)}
+window.puMoneySend=async function puMoneySend(type){
  const errorEl=document.getElementById('puMoneyError');
  const fail=msg=>{if(errorEl)errorEl.textContent=msg;else toast(msg);return false};
  if(type!=='transfer')return fail('红包功能已停用');
- if(sending)return fail('请等待当前回复完成后再转账');
+ // Transfer submission is independent of an in-progress character reply.
+ // Never silently block a user transfer because the AI is busy.
  const amountEl=document.getElementById('puMoneyAmount'),noteEl=document.getElementById('puMoneyNote');
  if(!amountEl||!noteEl)return fail('转账页面加载异常，请重新打开');
  const raw=amountEl.value.trim(),amount=Number(raw),cents=Math.round(amount*100);
@@ -2718,7 +2719,8 @@ async function puMoneySend(type){
  const remaining=weiMoneyRemaining('user');
  if(amount>remaining)return fail('今日剩余转账额度 ¥'+remaining.toFixed(2));
  const w=puMoneyWallet();
- if(amount>w.balance)return fail('模拟钱包余额不足（当前 ¥'+w.balance.toFixed(2)+'），请先在钱包中调整余额');
+ // This is a fictional chat transfer, not a real payment: the demo wallet
+ // must not prevent sending an otherwise valid roleplay message.
  const note=noteEl.value.trim().slice(0,100),id=uid(),date=now();
  const m={id,role:'user',date,puType:'transfer',puAmount:amount.toFixed(2),puNote:note,puStatus:'pending',content:'[转账 ¥'+amount.toFixed(2)+'] '+note};
  const originalBalance=w.balance;
@@ -2727,7 +2729,8 @@ async function puMoneySend(type){
  try{
   puMoneySave(w);
   state.messages.push(m);
-  persist();renderChat();puMoneyClose();
+  if(!persist())throw new Error('本地聊天记录未能保存，请检查存储空间');
+  renderChat();puMoneyClose();
  }catch(e){
   state.messages=state.messages.filter(x=>x.id!==id);
   w.balance=originalBalance;w.records=w.records.filter(x=>x.id!==id);
@@ -2737,7 +2740,7 @@ async function puMoneySend(type){
  try{await puReplyToRichMessage(m.content+'。你可以根据人设决定接受或退还，不必机械接受。')}
  catch(e){toast('转账已发送，但角色回复失败：'+(e&&e.message||'未知错误'))}
  return true;
-}
+};
 function puMoneyOpen(id){const m=puMoneyFind(id);if(!m||!['gift','transfer'].includes(m.puType))return;const incoming=m.role==='assistant';const status=puMoneyStatusLabel(m);const action=m.puStatus==='pending'&&incoming?`<button onclick="puMoneyResolve('${m.id}','returned')">退还</button><button onclick="puMoneyResolve('${m.id}','received')">${m.puType==='gift'?'拆红包':'确认收款'}</button>`:`<button onclick="puMoneyClose()">关闭</button>`;puMoneyDialog(`<div class="wei-receipt"><div class="wei-receipt-head"><span>PAYMENT RECEIPT</span><button type="button" onclick="puMoneyClose()" aria-label="关闭转账详情">×</button></div><div class="wei-receipt-main"><small>${m.puType==='gift'?'红包详情':'转账详情'}</small><strong>¥${esc(Number(m.puAmount||0).toFixed(2))}</strong><span>✓ ${esc(status)}</span></div><div class="wei-receipt-fields"><div><span>交易类型</span><b>${m.puType==='gift'?'红包':'转账'}</b></div><div><span>转账备注</span><b>${esc(m.puNote||'无')}</b></div><div><span>当前状态</span><b>${esc(status)}</b></div></div><div class="pu-money-actions wei-receipt-actions">${action}</div></div>`)}
 function puMoneyResolve(id,status){
  const m=puMoneyFind(id);
@@ -4021,7 +4024,53 @@ function accept(){by('weiInviteOverlay')?.remove();open()}
 function reject(){by('weiInviteOverlay')?.remove();toast('已拒绝邀请，继续线上聊天')}
 function addButton(){by('weiOfflineEntry')?.remove()}
  window.weiOfflineFromExtras=function(){try{puToggleExtras(false)}catch(e){by('puChatExtras')?.setAttribute('hidden','')}offlineChar=cid();invite('“要不要找个时间见一面？”')}
-function detectInvite(){let lastId='';setInterval(()=>{if(!by('chat')?.classList.contains('active'))return;let ms=state.messages||[],m=ms[ms.length-1];if(!m||m.role==='user'||m.id===lastId)return;lastId=m.id;let t=String(m.content||'');if(/(见一面|见个面|出来见|约个时间见|线下见|一起去咖啡馆|一起出去玩)/.test(t)&&/(吗|吧|要不要|好不好|可以|想|一起)/.test(t)){let key='invited_'+cid()+'_'+m.id;if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');invite(t.slice(0,250))}}},1800)}
+function detectInvite(){
+ // 每个角色只对新到达的 Char 消息判断，避免打开旧聊天时重弹。
+ const seen=new Map();let pending=null;
+ const textOf=m=>String(m?.content||m?.text||'').trim();
+ const idOf=m=>String(m?.id||m?.date||'')+'|'+textOf(m).slice(0,50);
+ const positive=/(?:见(?:一|个)?面|碰(?:个)?面|约会|来(?:你|我)?家|去(?:你|我)?家|到(?:你|我)?家|找你|接你|去接你|来接你|见你|去见你|过来|过去|出发|在路上|在车上|快到了|马上到|就要到|已经到了|我到了|到楼下|在楼下|到门口|在门口|到车库|地下车库|电梯(?:已经|都|刚)?(?:按|到|上)|上楼了|敲门|开门|到你那|到你这|到你身边|在你家楼下)/;
+ const action=/(?:我|咱们|我们|现在|马上|已经|刚刚|这就|等我|给我|来|去|到|车|楼|门|电梯|见|接|约|一起)/;
+ const neg=/(?:不(?:想|要|会|能|打算|可能|准备)(?:去|来|见|约|出发|过去|过来)|没(?:有|打算)(?:去|来|见)|别(?:来|过来|见)|取消(?:见面|约会)|改天|下次再|以后再|梦里|假如|如果|曾经|昨天|上次|回忆|小说里|电影里)/;
+ function check(){
+  if(!by('chat')?.classList.contains('active')||by('weiInviteOverlay')||by('puStory')?.classList.contains('active'))return;
+  const char=cid(),ms=Array.isArray(state.messages)?state.messages:[];
+  const latest=ms[ms.length-1];if(!latest)return;
+  const key=idOf(latest),prior=seen.get(char);
+  if(prior===undefined){seen.set(char,key);return}
+  if(prior===key)return;
+  seen.set(char,key);
+  if(latest.role==='user')return;
+  const t=textOf(latest);if(!t||!positive.test(t)||!action.test(t)||neg.test(t))return;
+  // 多条 Char 连发时等待一小段时间，以最近的上下文判断是否真的赴约。
+  const recent=ms.slice(-9).map(textOf).join(' ');
+  if(/(?:别来|不要过来|取消见面|不见了|别见了)/.test(t))return;
+  const sceneKey='wei_invite_scene_'+char;
+  let last=null;try{last=JSON.parse(sessionStorage.getItem(sceneKey)||'null')}catch(e){}
+  // 同一场见面被拒绝或接受后，至少六小时内不再重复弹窗。
+  if(last&&Date.now()-Number(last.at||0)<6*3600000)return;
+  const strong=/(?:在车上|已经出发|出发了|马上到|快到了|我到了|已经到了|楼下|门口|地下车库|电梯|敲门|开门|来接你|去接你|来找你|去找你|来你家|去你家|见你)/.test(t);
+  const proposal=/(?:见面|见一面|见个面|约会|一起出去|出来见|找你|接你|过来)/.test(t)&&/(?:吗|吧|要不要|好不好|可以|想|一起|现在|今晚|明天|周末|什么时候|几点)/.test(t);
+  if(!strong&&!proposal)return;
+  if(pending)clearTimeout(pending);
+  pending=setTimeout(()=>{
+   pending=null;
+   if(cid()!==char||!by('chat')?.classList.contains('active')||by('weiInviteOverlay'))return;
+   const current=state.messages||[];
+   const recentChar=[...current].reverse().find(m=>m.role!=='user');
+   if(!recentChar||idOf(recentChar)!==key)return;
+   if(!strong&&!/(?:见面|约会|来|去|到|见你|找你|接你)/.test(recent))return;
+   offlineChar=char;
+   try{sessionStorage.setItem(sceneKey,JSON.stringify({at:Date.now(),message:key}))}catch(e){}
+   invite(t.slice(0,250));
+  },900);
+ }
+ setInterval(check,1000);
+ // 页面内切换角色或重新打开聊天时重新建立观察基线。
+ const old=window.puOpenChat;
+ if(typeof old==='function')window.puOpenChat=function(){const r=old.apply(this,arguments);const ms=state.messages||[];const m=ms[ms.length-1];if(m)seen.set(cid(),idOf(m));return r};
+}
+
 window.weiOfflinePage=page;window.weiOfflineSetting=setting;window.weiOfflineResize=resize;window.weiOfflineSend=send;window.weiOfflineContinue=()=>generate();window.weiOfflineVersion=version;window.weiOfflineCopy=copy;window.weiOfflineEdit=edit;window.weiOfflineDelete=del;window.weiOfflineRegenerate=regen;window.weiOfflineExit=exit;window.weiOfflineEnd=end;window.weiOfflineNew=fresh;window.weiOfflineResume=resume;window.weiOfflineRename=rename;window.weiOfflineSelectPreset=choose;window.weiOfflineEditPreset=ep;window.weiOfflineTab=tab;window.weiOfflineRenderPrompts=renderPrompts;window.weiOfflinePromptToggle=togglePrompt;window.weiOfflinePromptEdit=editPrompt;window.weiOfflinePromptMove=movePrompt;window.weiOfflineImport=importPreset;window.weiOfflineRenamePreset=renamePreset;window.weiOfflineDeletePreset=deletePreset;window.weiOfflineInvite=()=>invite();window.weiOfflineAccept=accept;window.weiOfflineReject=reject;
 window.puOpenStory=open;window.puSendStory=send;
 let oldSet=window.puSetChatMode;window.puSetChatMode=function(mode){if(mode==='story'){by('puModePanel').hidden=true;open()}else oldSet(mode)};
