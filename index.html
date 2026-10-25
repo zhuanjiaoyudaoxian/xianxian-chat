@@ -1417,7 +1417,7 @@ function weiRescueRecover(){
  if(r.charId!==puChars.current)return toast('有其他角色的未显示回复，切换到该角色后可恢复');
  if(!confirm('检测到一次 API 已成功生成、但可能未显示的回复。要恢复到当前聊天吗？'))return;
  try{
-  const parts=puParseChatReplies(r.raw);let added=0;
+  const parts=weiSplitMixedMedia(puParseChatReplies(r.raw));let added=0;
   for(let i=0;i<parts.length;i++){
    const source=parts[i].replace(/\[STICKER:[^\]]+\]/g,'').trim();
    if(!source)continue;
@@ -1431,6 +1431,39 @@ function weiRescueRecover(){
  }catch(e){console.error(e);toast('恢复失败：'+e.message)}
 }
 function puStartOrStop(){if(sending){puReplyStopped=true;puReplyController?.abort();toast('正在停止 Char 输出');return;}if(weiRescueRead()?.charId===puChars.current){weiRescueRecover();return}void puGenerateQueuedReply()}
+/* Mixed-media reply parsing: only explicit standalone protocol markers become media. */
+function weiSplitMixedMedia(parts){
+ const marker=/(\[(?:语音|VOICE|AUDIO|语音消息|图片|照片|IMAGE|视频|VIDEO)(?:消息)?\]|【(?:语音|语音消息|VOICE|AUDIO|图片|照片|图片消息|视频|视频消息|IMAGE|VIDEO)】)/gi;
+ const out=[];
+ for(const raw of parts){
+  const text=String(raw||'').trim();if(!text)continue;
+  const hits=[...text.matchAll(marker)];
+  if(!hits.length){out.push(text);continue}
+  let cursor=0;
+  for(let i=0;i<hits.length;i++){
+   const hit=hits[i],at=hit.index;
+   const before=text.slice(cursor,at).trim();if(before)out.push(before);
+   const end=i+1<hits.length?hits[i+1].index:text.length;
+   const body=text.slice(at+hit[0].length,end).trim();
+   if(body)out.push(hit[0]+body);else out.push(hit[0]);
+   cursor=end;
+  }
+ }
+ return out;
+}
+function weiExplicitVoiceRequest(text){
+ const t=String(text||'');
+ return /(?:发|来|录|说|回复|回|听|用|换成|改成|发送|给我).{0,9}语音|语音.{0,9}(?:发|来|说|回复|回|听|给我)|(?:voice\s*(?:message|note)|send\s+(?:me\s+)?(?:a\s+)?voice)/i.test(t)
+  && !/(?:不要|别|不用|无需|禁止).{0,5}(?:发|来|用|说)?语音/.test(t);
+}
+function weiApplyVoiceFallback(parts,requested){
+ if(!requested||parts.some(x=>/^\s*(?:\[(?:语音|VOICE|AUDIO|语音消息)\]|【(?:语音|语音消息|VOICE|AUDIO)】)/i.test(x)))return parts;
+ const result=parts.slice();
+ // Only turn an ordinary conversational reply into simulated voice, never a transfer or media card.
+ const idx=result.findIndex(x=>x.trim()&&!/^\s*(?:\[|【)(?:转账|图片|照片|视频|IMAGE|VIDEO|STICKER)/i.test(x));
+ if(idx>=0)result[idx]='[语音]'+result[idx];
+ return result;
+}
 async function puGenerateQueuedReply(){
  if(sending)return;
  const pending=state.messages.filter(m=>m.role==='user'&&!m.puHandled);
@@ -1446,6 +1479,7 @@ async function puGenerateQueuedReply(){
    if(puReplyStopped)return;
    const guide=choices.length?'\n可用表情包：'+JSON.stringify(choices)+'。可按语境在消息后添加 [STICKER:id]。':'';
    const prompt=puChatOptions.mode==='chat'?puConversationPrompt()+'\n以下背景资料只用于理解人设，不得改变即时消息输出格式：\n'+systemPrompt(recent)+'\n只输出JSON字符串数组。仅符合情境时才转账，格式【转账:52.00|备注:去吃饭】。模拟转账单笔必须在0.01至99999.99元之间，每日累计最多99999.99元。严禁生成131400等超额转账，改用1314、520、9999等合法金额；不要把超额数字截断为上限。引用真实用户消息使用【引用ID:消息ID】。'+guide:systemPrompt(recent)+'\n'+puConversationPrompt()+guide;
+   if(puChatOptions.mode==='chat'&&weiExplicitVoiceRequest(text))prompt+='\n【本轮消息类型要求】用户刚刚明确要求语音。本轮至少输出一条以[语音]开头的独立消息，内容是角色实际说出的话。不要只用文字声称发了语音。';
    raw=await requestModel(recent,prompt+weiContentPrompt('online'),{signal:puReplyController.signal,kind:'Char 聊天'});
   }else raw=localReply(text);
   if(puReplyStopped)return;
@@ -1453,7 +1487,11 @@ async function puGenerateQueuedReply(){
   // 原文在任何解析或 UI 更新前保存，失败或刷新后可恢复。
   weiRescueWrite({key,charId,pendingIds,raw,time:Date.now()});
   let parts=puParseChatReplies(raw);
-  if(puChatOptions.reply==='one')parts=parts.slice(0,1);
+  if(puChatOptions.mode==='chat'){parts=weiSplitMixedMedia(parts);parts=weiApplyVoiceFallback(parts,weiExplicitVoiceRequest(text));}
+  if(puChatOptions.reply==='one'&&parts.length>1){
+   const voicePart=weiExplicitVoiceRequest(text)?parts.find(x=>/^\s*(?:\[(?:语音|VOICE|AUDIO|语音消息)\]|【(?:语音|语音消息|VOICE|AUDIO)】)/i.test(x)):null;
+   parts=voicePart?[voicePart]:parts.slice(0,1);
+  }
   if(!parts.length)parts=[String(raw).trim()];
   for(let i=0;i<parts.length;i++){
    if(puReplyStopped)break;
@@ -3967,6 +4005,21 @@ function cfg(){return data().settings||(data().settings={...defaults})}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));localStorage.setItem(PKEY,JSON.stringify(presets))}catch(e){toast('线下记录存储空间不足，请备份或清理旧数据')}}
 function sess(){return data().sessions.find(x=>x.id===data().current)}
 function name(){return typeof displayName==='function'?displayName():'Char'}
+function offlineUserName(){return String(puUser?.name||puUser?.nickname||'你').trim()||'你'}
+function offlineResolve(text){const user=offlineUserName(),char=name();return String(text??'').replace(/\{\{\s*(user|char)\s*\}\}/gi,(_,key)=>key.toLowerCase()==='user'?user:char)}
+function offlineChatContext(){
+ const msgs=Array.isArray(state.messages)?state.messages:[];
+ return msgs.slice(-45).map(m=>{
+  const who=m.role==='user'?offlineUserName():name();
+  const type=m.puType||m.type||'';
+  let content=String(m.content||m.text||'');
+  if(type==='voice'||type==='audio')content='[语音消息] '+content;
+  else if(type==='video')content='[视频消息] '+content;
+  else if(type==='image')content='[图片消息] '+content;
+  return who+'：'+offlineResolve(content);
+ }).join('\n').slice(-22000);
+}
+
 function avatar(user){let a=user?puUser?.avatar:state.persona?.avatar,n=user?(puUser?.name||'User'):name();return '<div class="wo-avatar">'+(a?'<img src="'+safe(a)+'" alt="'+safe(n)+'">':safe(n.slice(0,1)))+'</div>'}
 function heading(title,back){if(title==='我寄你的信，总要送往邮局'){try{title=JSON.parse(localStorage.getItem('wei_offline_beauty_v2')||'{}').decorTitle||title}catch(e){}}return '<header class="wo-head"><button class="wo-icon" onclick="weiOfflinePage(\''+back+'\')">‹</button><div class="wo-heading">'+safe(title)+(back==='exit'?'<small>OFFLINE STORY</small>':'')+'</div><button class="wo-icon" onclick="weiOfflinePage(\'settings\')">'+(back==='exit'?'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2 2-.06-.06A1.7 1.7 0 0 0 15.9 18l-.1.03V21h-3v-.09A1.7 1.7 0 0 0 11.2 19h-1.6a1.7 1.7 0 0 0-1.5.88l-.06.06-2-2 .06-.06A1.7 1.7 0 0 0 6.4 16l-.03-.1H4v-3h.09A1.7 1.7 0 0 0 6 11.2V9.6a1.7 1.7 0 0 0-.88-1.5l-.06-.06 2-2 .06.06A1.7 1.7 0 0 0 9 6.4l.1-.03V4h3v.09A1.7 1.7 0 0 0 13.8 6h1.6a1.7 1.7 0 0 0 1.5-.88l.06-.06 2 2-.06.06A1.7 1.7 0 0 0 18.6 9l.03.1H21v3h-.09A1.7 1.7 0 0 0 19 13.8V15Z"/></svg>':' ')+'</button></header>'}
 function ensure(){let d=data(),x=sess();if(!x){x={id:'meeting_'+Date.now(),title:'第一章 · 约定的见面',place:'见面 · 待定场景',created:new Date().toLocaleString(),status:'active',messages:[],summary:'',scene:''};d.sessions.unshift(x);d.current=x.id;save()}return x}
@@ -3993,16 +4046,16 @@ html='<div class="wo-subpage"><label class="wo-block" style="display:block;text-
 let p=presets.find(x=>x.id===editingId);html='<div class="wo-subpage">'+(p?'<b>'+safe(p.name)+'</b><div class="wo-small">每条提示词独立开关，开启后参与后续生成</div><div class="wo-btns" style="margin:12px 0"><button class="wo-btn" onclick="weiOfflineTab(\'styles\')">文风</button><button class="wo-btn" onclick="weiOfflineTab(\'all\')">全部提示词</button></div><input placeholder="搜索提示词" id="woSearch" oninput="weiOfflineRenderPrompts()"><div id="woPrompts"></div><button class="wo-btn dark" onclick="weiOfflinePage(\'presets\')">保存并返回</button>':'预设不存在')+'</div>';
 }
 let title={settings:'生成设置',history:'线下记录',menu:'更多操作',presets:'预设管理',import:'导入预设',editor:'编辑预设'}[activePage]||'线下模式',back={settings:'story',history:'story',menu:'story',presets:'settings',import:'presets',editor:'presets'}[activePage]||'story';root.innerHTML=heading(title,back)+html;if(activePage==='editor')renderPrompts();}
-function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=vs[vi]||'';return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+safe(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
+function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+safe(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
 function setting(k,v){cfg()[k]=v;save();render()}
 function open(){offlineChar=cid();ensure();page('story');document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));}
 function exit(){save();const target=document.getElementById('chat');if(!target){console.error('未找到聊天页面');return;}try{puChatOptions.mode='chat';localStorage.setItem(PU_CHAT_OPTIONS,JSON.stringify(puChatOptions))}catch(e){console.warn('保存聊天模式失败',e)}document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===target));target.hidden=false;target.style.removeProperty('display');target.style.removeProperty('visibility');try{puSyncModeUI()}catch(e){console.warn('同步聊天模式失败',e)}try{renderChat()}catch(e){console.error('恢复聊天页面失败',e)}requestAnimationFrame(()=>{if(!target.classList.contains('active')){document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el===target))}})}
 function makePrompt(){let c=cfg(),x=sess(),p=presets.find(q=>q.id===c.preset),recent=(x?.messages||[]).slice(-20),styles=p?p.prompts.filter(q=>q.enabled).map(q=>q.text).join('\n\n'):'';
-let context=state.messages.slice(-Math.min(state.settings.context||20,25)).map(m=>m.role+': '+m.content).join('\n').slice(-14000);
-return systemPrompt([])+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'');}
+let context=offlineChatContext();
+return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'');}
 async function generate(regen=-1){if(busy)return;let x=sess();if(!x||x.status==='ended')return toast('本次见面已结束，请开始新见面');busy=true;let start=Date.now(),typing=by('woTyping');if(typing)typing.hidden=false;let send=by('puStorySend');if(send)send.disabled=true;
-try{let history=x.messages.slice(-20).map(m=>({role:m.role==='user'?'user':'assistant',content:m.versions?.[m.selected||0]||m.text}));if(history.length&&history[history.length-1].role==='assistant')history.push({role:'user',content:'请继续当前场景，保持连贯，不重复前文。'});if(!history.length)history.push({role:'user',content:'请根据已有的线上聊天背景自然开启这次见面。'});
-let answer=state.api.mode==='remote'?await requestModel(history,makePrompt(),{timeoutMs:180000,kind:'线下剧情生成'}):localReply(history[history.length-1].content);let duration=Date.now()-start;
+try{let history=x.messages.slice(-20).map(m=>({role:m.role==='user'?'user':'assistant',content:offlineResolve(m.versions?.[m.selected||0]||m.text)}));if(history.length&&history[history.length-1].role==='assistant')history.push({role:'user',content:'请继续当前场景，保持连贯，不重复前文。'});if(!history.length)history.push({role:'user',content:'紧接以下线上聊天最后一条消息继续写线下剧情。不要重启故事，不要擅自更改地点或已发生事件。\n'+offlineChatContext()});
+let answer=state.api.mode==='remote'?await requestModel(history,makePrompt(),{timeoutMs:180000,kind:'线下剧情生成'}):localReply(history[history.length-1].content);answer=offlineResolve(answer);let duration=Date.now()-start;
 if(regen>=0&&x.messages[regen]){let m=x.messages[regen];m.versions=m.versions||[m.text];m.versions.push(answer);m.selected=m.versions.length-1;m.duration=duration}else{x.messages.push({id:'wo_'+Date.now(),role:'assistant',text:answer,versions:[answer],selected:0,duration,date:new Date().toLocaleString()})}save();entries();
 }catch(e){toast('线下生成失败：'+e.message)}finally{busy=false;let t=by('woTyping');if(t)t.hidden=true;let b=by('puStorySend');if(b)b.disabled=false}}
 async function send(){let inp=by('puStoryInput'),t=inp?.value.trim(),x=sess();if(!t||busy)return;if(x?.status==='ended')return toast('本次见面已结束');x.messages.push({id:'wo_'+Date.now(),role:'user',text:t,date:new Date().toLocaleString()});inp.value='';save();entries();await generate()}
