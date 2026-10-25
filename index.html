@@ -1398,6 +1398,19 @@ function puParseChatReplies(raw){
   if(narration.test(p)||/^(?:\*|（|\()[^\n]{3,}(?:\*|）|\))$/.test(p))continue;
   out.push(p);
  }
+ // 引用消息可能被模型写成一个带换行的 JSON 字符串。
+ // 只在引用回复中按独立段落拆分，保留首段引用协议；普通消息仍沿用原有分条规则。
+ const quotedParts=[];
+ for(const item of out){
+  const value=String(item||'');
+  const quoted=/^\s*【引用(?:ID)?[:：][^】]+】/.test(value);
+  if(!quoted){quotedParts.push(value);continue}
+  const lines=value.replace(/\r\n?/g,'\n').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  if(lines.length<=1){quotedParts.push(value);continue}
+  // 仅将自然语言的换行拆开，避免把结构化媒体标记、转账备注截断。
+  for(const line of lines)quotedParts.push(line);
+ }
+ out.splice(0,out.length,...quotedParts);
  // 模型确实生成了文字但全部被过滤时，优先保留原文，避免付费后只显示省略号。
  if(!out.length&&parts.length)for(const p of parts){if(String(p).trim())out.push(String(p).trim())}
  const cap=puChatOptions.reply==='one'?1:puChatOptions.reply==='auto'?5:6;
@@ -1504,6 +1517,11 @@ async function puGenerateQueuedReply(){
     prompt+='\n【连续消息与主动引用】本轮用户连续发送的所有未处理消息如下，必须综合理解，不可只回应最后一条：\n'+userBatch+'\n允许根据语境有节制地引用其中一条真实用户消息，尤其当用户撤回、改口、前后矛盾或提出多个问题时。引用必须使用真实消息ID，在对应独立回复的最开头写【引用ID:实际消息ID】，然后紧接回复内容；绝不可虚构ID、引用内容或每条都引用。若无引用必要就正常回复。引用标记属于协议，不要在普通正文解释。';
    }
    if(puChatOptions.mode==='chat'&&weiExplicitVoiceRequest(text))prompt+='\n【本轮消息类型要求】用户刚刚明确要求语音。本轮至少输出一条以[语音]开头的独立消息，内容是角色实际说出的话。不要只用文字声称发了语音。';
+   // Some chat-completions providers reject a request whose last turn is assistant.
+   // This instruction exists ONLY in the API payload, never in the stored chat history.
+   if(proactive){
+    recent.push({role:'user',content:'【系统触发的主动续聊请求，非 User 实际发言】User 此刻没有发送任何新消息。请由 Char 自然继续当前对话，保持人设和上下文，不要代替 User 发言、行动或作决定。严格遵守以上输出格式。'});
+   }
    raw=await requestModel(recent,prompt+weiContentPrompt('online'),{signal:puReplyController.signal,kind:'Char 聊天'});
   }else raw=localReply(proactive?'（User 暂未发送新消息，请 Char 自然主动继续对话）':text);
   if(puReplyStopped)return;
