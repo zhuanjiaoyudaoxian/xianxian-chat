@@ -1051,7 +1051,7 @@ html[data-chat-bubble-tail="off"] #chat #chatList .msg .bubble::before{display:n
 #puStory .wo-head{border-bottom:1px solid #f0f0f0}
 .wei-decor-thumb{display:flex;align-items:center;justify-content:center;width:115px;height:130px;background:#f5f5f5;color:#aaa;font-size:11px;box-shadow:5px 5px 0 #e9e6e2;margin:12px 0}
 .wei-decor-thumb img{width:100%;height:100%;object-fit:cover}
-</style><style id="weiOfflineRichStyles">#puStory .wo-content h1,#puStory .wo-content h2,#puStory .wo-content h3{font-size:1.12em;margin:.8em 0 .3em;font-weight:700}#puStory .wo-content p{margin:.45em 0}#puStory .wo-content blockquote{border-left:3px solid #ccc;padding:4px 12px;margin:8px 0;color:#777}#puStory .wo-content details{border:1px solid #e5e5e5;border-radius:7px;padding:9px 12px;margin:10px 0;background:#fafafa}#puStory .wo-content summary{cursor:pointer;font-weight:600}#puStory .wo-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f5f5;padding:10px;border-radius:5px}#puStory .wo-content code{font-size:.9em;background:#f5f5f5;padding:1px 3px}#puStory .wo-content table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto}#puStory .wo-content td,#puStory .wo-content th{border:1px solid #ddd;padding:5px}#puStory .wo-content hr{border:0;border-top:1px solid #ddd;margin:12px 0}#puStory .wo-content .wo-md-item{padding-left:12px}#puStory .wo-content{white-space:pre-wrap}#puStory .wo-content details summary{white-space:normal}#puStory .wo-content:has(details),#puStory .wo-content:has(p){white-space:normal}</style>
+</style><style id="weiOfflineRichStyles">#puStory .wo-content h1,#puStory .wo-content h2,#puStory .wo-content h3{font-size:1.12em;margin:.8em 0 .3em;font-weight:700}#puStory .wo-content p{margin:.45em 0}#puStory .wo-content blockquote{border-left:3px solid #ccc;padding:4px 12px;margin:8px 0;color:#777}#puStory .wo-content details{border:1px solid #e5e5e5;border-radius:7px;padding:9px 12px;margin:10px 0;background:#fafafa}#puStory .wo-content summary{cursor:pointer;font-weight:600}#puStory .wo-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f5f5;padding:10px;border-radius:5px}#puStory .wo-content code{font-size:.9em;background:#f5f5f5;padding:1px 3px}#puStory .wo-content table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto}#puStory .wo-content td,#puStory .wo-content th{border:1px solid #ddd;padding:5px}#puStory .wo-content hr{border:0;border-top:1px solid #ddd;margin:12px 0}#puStory .wo-content .wo-md-item{padding-left:12px}#puStory .wo-content{white-space:normal}#puStory .wo-content details summary{white-space:normal}</style>
 </head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -4200,8 +4200,8 @@ if(activePage==='exit'){exit();return}
 let html='';if(activePage==='settings'){
 let c=cfg(),select=(key,opts)=>'<select onchange="weiOfflineSetting(\''+key+'\',this.value)">'+opts.map(([v,t])=>'<option value="'+v+'" '+(c[key]===v?'selected':'')+'>'+t+'</option>').join('')+'</select>';
 html='<div class="wo-subpage"><div class="wo-row"><b>目标生成字数</b><span>'+c.words+' 字</span></div><input type="range" min="100" max="3000" step="100" value="'+c.words+'" oninput="weiOfflineSetting(\'words\',+this.value)"><div class="wo-btns">'+[300,500,800,1200,2000].map(n=>'<button class="wo-btn" onclick="weiOfflineSetting(\'words\','+n+')">'+n+'</button>').join('')+'</div><div class="wo-row">叙事视角'+select('pov',[['first','第一人称'],['second','第二人称'],['third','第三人称']])+'</div><div class="wo-row">剧情节奏'+select('pace',[['slow','慢节奏'],['normal','正常'],['fast','快节奏']])+'</div><div class="wo-row">对白与描写比例'+select('ratio',[['talk','对白较多'],['balanced','均衡'],['description','描写较多']])+'</div>';
-html+='<label class="wo-row"><span><b>自动格式渲染</b><small style="display:block;color:#999;font-size:11px">HTML · Markdown · 折叠摘要（仅改变显示）</small></span><input type="checkbox" '+(c.richRender!==false?'checked':'')+' onchange="weiOfflineSetting(\'richRender\',this.checked)"></label>';
-html+='<div class="wo-block" onclick="weiOfflinePage(\'regex\')">酒馆正则管理 <span style="float:right">›</span><div class="wo-small">导入 JSON · 启用与排序 · 编辑显示替换规则</div></div>';
+
+
 for(let [k,t] of [['thought','Char 内心描写'],['speak','允许 Char 抢话'],['memory','剧情记忆摘要'],['scene','场景状态记录'],['temp','临时剧情指令']])html+='<label class="wo-row">'+t+'<input type="checkbox" '+(c[k]?'checked':'')+' onchange="weiOfflineSetting(\''+k+'\',this.checked)"></label>';
 if(c.temp)html+='<textarea rows="3" placeholder="本次剧情的临时指令" onchange="weiOfflineSetting(\'tempText\',this.value)">'+safe(c.tempText)+'</textarea>';
 html+='<div class="wo-block" onclick="weiOfflinePage(\'presets\')">预设管理 <span style="float:right">›</span><div class="wo-small">导入预设 · 文风开关 · 编辑提示词</div></div></div>';
@@ -4223,7 +4223,7 @@ function weiOfflineRich(text){
  const raw=String(text??'');
  try{
   const esc=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  if(cfg().richRender===false)return esc(raw);
+  // Rendering is always enabled; no separate mode or switch.
   const code=[];
   let src=weiRegexApply(raw).replace(/```([^\n`]*)\n([\s\S]*?)```/g,(_,lang,body)=>{const key='WEICODEPLACEHOLDER'+code.length+'END';code.push('<pre><code>'+esc(body)+'</code></pre>');return key});
   src=src.replace(/<!--([\s\S]*?)-->/g,'');
@@ -4261,8 +4261,8 @@ function weiOfflineRich(text){
      // Only simple formatting properties; never preserve URLs, positioning or arbitrary CSS.
      const safeStyles=[];
      for(const declaration of val.split(';')){
-      const m=declaration.match(/^\s*(text-align|color|background-color|font-weight|font-style|text-decoration)\s*:\s*(.*?)\s*$/i);
-      if(m&&/^(center|left|right|justify|bold|normal|italic|underline|line-through|#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(m[2]))safeStyles.push(m[1]+':'+m[2]);
+      const m=declaration.match(/^\s*(text-align|color|background-color|font-weight|font-style|text-decoration|font-size|line-height|letter-spacing|border-color)\s*:\s*(.*?)\s*$/i);
+      if(m&&m[2].length<80&&/^(center|left|right|justify|bold|normal|italic|underline|line-through|#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20}|[0-9.]+(?:px|em|rem|%))$/i.test(m[2]))safeStyles.push(m[1]+':'+m[2]);
      }
      if(safeStyles.length)node.setAttribute('style',safeStyles.join(';'));else node.removeAttribute(attr.name);
      continue;
@@ -4272,12 +4272,49 @@ function weiOfflineRich(text){
    clean(node);
   }}
   clean(root);
+  // Preserve original line breaks in plain text nodes after HTML parsing.
+  // For long AI replies without any paragraph breaks, add conservative visual
+  // paragraph boundaries at sentence endings. This never changes saved text.
+  function formatProse(node){
+   for(const child of Array.from(node.childNodes)){
+    if(child.nodeType===1){
+     if(!/^(PRE|CODE|TEXTAREA|SUMMARY|RT|RP)$/.test(child.tagName))formatProse(child);
+     continue;
+    }
+    if(child.nodeType!==3)continue;
+    const original=child.nodeValue||'';
+    if(!original.trim())continue;
+    let value=original.replace(/\r\n?/g,'\n');
+    // Only apply inferred paragraphs to long, unbroken prose, never short labels.
+    if(!value.includes('\n') && value.length>260 && /[。！？]/.test(value)){
+     let out='',chunk='';
+     const sentences=value.match(/[^。！？]*[。！？]+[”’」』】]?|[^。！？]+$/g)||[value];
+     for(const sentence of sentences){
+      chunk+=sentence;
+      if(chunk.length>=115 && /[。！？][”’」』】]?$/.test(sentence)){
+       out+=chunk+'\n\n';chunk='';
+      }
+     }
+     value=out+chunk;
+     value=value.replace(/\n\n$/,'');
+    }
+    if(!value.includes('\n'))continue;
+    const fragment=doc.createDocumentFragment();
+    const pieces=value.split('\n');
+    pieces.forEach((part,i)=>{
+     if(i)fragment.appendChild(doc.createElement('br'));
+     if(part)fragment.appendChild(doc.createTextNode(part));
+    });
+    child.replaceWith(fragment);
+   }
+  }
+  formatProse(root);
   let html=root.innerHTML;
   code.forEach((fragment,i)=>{html=html.replace('WEICODEPLACEHOLDER'+i+'END',fragment)});
   return html;
  }catch(e){console.warn('线下富文本渲染已降级',e);return String(raw).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 }
-function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+(u?safe(t):weiOfflineRich(t))+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
+function entries(){if(typeof window.weiOfflineDecorRender==='function')window.weiOfflineDecorRender();let el=by('woEntries'),x=sess();if(!el)return;el.innerHTML=(x?.messages||[]).map((m,i)=>{let u=m.role==='user',vs=m.versions||[m.text],vi=m.selected||0,t=offlineResolve(vs[vi]||'');return '<article class="wo-entry '+(u?'user':'')+'"><div class="wo-author">'+avatar(u)+'<div><div class="wo-name">'+safe(u?(puUser?.name||'User'):name())+'</div><div class="wo-floor">#'+(i+1)+' 楼</div></div></div><div class="wo-content">'+weiOfflineRich(t)+'</div><div class="wo-meta"><span>'+Array.from(t).length+' 字'+(m.duration?' · '+(m.duration/1000).toFixed(1)+' 秒':'')+'</span>'+(u?'':'<span><button class="wo-icon" onclick="weiOfflineVersion('+i+',-1)">‹</button> '+(vi+1)+'/'+vs.length+' <button class="wo-icon" onclick="weiOfflineVersion('+i+',1)">›</button></span>')+'</div><div class="wo-actions"><button onclick="weiOfflineCopy('+i+')">复制</button><button onclick="weiOfflineEdit('+i+')">编辑</button>'+(u?'':'<button onclick="weiOfflineRegenerate('+i+')">重生成</button>')+'<button onclick="weiOfflineDelete('+i+')">删除</button></div></article>'}).join('');let sc=by('woScroll');if(sc)sc.scrollTop=sc.scrollHeight}
 function setting(k,v){cfg()[k]=v;save();render()}
 function open(){offlineChar=cid();ensure();page('story');document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('active',el.id==='puStory'));}
 function exit(){
