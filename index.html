@@ -3123,7 +3123,7 @@ window.systemPrompt=function(recent){return originalSystemPrompt(recent)};
 // Character paper wizard. The existing save/create logic is retained; only inputs are mapped.
 window.puCardTurn=function(delta){page=Math.min(3,Math.max(1,page+delta));for(let i=1;i<=3;i++)$id('puPage'+i).hidden=i!==page;$id('puPaperNumber').textContent=String(page).padStart(2,'0');$id('puPaperProgress').textContent=page+' / 3';$id('puPrevPage').hidden=page===1;$id('puNextPage').hidden=page===3;$id('puCardSave').hidden=page!==3;document.querySelector('#persona .body')?.scrollTo({top:0,behavior:'smooth'});if(page===3)puCardRenderWorlds()};
 function puCardRenderWorlds(){const box=$id('puCardWorlds');if(!box)return;box.innerHTML=state.world.map(w=>`<label class="pu-world-check"><input type="checkbox" ${(!Array.isArray(state.persona.worldBindings)||state.persona.worldBindings.includes(w.id))?'checked':''} data-world-id="${esc(w.id)}"><span>${esc(w.title)} <small>(${esc(w.group||'未分组')})</small></span></label>`).join('')||'<p class="muted">还没有世界书，可以先去世界书应用创建。</p>'}
-function initPersona(){if(!$id('puCardName'))return;page=1;$id('puCardName').value=state.persona.name||'';$id('puCardPersona').value=state.persona.personality||state.persona.rawSource||'';$id('puCardFirst').value=state.persona.first||'';puCardTurn(0);if(typeof puRenderPersonaAvatar==='function')puRenderPersonaAvatar()}
+function initPersona(){weiCardInstallButton();if(!$id('puCardName'))return;page=1;$id('puCardName').value=state.persona.name||'';$id('puCardPersona').value=state.persona.personality||state.persona.rawSource||'';$id('puCardFirst').value=state.persona.first||'';puCardTurn(0);if(typeof puRenderPersonaAvatar==='function')puRenderPersonaAvatar()}
 window.renderPersona=initPersona;
 const oldSave=window.savePersona;
 window.savePersona=function(){const name=$id('puCardName')?.value.trim(),personality=$id('puCardPersona')?.value.trim()||$id('puCardTemplate')?.value.trim();if(!name||!personality){toast('请填写角色姓名和人设');page=!name?1:2;puCardTurn(0);return}state.persona.name=name;state.persona.personality=personality;state.persona.first=$id('puCardFirst').value.trim();// Legacy maskId is ignored; current User identity is selected globally.
@@ -3137,6 +3137,72 @@ function weiGuessCharName(raw,filename){
 }
 function weiApplyImportedName(name){const field=$id('puCardName');name=String(name||'').trim();if(!field||!name)return;const old=field.value.trim();if(!old||old===name||confirm('识别到角色姓名「'+name+'」，是否替换当前姓名「'+old+'」？'))field.value=name;}
 window.puCardImport=async function(input){const f=input.files?.[0];input.value='';if(!f)return;try{if(/\.png$/i.test(f.name)){const buf=await f.arrayBuffer(),view=new DataView(buf),bytes=new Uint8Array(buf);if(view.getUint32(0)!==0x89504e47)throw Error('不是有效 PNG');let pos=8,meta=null;while(pos+12<=bytes.length){const len=view.getUint32(pos),type=String.fromCharCode(...bytes.slice(pos+4,pos+8));if(len>bytes.length-pos-12)break;if(type==='tEXt'){const payload=bytes.slice(pos+8,pos+8+len),zero=payload.indexOf(0),key=new TextDecoder().decode(payload.slice(0,zero));if(key==='chara'||key==='ccv3'){const encoded=new TextDecoder().decode(payload.slice(zero+1));meta=JSON.parse(decodeURIComponent(escape(atob(encoded))));break}}pos+=len+12}if(!meta)throw Error('PNG 未包含可识别的酒馆角色卡数据');const d=meta.data||meta;weiApplyImportedName(d.name||d.char_name||'');$id('puCardPersona').value=[d.description,d.personality,d.scenario].filter(Boolean).join('\n\n');$id('puCardFirst').value=d.first_mes||'';toast('已读取 PNG 角色卡');return}if(/\.docx?$/i.test(f.name)){const t=await fileText(f);if(!weiWordPreview([{name:'人物设定',text:t}],'人物设定'))return;weiApplyImportedName(weiGuessCharName(t,f.name));$id('puCardPersona').value=t;toast('已导入人设文本');return}const raw=await f.text();if(/\.json$/i.test(f.name)){const json=JSON.parse(raw),d=json.data||json.character||json;weiApplyImportedName(d.name||d.char_name||d.character_name||weiGuessCharName(raw,f.name));$id('puCardPersona').value=[d.description||d.char_persona,d.personality,d.scenario].filter(Boolean).join('\n\n')||raw;$id('puCardFirst').value=d.first_mes||d.first||''}else {weiApplyImportedName(weiGuessCharName(raw,f.name));$id('puCardPersona').value=raw;}toast('角色卡已导入')}catch(e){toast('角色卡导入失败：'+e.message)}};
+/* Character-card attachments: isolated from desktop/offline global worldbooks. */
+function weiCharacterExtras(){
+ const p=state.persona||{};
+ if(!p.cardExtras||typeof p.cardExtras!=='object')p.cardExtras={world:[],regex:[],presets:[]};
+ for(const k of ['world','regex','presets'])if(!Array.isArray(p.cardExtras[k]))p.cardExtras[k]=[];
+ return p.cardExtras;
+}
+function weiCardEscape(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function weiCharacterWorldPrompt(context){
+ const books=state.persona?.cardExtras?.world||[];
+ const lower=String(context||'').toLowerCase();
+ return books.filter(w=>w.enabled!==false&&(w.always||!String(w.keywords||'').trim()||String(w.keywords).split(/[,，、;；\n]/).some(k=>k.trim()&&lower.includes(k.trim().toLowerCase()))))
+ .slice(0,80).map(w=>'【'+w.title+'】\n'+w.content).join('\n').slice(0,16000);
+}
+window.weiCharacterWorldPrompt=weiCharacterWorldPrompt;
+function weiCardReadExtras(d){
+ const book=d.character_book||d.characterBook||d.extensions?.character_book||{};
+ const entries=Array.isArray(book.entries)?book.entries:Object.values(book.entries||{});
+ const world=entries.filter(x=>x&&typeof x==='object'&&String(x.content||'').trim()).map((x,i)=>({id:'cw_'+Date.now()+'_'+i,title:String(x.comment||x.name||'角色设定 '+(i+1)),content:String(x.content||''),keywords:Array.isArray(x.keys)?x.keys.join(','):String(x.keywords||''),always:!!(x.constant||x.always),enabled:x.enabled!==false&&x.disable!==true}));
+ const extensions=d.extensions||{};
+ const regex=[...(Array.isArray(extensions.regex_scripts)?extensions.regex_scripts:[]),...(Array.isArray(d.regex_scripts)?d.regex_scripts:[])].filter(x=>x&&typeof x==='object'&&String(x.findRegex||x.regex||'').trim());
+ const presets=[...(Array.isArray(extensions.prompts)?extensions.prompts:[]),...(Array.isArray(d.prompts)?d.prompts:[])].filter(x=>x&&typeof x==='object'&&String(x.content||x.prompt||'').trim());
+ return {world,regex,presets};
+}
+function weiCardPNGMeta(buf){
+ const bytes=new Uint8Array(buf),view=new DataView(buf),decoder=new TextDecoder();
+ if(bytes.length<8||view.getUint32(0)!==0x89504e47)throw Error('不是有效 PNG');
+ let pos=8;
+ while(pos+12<=bytes.length){const len=view.getUint32(pos),type=decoder.decode(bytes.subarray(pos+4,pos+8));if(len>bytes.length-pos-12)break;
+ if(type==='tEXt'){const payload=bytes.subarray(pos+8,pos+8+len),zero=payload.indexOf(0);if(zero>0){const key=decoder.decode(payload.subarray(0,zero));if(key==='chara'||key==='ccv3'){const encoded=decoder.decode(payload.subarray(zero+1));const binary=atob(encoded);const utf8=Uint8Array.from(binary,c=>c.charCodeAt(0));return JSON.parse(decoder.decode(utf8));}}}
+ pos+=len+12;
+ }throw Error('PNG 没有可识别的角色卡元数据');
+}
+function weiCardManage(){
+ const ex=weiCharacterExtras();let old=document.getElementById('weiCardExtrasModal');if(old)old.remove();
+ const cover=document.createElement('div');cover.id='weiCardExtrasModal';cover.style.cssText='position:fixed;inset:0;z-index:99999;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px';
+ const pane=document.createElement('section');pane.style.cssText='width:min(100%,480px);max-height:85dvh;overflow:auto;background:var(--panel,#fff);color:var(--ink,#222);border-radius:18px;padding:18px';
+ pane.innerHTML='<h3>当前角色 · 专属资料</h3><p class="muted">这些内容只属于当前角色，不会加入桌面或线下全局世界书。</p>'+['world','regex','presets'].map(k=>'<h4>'+({world:'专属世界书',regex:'专属正则（独立保存）',presets:'附带提示词 / 预设'}[k])+'（'+ex[k].length+'）</h4>'+ex[k].map((v,i)=>'<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input style="width:auto" type="checkbox" data-kind="'+k+'" data-index="'+i+'" '+(v.enabled!==false?'checked':'')+'><span style="flex:1">'+weiCardEscape(v.title||v.name||v.scriptName||'条目 '+(i+1))+'</span><button type="button" data-remove="'+k+'" data-index="'+i+'">删除</button></label>').join('')+'<p class="muted">'+(ex[k].length?'':'暂无条目')+'</p>').join('')+'<div style="display:flex;gap:8px;margin-top:14px"><button class="btn alt" id="weiCardClose">关闭</button><button class="btn" id="weiCardSave">保存设置</button></div>';
+ cover.appendChild(pane);document.body.appendChild(cover);
+ pane.querySelector('#weiCardClose').onclick=()=>cover.remove();
+ pane.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{if(!confirm('确定删除这条角色专属资料吗？'))return;ex[b.dataset.remove].splice(+b.dataset.index,1);persist();weiCardManage()});
+ pane.querySelector('#weiCardSave').onclick=()=>{pane.querySelectorAll('input[data-kind]').forEach(e=>{if(ex[e.dataset.kind][+e.dataset.index])ex[e.dataset.kind][+e.dataset.index].enabled=e.checked});if(persist()){cover.remove();toast('角色专属资料已保存')}};
+}
+window.weiCardManage=weiCardManage;
+const weiOldCardImport=window.puCardImport;
+window.puCardImport=async function(input){
+ const f=input.files?.[0];if(!f||!/\.png$/i.test(f.name))return weiOldCardImport.call(this,input);
+ try{
+ const meta=weiCardPNGMeta(await f.arrayBuffer()),d=meta.data||meta,ex=weiCardReadExtras(d);
+ const msg='识别到：世界书 '+ex.world.length+' 条、正则 '+ex.regex.length+' 条、提示词 '+ex.presets.length+' 条。\n角色人设将填入编辑器；附带配置由你分别选择。';
+ if(!confirm(msg+'\n\n继续导入角色卡吗？')){input.value='';return}
+ const flags={};for(const k of ['world','regex','presets'])flags[k]=ex[k].length&&confirm('是否导入 '+({world:'角色专属世界书',regex:'角色专属正则',presets:'角色专属提示词 / 预设'}[k])+'（'+ex[k].length+' 条）？\n不会覆盖现有配置。');
+ await weiOldCardImport.call(this,input);
+ const target=weiCharacterExtras();for(const k of ['world','regex','presets'])if(flags[k]){
+ const known=new Set(target[k].map(x=>JSON.stringify([x.title||x.name||x.scriptName,x.content||x.findRegex||x.prompt])));
+ for(const item of ex[k]){const key=JSON.stringify([item.title||item.name||item.scriptName,item.content||item.findRegex||item.prompt]);if(!known.has(key)){target[k].push(item);known.add(key)}}
+ }
+ persist();toast('角色卡及选定的专属资料已导入');
+ }catch(e){input.value='';toast('角色卡导入失败：'+e.message);console.error(e)}
+};
+const weiOldMatchedWorld=window.matchedWorld;
+window.matchedWorld=function(messages){return weiOldMatchedWorld(messages)};
+const weiOldSystemPrompt=window.systemPrompt;
+window.systemPrompt=function(recent){const base=weiOldSystemPrompt(recent);const extra=weiCharacterWorldPrompt((recent||[]).map(m=>m.content||'').join('\n'));return base+(extra?'\n【当前角色专属世界书】\n'+extra:'')};
+function weiCardInstallButton(){const pane=document.getElementById('puCardWorlds');if(!pane||document.getElementById('weiCardExtrasButton'))return;const btn=document.createElement('button');btn.id='weiCardExtrasButton';btn.type='button';btn.className='btn alt';btn.style.margin='12px 0';btn.textContent='管理角色专属世界书 / 正则 / 预设';btn.onclick=weiCardManage;pane.parentNode.insertBefore(btn,pane)}
+weiCardInstallButton();
 // Make character opening reset wizard, while keeping existing avatar and account state.
 const originalGo=window.go;window.go=function(id){originalGo(id);if(id==='persona')initPersona();if(id==='world')renderWorld()};
 const originalAdd=window.puAddChar;window.puAddChar=function(){originalAdd();if(puCreatingChar)initPersona()};
@@ -4656,8 +4722,8 @@ function makePrompt(){let c=cfg(),x=sess(),p=presets.find(q=>q.id===c.preset),re
 const previousMeetings=data().sessions.filter(m=>m.id!==x?.id&&m.status==='ended').slice(0,12).reverse();
 const previousMemory=previousMeetings.map((m,i)=>{const lines=(m.messages||[]).filter(z=>z&&typeof z.text==='string').slice(-10).map(z=>(z.role==='user'?'User':'Char')+'：'+String(z.versions?.[z.selected||0]||z.text).slice(0,750)).join('\n');return '【已结束的第'+(i+1)+'场见面：'+m.title+'】\n'+(m.summary?'历史摘要：'+m.summary.slice(0,1200)+'\n':'')+lines.slice(-5500)}).join('\n\n').slice(-17000);
 let context=offlineChatContext();
-const worldbook=owPrompt();
-return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【之前已结束的见面（仅供长期记忆，不是当前正在发生的场景）】\n'+(previousMemory||'暂无')+'\n【线下专属世界书（已启用条目，作为设定参考）】\n'+(worldbook||'暂无')+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'')+weiOfflinePovRule(c.pov);}
+const worldbook=owPrompt();const cardWorldbook=window.weiCharacterWorldPrompt?window.weiCharacterWorldPrompt(offlineChatContext()+"\n"+(x?.messages||[]).map(m=>m.text||"").join("\n")):"";
+return offlineResolve(systemPrompt([]))+weiContentPrompt('offline')+'\n【线下见面模式：独立小说叙事】\n角色身份与人物设定保持不变。当前线下剧情：'+(x?.title||'')+'，'+(x?.place||'')+'。\n【续写硬性规则】线上对话是本次剧情的直接前情。第一次空输入生成必须紧接线上最后一条消息的时间、地点、动作和情绪，不得另起场景；明确区分已发生、计划和想象，不得擅自把尚未发生的行动写成事实。之后每次紧接本次线下剧情最后一段，不复述或重启。线上消息中语音、图片、视频的文字说明是剧情信息，不能当成现实媒体播放。正文中禁止输出{{user}}、{{char}}等模板变量，使用角色实际姓名。\n叙事视角：'+({first:'第一人称',second:'第二人称',third:'第三人称'}[c.pov])+'；剧情节奏：'+({slow:'慢',normal:'正常',fast:'快'}[c.pace])+'；对白与描写：'+({talk:'对白较多',balanced:'均衡',description:'描写较多'}[c.ratio])+'。\n'+(c.thought?'允许适当描写 Char 内心。':'不直接描写 Char 内心。')+(c.speak?'允许合理带动 User 的回应，但不要严重违背用户设定。':'绝不替 User 写台词、行动、想法或决定。')+'\n目标长度约 '+c.words+' 个汉字，允许根据情节自然波动，避免凑字、复读、套路。只输出故事正文。\n【线上对话背景，仅用于衔接，勿逐字复述】\n'+context+'\n【之前已结束的见面（仅供长期记忆，不是当前正在发生的场景）】\n'+(previousMemory||'暂无')+'\n【线下专属世界书（已启用条目，作为设定参考）】\n'+(worldbook||'暂无')+'\n【当前角色专属世界书】\n'+(cardWorldbook||'暂无')+'\n【本次见面已发生】\n'+recent.map(m=>(m.role==='user'?'User':'Char')+': '+(m.versions?.[m.selected||0]||m.text)).join('\n').slice(-20000)+(c.memory?'\n【剧情摘要】'+(x?.summary||''):'')+(c.scene?'\n【场景状态】'+(x?.scene||''):'')+(c.temp?'\n【临时指令】'+c.tempText:'')+(styles?'\n【启用的预设写作规则（在人物设定和基础模式规则下生效）】\n'+styles.slice(0,40000):'')+weiOfflinePovRule(c.pov);}
 // Offline word targets are soft goals, not a strict character limit. This path is
 // intentionally isolated from online chat, translation and preset rendering.
 function weiOfflineCount(text){return Array.from(String(text||'').replace(/\s/g,'')).length}
