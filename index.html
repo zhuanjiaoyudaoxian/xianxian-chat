@@ -6298,4 +6298,33 @@ else refresh();
 window.addEventListener('load',refresh,{once:true});
 })();
 </script>
+<!-- wei-netease-authorized-bridge-v1 -->
+<script>
+/* Optional authorized music provider bridge. No password/cookie is stored in the page. */
+(function(){
+'use strict';
+const KEY='wei_netease_authorized_bridge_url_v1';
+let base='',account=null,lists=[];
+try{base=localStorage.getItem(KEY)||''}catch(e){}
+function origin(url){try{const u=new URL(url);return u.protocol==='https:'&&u.username===''&&u.password===''&&u.search===''&&u.hash===''?u.origin:''}catch(e){return ''}}
+function safeText(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function request(path){const r=await fetch(base+path,{credentials:'include',headers:{'Accept':'application/json'}});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+async function sync(){if(!base)return false;try{const a=await request('/api/netease/me');if(!a||!a.id)throw Error('未登录');account=a;const p=await request('/api/netease/playlists');lists=Array.isArray(p)?p:(Array.isArray(p.playlists)?p.playlists:[]);if(typeof nmRender==='function')nmRender();return true}catch(e){account=null;lists=[];return false}}
+window.mrNetEaseConnect=async function(){
+ if(!base){const typed=prompt('请输入你已获授权的网易云连接服务 HTTPS 地址。\n服务须支持安全登录与歌单读取；这里不是网易云账号密码。\n\n尚未部署连接服务时请取消。','');if(typed===null)return;const valid=origin(typed.trim());if(!valid){alert('请填写有效的 HTTPS 服务地址。不能直接填写网易云个人主页。');return}base=valid;try{localStorage.setItem(KEY,base)}catch(e){}
+ }
+ if(await sync()){const answer=confirm('网易云账号已连接：'+String(account.nickname||'已授权用户')+'。\n\n确定：重新授权登录\n取消：继续使用当前账号');if(!answer)return}
+ const auth=base+'/api/netease/auth/start?return_to='+encodeURIComponent(location.origin+location.pathname);
+ if(!confirm('即将前往你配置的授权服务登录。\n请确认服务由你信任的提供者运营，切勿在喂喂机内填写密码或 Cookie。\n\n继续吗？'))return;
+ location.href=auth;
+};
+window.mrNetEaseDisconnect=async function(){if(!base)return;try{await fetch(base+'/api/netease/logout',{method:'POST',credentials:'include'})}catch(e){}account=null;lists=[];if(typeof nmRender==='function')nmRender()};
+const previousRows=window.nmPlaylistRows;
+if(typeof previousRows==='function')window.nmPlaylistRows=function(){let html=previousRows.apply(this,arguments);if(!account||!lists.length)return html;return html+lists.map((p,i)=>'<button class="mr-playlist-row" onclick="mrNetEasePlaylist('+i+')"><div class="mr-list-cover">'+(typeof p.cover==='string'&&/^https:\/\//.test(p.cover)?'<img alt="" src="'+safeText(p.cover)+'">':'♫')+'</div><div><b>'+safeText(p.name)+'</b><small>'+safeText(p.trackCount||0)+' tracks · 网易云</small></div><span>›</span></button>').join('')};
+window.mrNetEasePlaylist=async function(index){const p=lists[index];if(!p||!account)return;try{const data=await request('/api/netease/playlists/'+encodeURIComponent(String(p.id))+'/tracks');const songs=Array.isArray(data)?data:data.tracks;if(!Array.isArray(songs))throw Error('歌单格式错误');const lines=songs.map((t,i)=>'<div class="mr-track"><span>'+String(i+1).padStart(2,'0')+'</span><div class="mr-track-art">'+(typeof t.cover==='string'&&/^https:\/\//.test(t.cover)?'<img alt="" src="'+safeText(t.cover)+'">':'♫')+'</div><div class="mr-track-name"><b>'+safeText(t.name)+'</b><small>'+safeText(t.artist)+'</small></div><button class="mr-track-play" onclick="mrNetEasePlay('+index+','+i+')">▶</button></div>').join('');window.__weiNetEaseCurrentSongs=songs;const main=document.getElementById('nmMain');if(main){main.innerHTML='<div class="mr-playlist-hero"><button onclick="nmRender()">‹</button><div><small>NETEASE MUSIC</small><h2>'+safeText(p.name)+'</h2><p>'+songs.length+' tracks</p></div></div>'+lines}}
+ catch(e){alert('暂时无法读取歌单：'+e.message)}};
+window.mrNetEasePlay=async function(playlistIndex,songIndex){const t=(window.__weiNetEaseCurrentSongs||[])[songIndex];if(!t||!account)return;try{const result=await request('/api/netease/tracks/'+encodeURIComponent(String(t.id))+'/play');if(!result||!result.url||!/^https:\/\//.test(result.url)){alert(result&&result.message?String(result.message):'该歌曲未获播放授权，请在网易云官方客户端收听。');return}const audio=document.getElementById('audio');if(!audio)return;audio.pause();if(typeof musicUrl!=='undefined'&&musicUrl){try{URL.revokeObjectURL(musicUrl)}catch(e){}musicUrl=null}audio.src=result.url;const title=document.getElementById('trackName');if(title)title.textContent=String(t.name||'网易云歌曲');await audio.play();}catch(e){alert('播放失败或没有相应授权：'+e.message)}};
+if(base){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>sync());else sync()}
+})();
+</script>
 </body></html>
