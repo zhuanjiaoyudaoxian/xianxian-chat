@@ -638,6 +638,11 @@ html[data-pu-mode="dark"] .wei-theme-dialog .wei-theme-cancel{color:#aaaab3}
   background:transparent!important;border:1px solid #ded7cf!important;
   border-radius:0!important;transform:none!important;pointer-events:none;
 }
+/* Second-page postage quote: slimmer strip and smaller type only. */
+#home .pu-second-redesign .bloom-quote{min-height:clamp(41px,6.6vh,57px)!important;padding:8px 12px!important;margin-bottom:6px!important}
+#home .pu-second-redesign .bloom-quote>span{font-size:13px!important;line-height:1.35!important;font-weight:400!important}
+#home .pu-second-redesign .bloom-quote::after{inset:6px!important;top:6px!important;bottom:6px!important;left:6px!important;right:6px!important}
+
 
 
 </style><style>
@@ -1396,13 +1401,23 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="pu-second-spacer" aria-hidden="true"></div>
     <button class="bloom-quote" onclick="bloomEditText('quote')"><span id="bloomQuoteText">人的心臟都在左邊，要怎樣擁抱才能心心相印</span></button>
   </div>
-  <div class="bloom-page bloom-page-three pu46-new-third"><div id="weThirdApps"></div>
-    <article class="pu-newspaper" aria-label="可编辑的每日小报">
-      <div class="pu-paper-head"><span class="pu-paper-stamp" onclick="puPaperEdit('stamp')" role="button" tabindex="0" aria-label="编辑报纸角标" id="puPaperStamp">只印<br>一份</span><button class="pu-paper-title" id="puPaperTitle" onclick="puPaperEdit('title')">The Universe Daily</button><span class="pu-paper-number" onclick="puPaperEdit('number')" role="button" tabindex="0" id="puPaperNumber">NO.<br>001</span></div>
-      <div class="pu-paper-meta"><button id="puPaperDate" onclick="puPaperEdit('date')">2026.10.21 · WED</button><span>DAILY EDITION</span></div>
-      <div class="pu-paper-story"><button class="pu-paper-photo" id="bloomImg_paperphoto" onclick="bloomPick('paperphoto')" aria-label="更换报纸照片">＋<small>添加照片</small></button><div class="pu-paper-article"><button class="pu-paper-kicker" id="puPaperKicker" onclick="puPaperEdit('kicker')">头条 · HEADLINE</button><button class="pu-paper-headline" id="puPaperHeadline" onclick="puPaperEdit('headline')">今天也有值得记录的小事。</button><div class="pu-paper-rule"></div><button class="pu-paper-body" id="puPaperBody" onclick="puPaperEdit('body')">属于我们的日常，都值得被珍藏。</button></div></div>
-      <button class="pu-paper-ticker" id="puPaperTicker" onclick="puPaperEdit('ticker')">快讯　/　A LITTLE PIECE OF LIFE　/　每一天都值得纪念</button>
-    </article>
+  <div class="bloom-page bloom-page-three pu-third-scrapbook" id="puThirdPage">
+    <div class="pu3-top">
+      <div class="pu3-top-left"><button class="pu3-photo pu3-round" id="bloomImg_thirdtopavatar" onclick="bloomPick('thirdtopavatar')" aria-label="更换顶部圆形照片">＋</button><button class="pu3-ribbon" onclick="pu3EditText('ribbon')" id="pu3Ribbon">Super happy ♡</button><button class="pu3-ribbon pu3-ribbon-small" onclick="pu3EditText('subribbon')" id="pu3Subribbon">✧ ♡ ☁ ✧</button></div>
+      <button class="pu3-photo pu3-top-photo" id="bloomImg_thirdtopphoto" onclick="bloomPick('thirdtopphoto')" aria-label="更换顶部方形照片">＋</button>
+    </div>
+    <div class="pu3-center">
+      <div class="pu3-pills"><button onclick="pu3EditText('pill0')" id="pu3Pill0">♫ Music</button><button onclick="pu3EditText('pill1')" id="pu3Pill1">♡ Daily</button></div>
+      <div class="pu3-center-main"><button class="pu3-photo pu3-center-avatar" id="bloomImg_thirdcenter" onclick="bloomPick('thirdcenter')" aria-label="更换中间头像">＋</button><button class="pu3-arc" onclick="pu3EditText('arc')" id="pu3Arc">✧ ♫ ·˚ ♫ ✧</button></div>
+      <div class="pu3-pills"><button onclick="pu3EditText('pill2')" id="pu3Pill2">✿ Love</button><button onclick="pu3EditText('pill3')" id="pu3Pill3">✧ Note</button></div>
+    </div>
+    <div class="pu3-bottom">
+      <button class="pu3-photo pu3-bottom-photo" id="bloomImg_thirdbottom" onclick="bloomPick('thirdbottom')" aria-label="更换底部照片">＋</button>
+      <div class="pu3-folders" id="pu3Folders"></div>
+    </div>
+    <div class="pu3-extra-apps" id="weThirdApps"></div>
+    <div class="pu3-edit-hint" id="pu3EditHint">长按软件或文件夹整理</div>
+    <div class="pu3-folder-overlay" id="pu3Overlay" hidden><div class="pu3-folder-panel"><div class="pu3-folder-heading"><button id="pu3FolderName" onclick="pu3Rename()">文件夹</button><button class="pu3-close" onclick="pu3Close()" aria-label="关闭文件夹">×</button></div><div class="pu3-folder-apps" id="pu3FolderApps"></div><button class="pu3-add" onclick="pu3AddApps()">＋ 添加软件</button><button class="pu3-finish" onclick="pu3ToggleEdit(false)">完成整理</button></div></div>
   </div>
  </div>
  <div id="bloomAppDrawer" class="bloom-app-drawer" aria-hidden="true"><div class="bloom-app-drawer-inner"><button class="bloom-drawer-close" onclick="bloomCloseApps()">关闭 ×</button><h3>全部应用</h3><div id="bloomAllApps"></div></div></div>
@@ -2030,7 +2045,99 @@ function weEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 function weApplyHome(d){for(let p=0;p<2;p++){const grid=document.getElementById('bloomGrid'+(p+1));if(grid)grid.innerHTML=(d.pages[p]||[]).filter(id=>weCatalog.some(a=>a.id===id)).map(id=>bloomIcon(id)).join('')};const third=document.getElementById('weThirdApps');if(third)third.innerHTML=(d.pages[2]||[]).map(id=>bloomIcon(id)).join('');document.getElementById('home')?.style.setProperty('--we-icon-size',d.size+'px');document.getElementById('home')?.style.setProperty('--we-icon-gap',d.gap+'px');document.getElementById('home')?.style.setProperty('--we-icon-radius',d.radius+'%');document.getElementById('home')?.classList.toggle('we-hide-labels',!d.labels);document.getElementById('bloomDock')?.classList.toggle('we-hidden',!d.dock);for(let p=0;p<3;p++){const pg=document.querySelectorAll('#bloomPages>.bloom-page')[p];if(!pg)continue;for(const [id,sel] of Object.entries(weSel)){const el=pg.querySelector(sel);if(el)el.classList.toggle('we-hidden',!(d.widgets[p]||[]).includes(id));}}}
 const weOldRender=bloomRenderHome;bloomRenderHome=function(){weOldRender();weApplyHome(weSaved)};renderHome=bloomRenderHome;diyRenderHome=bloomRenderHome;
 function weSnapshot(){const home=document.getElementById('home');if(!home)return '';const clone=home.cloneNode(true);clone.classList.add('active');clone.style.display='flex';clone.querySelectorAll('script').forEach(n=>n.remove());const pages=clone.querySelectorAll('.bloom-page');pages.forEach((pg,i)=>pg.style.display=i===wePage?'flex':'none');const grids=[clone.querySelector('#bloomGrid1'),clone.querySelector('#bloomGrid2'),clone.querySelector('#weThirdApps')];grids.forEach((g,i)=>{if(g)g.innerHTML=(weDraft.pages[i]||[]).map(id=>bloomIcon(id)).join('')});clone.style.setProperty('--we-icon-size',weDraft.size+'px');clone.style.setProperty('--we-icon-gap',weDraft.gap+'px');clone.style.setProperty('--we-icon-radius',weDraft.radius+'%');clone.classList.toggle('we-hide-labels',!weDraft.labels);clone.querySelector('#bloomDock')?.classList.toggle('we-hidden',!weDraft.dock);pages.forEach((pg,p)=>Object.entries(weSel).forEach(([id,sel])=>pg.querySelector(sel)?.classList.toggle('we-hidden',!(weDraft.widgets[p]||[]).includes(id))));const sc=clone.querySelector('#bloomPages');if(sc){sc.style.display='block';sc.style.overflow='hidden';sc.style.width='100%';sc.style.height='100%';pages.forEach(pg=>{pg.style.width='100%';pg.style.minWidth='100%';pg.style.height='100%'})}return clone.outerHTML}
-function wePreview(){const frame=document.getElementById('weLiveFrame');if(!frame)return;const styles=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+styles+'</style></head><body>'+weSnapshot()+'</body></html>'; }
+function wePreview(){const frame=document.getElementById('weLiveFrame');if(!frame)return;const styles=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+styles+'</style></head><body>'+weSnapshot()+'<style id="pu-third-only-styles">
+#home .pu-third-scrapbook{box-sizing:border-box;position:relative;justify-content:space-evenly;gap:clamp(9px,1.8vh,20px);padding:clamp(10px,2vh,20px) 17px 9px!important;overflow:hidden;color:var(--text,#56545b)}
+#home .pu-third-scrapbook button{font-family:inherit;cursor:pointer}
+#home .pu3-top,#home .pu3-bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;min-height:0;width:100%}
+#home .pu3-top{flex:0 1 31%;}#home .pu3-bottom{flex:0 1 30%;align-items:stretch}
+#home .pu3-top-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;gap:5px}
+#home .pu3-photo{background:rgba(247,246,249,.7);border:2px solid rgba(255,255,255,.85);color:#a7a5af;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:23px;padding:0;box-shadow:0 2px 9px #5551}
+#home .pu3-photo img{width:100%;height:100%;object-fit:cover;display:block}
+#home .pu3-round{width:clamp(76px,11vh,116px);height:clamp(76px,11vh,116px);border-radius:50%}
+#home .pu3-top-photo{width:100%;height:100%;max-height:190px;border-radius:18px}
+#home .pu3-ribbon{max-width:100%;min-height:23px;padding:4px 12px;background:rgba(255,255,255,.75);border:1px solid #ffffffb8;border-radius:5px;color:#77727d;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#home .pu3-ribbon-small{min-height:18px;padding:2px 9px;font-size:10px;background:rgba(255,255,255,.48)}
+#home .pu3-center{width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(92px,1.18fr) minmax(0,1fr);gap:6px;align-items:center;flex:0 0 auto}
+#home .pu3-pills{display:flex;flex-direction:column;gap:15px;min-width:0}
+#home .pu3-pills button{width:100%;min-width:0;border-radius:999px;border:1px solid #fff9;background:rgba(255,255,255,.68);padding:10px 3px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#787580}
+#home .pu3-center-main{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+#home .pu3-center-avatar{width:clamp(86px,12vh,124px);height:clamp(86px,12vh,124px);max-width:100%;border-radius:50%}
+#home .pu3-arc{border:0;background:transparent;font-size:11px;white-space:nowrap;color:inherit;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#home .pu3-bottom-photo{height:100%;min-height:135px;border-radius:16px;width:100%}
+#home .pu3-folders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:9px;min-height:0}
+#home .pu3-folder{display:flex;flex-direction:column;align-items:center;min-width:0;gap:3px;border:0;background:transparent;padding:0;color:inherit}
+#home .pu3-folder-cover{width:min(100%,75px);aspect-ratio:1;border-radius:15px;background:rgba(236,235,240,.8);border:1px solid #fff9;padding:7px;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:4px;box-shadow:0 2px 6px #5551}
+#home .pu3-folder-mini{background:rgba(255,255,255,.8);border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:14px}
+#home .pu3-folder-mini img{width:100%;height:100%;object-fit:cover}
+#home .pu3-folder-label{font-size:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#home .pu3-extra-apps{display:flex!important;flex-wrap:wrap;gap:8px;justify-content:center;max-height:80px;overflow:auto;flex:0 0 auto}
+#home .pu3-extra-apps:empty{display:none!important}
+#home .pu3-extra-apps .bloom-icon{width:var(--we-icon-size,52px);font-size:10px}
+#home .pu3-edit-hint{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:10px;color:#8b8892;opacity:0;pointer-events:none}
+#home .pu-third-scrapbook.pu3-editing .pu3-edit-hint{opacity:1}
+#home .pu-third-scrapbook.pu3-editing .pu3-folder-cover,#home .pu-third-scrapbook.pu3-editing .pu3-extra-apps .bloom-icon{animation:pu3-wiggle .22s infinite alternate}
+@keyframes pu3-wiggle{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
+#home .pu3-folder-overlay{position:absolute;inset:0;z-index:30;background:rgba(245,244,248,.72);backdrop-filter:blur(13px);display:flex;align-items:center;justify-content:center;padding:16px}
+#home .pu3-folder-overlay[hidden]{display:none!important}
+#home .pu3-folder-panel{background:rgba(255,255,255,.95);border-radius:24px;width:100%;max-height:95%;overflow:auto;padding:17px;box-shadow:0 12px 36px #4442;display:flex;flex-direction:column;gap:14px;color:#5f5d66}
+#home .pu3-folder-heading{display:flex;justify-content:space-between;align-items:center}
+#home .pu3-folder-heading button{border:0;background:transparent;color:inherit;font-size:18px}
+#home .pu3-folder-heading .pu3-close{font-size:26px}
+#home .pu3-folder-apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px 7px;min-height:120px;align-content:start}
+#home .pu3-folder-apps .pu3-contained{display:flex;align-items:center;flex-direction:column;gap:5px;min-width:0;position:relative;border:0;background:transparent;color:inherit;font-size:10px}
+#home .pu3-folder-apps .pu3-contained .bloom-icon-symbol{width:48px!important;height:48px!important;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#f0eef2;overflow:hidden;font-size:22px}
+#home .pu3-folder-apps .pu3-contained img{width:100%;height:100%;object-fit:cover}
+#home .pu3-folder-apps .pu3-contained .pu3-remove{position:absolute;top:-7px;right:5px;border:0;border-radius:50%;background:#e6e3e8;color:#777;width:21px;height:21px;font-size:16px}
+#home .pu3-add,#home .pu3-finish{border:1px solid #e4e1e7;border-radius:12px;background:#f5f3f6;color:#686470;padding:11px;font-size:13px}
+#home .pu3-drag-ghost{position:fixed;z-index:999999;pointer-events:none;opacity:.85;transform:translate(-50%,-50%);background:#fff;border-radius:14px;padding:8px;box-shadow:0 5px 25px #0003;font-size:12px}
+#home .pu3-drop-active .pu3-folder-cover{outline:2px solid #a9a1bb;outline-offset:3px}
+@media(max-height:710px){#home .pu-third-scrapbook{gap:6px;padding-top:6px!important}#home .pu3-round{width:75px;height:75px}#home .pu3-center-avatar{width:83px;height:83px}#home .pu3-pills{gap:7px}#home .pu3-pills button{padding:7px 2px}#home .pu3-bottom-photo{min-height:110px}#home .pu3-folder-cover{padding:5px}}
+</style>
+<script id="pu-third-only-script">
+(function(){
+'use strict';
+const KEY='pu_third_folders_v1',TKEY='pu_third_text_v1';
+const defaults=['日常','收藏','灵感','其他'];
+let folders,words,active=-1,editing=false,drag=null,suppress=false;
+try{folders=JSON.parse(localStorage.getItem(KEY))}catch(e){};
+if(!Array.isArray(folders)||folders.length!==4)folders=defaults.map(name=>({name,apps:[]}));
+folders=folders.map((f,i)=>({name:String(f.name||defaults[i]).slice(0,20),apps:Array.isArray(f.apps)?f.apps.filter(x=>typeof x==='string'):[]}));
+try{words=JSON.parse(localStorage.getItem(TKEY))||{}}catch(e){words={}};
+const texts={ribbon:'Super happy ♡',subribbon:'✧ ♡ ☁ ✧',arc:'✧ ♫ ·˚ ♫ ✧',pill0:'♫ Music',pill1:'♡ Daily',pill2:'✿ Love',pill3:'✧ Note'};
+const esc3=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(folders))}catch(e){toast('文件夹保存失败')}}
+function label(id){const a=appItems.find(x=>x[0]===id);return (window.weiDeskCustom||{})[id]?.name||diySaved.icons[id]?.name||a?.[2]||id}
+function symbol(id){const a=appItems.find(x=>x[0]===id);if(!a)return '';const url=(window.weiDeskCustom||{})[id]?.image||diyAssetUrl(diySaved.icons[id]?.asset);return url?'<img alt="" src="'+esc3(url)+'">':a[1]}
+function catalog(){return appItems.filter(a=>!['contacts','moments','profile','api'].includes(a[0])).map(a=>a[0]).concat(['diy']).filter((x,i,arr)=>arr.indexOf(x)===i)}
+function taken(){return new Set(folders.flatMap(f=>f.apps))}
+function openApp(id){if(id==='diy'){go('diy');diyStart()}else go(id)}
+function render(){const root=document.getElementById('pu3Folders');if(!root)return;const names=['ribbon','subribbon','arc','pill0','pill1','pill2','pill3'];for(const k of names){const el=document.getElementById('pu3'+k[0].toUpperCase()+k.slice(1));if(el)el.textContent=words[k]??texts[k]}
+root.innerHTML=folders.map((f,i)=>'<button class="pu3-folder" data-folder="'+i+'" onclick="pu3Open('+i+')"><span class="pu3-folder-cover">'+[0,1,2,3].map(j=>'<span class="pu3-folder-mini">'+(f.apps[j]?symbol(f.apps[j]):'')+'</span>').join('')+'</span><span class="pu3-folder-label">'+esc3(f.name)+'</span></button>').join('');
+if(active>=0){document.getElementById('pu3FolderName').textContent=folders[active].name;document.getElementById('pu3FolderApps').innerHTML=folders[active].apps.map(id=>'<div class="pu3-contained" data-pu3-app="'+esc3(id)+'"><button type="button" class="pu3-contained-launch" onclick="pu3Launch(&quot;'+esc3(id)+'&quot;)"><span class="bloom-icon-symbol">'+symbol(id)+'</span><span>'+esc3(label(id))+'</span></button>'+(editing?'<button class="pu3-remove" onclick="pu3Remove(&quot;'+esc3(id)+'&quot;)" aria-label="移出软件">×</button>':'')+'</div>').join('');}
+const page=document.getElementById('puThirdPage');page.classList.toggle('pu3-editing',editing);
+}
+window.pu3EditText=function(k){if(!(k in texts))return;const v=prompt('修改文字',words[k]??texts[k]);if(v===null)return;words[k]=v.trim().slice(0,70);try{localStorage.setItem(TKEY,JSON.stringify(words))}catch(e){toast('文字保存失败')}render()};
+window.pu3Open=function(i){if(suppress){suppress=false;return}if(drag)return;active=i;document.getElementById('pu3Overlay').hidden=false;render()};
+window.pu3Close=function(){active=-1;document.getElementById('pu3Overlay').hidden=true;render()};
+window.pu3Rename=function(){if(active<0)return;const v=prompt('文件夹名称',folders[active].name);if(v===null)return;folders[active].name=v.trim().slice(0,20)||defaults[active];save();render()};
+window.pu3Launch=function(id){if(editing)return;pu3Close();openApp(id)};
+window.pu3Remove=function(id){if(active<0)return;folders[active].apps=folders[active].apps.filter(x=>x!==id);const p=weSaved.pages[2]||(weSaved.pages[2]=[]);if(!p.includes(id))p.push(id);try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){};save();bloomRenderHome();render()};
+window.pu3ToggleEdit=function(value){editing=!!value;render()};
+window.pu3AddApps=function(){if(active<0)return;const available=catalog().filter(id=>!taken().has(id));if(!available.length){toast('没有可添加的软件');return}const panel=document.getElementById('pu3FolderApps');const existing=document.getElementById('pu3Choose');if(existing)existing.remove();const choose=document.createElement('div');choose.id='pu3Choose';choose.style.cssText='grid-column:1/-1;display:grid;gap:8px;background:#f6f5f8;padding:12px;border-radius:12px;max-height:230px;overflow:auto';choose.innerHTML='<strong style="font-size:12px">选择要收纳的软件</strong>'+available.map(id=>'<label style="display:flex;gap:9px;align-items:center;font-size:12px"><input type="checkbox" value="'+esc3(id)+'">'+esc3(label(id))+'</label>').join('')+'<button type="button" id="pu3ConfirmAdd" style="padding:9px;background:white;border:1px solid #ddd;border-radius:9px">确认添加</button>';panel.appendChild(choose);choose.querySelector('#pu3ConfirmAdd').onclick=()=>{const ids=[...choose.querySelectorAll('input:checked')].map(x=>x.value);if(!ids.length){choose.remove();return}folders[active].apps.push(...ids);const page3=weSaved.pages[2]||[];weSaved.pages[2]=page3.filter(id=>!ids.includes(id));try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){}save();bloomRenderHome();render()};};
+const previous=bloomRenderHome;bloomRenderHome=function(){previous();for(const slot of ['thirdtopavatar','thirdtopphoto','thirdcenter','thirdbottom'])bloomSlot(slot);const third=document.getElementById('weThirdApps');if(third){const used=taken();third.querySelectorAll('.bloom-icon').forEach(el=>{const match=el.getAttribute('onclick')?.match(/go\('([^']+)'\)/);if(match&&used.has(match[1]))el.remove()})}render()};renderHome=bloomRenderHome;diyRenderHome=bloomRenderHome;
+// 长按后拖放到文件夹：只监听第三页，其他页面和 Dock 不受影响。
+const page=document.getElementById('puThirdPage');let timer=null,start=null;
+page.addEventListener('pointerdown',e=>{if(e.target.closest('.pu3-folder-overlay'))return;const target=e.target.closest('.pu3-folder,.pu3-extra-apps .bloom-icon');if(!target)return;const folder=target.closest('[data-folder]');const match=target.getAttribute('onclick')?.match(/go\('([^']+)'\)/);const id=match?.[1];start={x:e.clientX,y:e.clientY,target,id,folder:folder?Number(folder.dataset.folder):-1};clearTimeout(timer);timer=setTimeout(()=>{if(!start)return;editing=true;render();const ghost=document.createElement('div');ghost.className='pu3-drag-ghost';ghost.textContent=start.id?label(start.id):folders[start.folder]?.name;document.body.appendChild(ghost);drag={...start,ghost};ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';},500)},true);
+page.addEventListener('pointermove',e=>{if(start&&!drag&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>12){clearTimeout(timer);start=null}if(!drag)return;drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';document.querySelectorAll('#pu3Folders .pu3-folder').forEach(el=>el.classList.toggle('pu3-drop-active',el.getBoundingClientRect().left<=e.clientX&&el.getBoundingClientRect().right>=e.clientX&&el.getBoundingClientRect().top<=e.clientY&&el.getBoundingClientRect().bottom>=e.clientY));e.preventDefault()},true);
+function finish(e){clearTimeout(timer);start=null;if(!drag)return;const d=drag;drag=null;d.ghost.remove();document.querySelectorAll('.pu3-drop-active').forEach(el=>el.classList.remove('pu3-drop-active'));const dest=document.elementFromPoint(e.clientX,e.clientY)?.closest('#pu3Folders [data-folder]');if(dest&&d.id){const i=Number(dest.dataset.folder);folders.forEach(f=>f.apps=f.apps.filter(x=>x!==d.id));folders[i].apps.push(d.id);weSaved.pages[2]=(weSaved.pages[2]||[]).filter(x=>x!==d.id);try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){}save();bloomRenderHome()}else if(d.folder>=0&&dest&&Number(dest.dataset.folder)!==d.folder){const i=Number(dest.dataset.folder);[folders[i],folders[d.folder]]=[folders[d.folder],folders[i]];save();render()}suppress=true;setTimeout(()=>{suppress=false},350);}
+page.addEventListener('pointerup',finish,true);page.addEventListener('pointercancel',finish,true);page.addEventListener('click',e=>{if(suppress&&e.target.closest('.pu3-folder,.pu3-extra-apps .bloom-icon')){e.preventDefault();e.stopPropagation();suppress=false}},true);
+// 文件夹里的软件可长按进入整理，再用 × 移出；普通点击直接打开。
+page.addEventListener('pointerdown',e=>{const item=e.target.closest('.pu3-contained');if(!item)return;clearTimeout(timer);timer=setTimeout(()=>{editing=true;render()},500)},false);
+page.addEventListener('pointerup',()=>clearTimeout(timer),false);
+render();
+})();
+</script>
+</body></html>'; }
 function weRenderEditor(){const root=document.getElementById('weDesktopEditor');if(!root)return;const isApp=weMode==='apps',items=isApp?weDraft.pages[wePage]:weDraft.widgets[wePage],lib=isApp?weCatalog:Object.entries(weWidgets).map(([id,v])=>({id,name:v[0]}));root.innerHTML=`<div class="we-title">桌面美化 <span>真实桌面实时预览</span></div><div class="we-switch">${['壁纸','组件','布局'].map((t,i)=>`<button onclick="weTab(${i})" class="${window.weTabIndex===i?'on':''}">${t}</button>`).join('')}</div><div class="we-switch">${[0,1,2].map(i=>`<button class="${wePage===i?'on':''}" onclick="wePageSet(${i})">第${['一','二','三'][i]}页</button>`).join('')}</div><div class="we-frame"><iframe id="weLiveFrame" title="真实桌面实时预览" sandbox="allow-same-origin"></iframe></div><p class="we-hint">预览复用当前桌面的实际结构、图片和图标；编辑时不会修改正式桌面。</p>${window.weTabIndex===0?`<div class="we-card"><b>桌面壁纸</b><p>沿用原有壁纸上传和背景设置。</p><button onclick="weOldPanel('wall')">打开原有壁纸设置</button></div>`:window.weTabIndex===1?`<div class="we-card"><b>组件内容</b><p>照片、文字、音乐等内容继续通过原有组件设置编辑。</p><button onclick="weOldPanel('widgets')">打开原有组件设置</button></div>`:`<div class="we-switch"><button class="${isApp?'on':''}" onclick="weModeSet('apps')">编辑软件</button><button class="${!isApp?'on':''}" onclick="weModeSet('widgets')">编辑组件</button></div><div class="we-card"><b>当前页面 · ${items.length} ${isApp?'个软件':'个组件'}</b><div class="we-list">${items.map((id,i)=>`<div class="we-item"><span>${weEsc(isApp?weItem(id):weWidgets[id]?.[0]||id)}</span><button onclick="weShift(${i},-1)" aria-label="前移">↑</button><button onclick="weShift(${i},1)" aria-label="后移">↓</button><button onclick="weAcross('${weEsc(id)}')">换页</button><button onclick="weRemove('${weEsc(id)}')">移除</button></div>`).join('')}</div><label class="we-field">添加${isApp?'软件':'组件'} <select id="weAddPick">${lib.filter(x=>!items.includes(x.id)).map(x=>`<option value="${weEsc(x.id)}">${weEsc(x.name)}</option>`).join('')}</select></label><button onclick="weAdd()">＋ 添加到本页</button></div><div class="we-card"><b>图标外观</b><label class="we-field">图标大小 <output id="weSizeValue">${weDraft.size}px</output><input type="range" min="32" max="80" value="${weDraft.size}" oninput="weStyle('size',+this.value)"></label><label class="we-field">图标间距 <output id="weGapValue">${weDraft.gap}px</output><input type="range" min="0" max="28" value="${weDraft.gap}" oninput="weStyle('gap',+this.value)"></label><label class="we-field">图标圆角 <output id="weRadiusValue">${weDraft.radius}px</output><input type="range" min="0" max="40" value="${weDraft.radius}" oninput="weStyle('radius',+this.value)"></label><label><input type="checkbox" ${weDraft.labels?'checked':''} onchange="weStyle('labels',this.checked)"> 显示名称</label><label><input type="checkbox" ${weDraft.dock?'checked':''} onchange="weStyle('dock',this.checked)"> 显示 Dock</label></div>`}${weNotice?`<div class="we-error" role="alert">⚠ ${weEsc(weNotice)}</div>`:''}<div class="we-actions"><button onclick="weCancel()">取消修改</button><button onclick="weSave()">保存桌面布局</button></div>`;wePreview()}
 window.weTabIndex=2;window.weTab=i=>{window.weTabIndex=i;weRenderEditor()};window.wePageSet=i=>{wePage=i;weNotice='';weRenderEditor()};window.weModeSet=m=>{weMode=m;weNotice='';weRenderEditor()};window.weShift=(i,d)=>weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'][wePage],j=i+d;if(j>=0&&j<a.length)[a[i],a[j]]=[a[j],a[i]]});window.weAcross=id=>{const target=Number(prompt('移动到第几页？请输入 1、2 或 3',String((wePage+1)%3+1)));if(![1,2,3].includes(target))return;weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];a[wePage]=a[wePage].filter(v=>v!==id);a[target-1].push(id)})};window.weRemove=id=>weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];a[wePage]=a[wePage].filter(v=>v!==id)});window.weAdd=()=>{let id=document.getElementById('weAddPick')?.value;if(!id)return;weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];if(weMode==='apps')a.forEach((page,i)=>a[i]=page.filter(v=>v!==id));a[wePage].push(id)})};window.weStyle=(k,v)=>{weDraft[k]=v;const label=document.getElementById('we'+k[0].toUpperCase()+k.slice(1)+'Value');if(label)label.textContent=v+'px';wePreview()};window.weSave=()=>{const errors=[0,1,2].map(i=>weValidate(weDraft,i)).filter(Boolean);if(errors.length){weNotice=errors[0];weRenderEditor();return}try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weDraft));weSaved=weClone(weDraft);bloomRenderHome();toast('桌面布局已保存')}catch(e){toast('保存失败：'+e.message)}};window.weCancel=()=>{weDraft=weClone(weSaved);weNotice='';weRenderEditor();toast('未保存的布局修改已取消')};window.weOldPanel=t=>{document.getElementById('weDesktopEditor').hidden=true;document.getElementById('weiBeautyModern').hidden=false;window.weiModernDesktopTab(t==='wall'?'wallpaper':'widgets')};
 window.weInstallDesktopEditor=function(){const weOldOpen=window.weiModernOpen;window.weiModernOpen=function(s){weOldOpen(s);const root=document.getElementById('weDesktopEditor');if(s==='desktop'){weDraft=weClone(weSaved);weNotice='';root.hidden=false;document.getElementById('weiBeautyModern').hidden=true;weRenderEditor()}else root.hidden=true};};
@@ -6088,5 +6195,97 @@ function mrSetPlayerWall(input){mrSetWallFile(input,'mr_player_wall')}
 function mrSetWallFile(input,key){let f=input.files?.[0];input.value='';if(!f)return;if(f.size>3*1024*1024)return toast('请选择小于 3MB 的图片');let r=new FileReader();r.onload=()=>{try{localStorage.setItem(key,r.result);if(key==='mr_global_wall'){document.getElementById('mrWallPreview').style.backgroundImage='url('+JSON.stringify(r.result)+')';document.getElementById('mrWallPreview').textContent='';document.getElementById('nmMain').style.backgroundImage='url('+JSON.stringify(r.result)+')';document.getElementById('nmMain').style.backgroundSize='cover'}else{let ov=document.getElementById('nmOverlay');if(!ov.hidden)ov.style.backgroundImage='linear-gradient(#061b32aa,#061b32aa),url('+JSON.stringify(r.result)+')'}toast('壁纸已保存')}catch(e){toast('图片保存失败，可能是浏览器空间不足')}};r.readAsDataURL(f)}
 function mrRestoreFloat(){let b=document.getElementById('mrSettingsFloat');if(!b)return;try{let p=JSON.parse(localStorage.getItem('mr_float_pos'));if(p){b.style.right='auto';b.style.left=(p.x?Math.max(12,b.parentElement.clientWidth-b.offsetWidth-12):12)+'px';b.style.top=Math.max(10,Math.min(b.parentElement.clientHeight-b.offsetHeight-10,p.y*(b.parentElement.clientHeight-b.offsetHeight)))+'px'}}catch(e){}let bg=localStorage.getItem('mr_global_wall');if(bg){let m=document.getElementById('nmMain');m.style.backgroundImage='url('+JSON.stringify(bg)+')';m.style.backgroundSize='cover'}}
 mrRestoreFloat();
+</script>
+<style id="pu-third-only-styles">
+#home .pu-third-scrapbook{box-sizing:border-box;position:relative;justify-content:space-evenly;gap:clamp(9px,1.8vh,20px);padding:clamp(10px,2vh,20px) 17px 9px!important;overflow:hidden;color:var(--text,#56545b)}
+#home .pu-third-scrapbook button{font-family:inherit;cursor:pointer}
+#home .pu3-top,#home .pu3-bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;min-height:0;width:100%}
+#home .pu3-top{flex:0 1 31%;}#home .pu3-bottom{flex:0 1 30%;align-items:stretch}
+#home .pu3-top-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;gap:5px}
+#home .pu3-photo{background:rgba(247,246,249,.7);border:2px solid rgba(255,255,255,.85);color:#a7a5af;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:23px;padding:0;box-shadow:0 2px 9px #5551}
+#home .pu3-photo img{width:100%;height:100%;object-fit:cover;display:block}
+#home .pu3-round{width:clamp(76px,11vh,116px);height:clamp(76px,11vh,116px);border-radius:50%}
+#home .pu3-top-photo{width:100%;height:100%;max-height:190px;border-radius:18px}
+#home .pu3-ribbon{max-width:100%;min-height:23px;padding:4px 12px;background:rgba(255,255,255,.75);border:1px solid #ffffffb8;border-radius:5px;color:#77727d;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#home .pu3-ribbon-small{min-height:18px;padding:2px 9px;font-size:10px;background:rgba(255,255,255,.48)}
+#home .pu3-center{width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(92px,1.18fr) minmax(0,1fr);gap:6px;align-items:center;flex:0 0 auto}
+#home .pu3-pills{display:flex;flex-direction:column;gap:15px;min-width:0}
+#home .pu3-pills button{width:100%;min-width:0;border-radius:999px;border:1px solid #fff9;background:rgba(255,255,255,.68);padding:10px 3px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#787580}
+#home .pu3-center-main{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+#home .pu3-center-avatar{width:clamp(86px,12vh,124px);height:clamp(86px,12vh,124px);max-width:100%;border-radius:50%}
+#home .pu3-arc{border:0;background:transparent;font-size:11px;white-space:nowrap;color:inherit;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#home .pu3-bottom-photo{height:100%;min-height:135px;border-radius:16px;width:100%}
+#home .pu3-folders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:9px;min-height:0}
+#home .pu3-folder{display:flex;flex-direction:column;align-items:center;min-width:0;gap:3px;border:0;background:transparent;padding:0;color:inherit}
+#home .pu3-folder-cover{width:min(100%,75px);aspect-ratio:1;border-radius:15px;background:rgba(236,235,240,.8);border:1px solid #fff9;padding:7px;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:4px;box-shadow:0 2px 6px #5551}
+#home .pu3-folder-mini{background:rgba(255,255,255,.8);border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:14px}
+#home .pu3-folder-mini img{width:100%;height:100%;object-fit:cover}
+#home .pu3-folder-label{font-size:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#home .pu3-extra-apps{display:flex!important;flex-wrap:wrap;gap:8px;justify-content:center;max-height:80px;overflow:auto;flex:0 0 auto}
+#home .pu3-extra-apps:empty{display:none!important}
+#home .pu3-extra-apps .bloom-icon{width:var(--we-icon-size,52px);font-size:10px}
+#home .pu3-edit-hint{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:10px;color:#8b8892;opacity:0;pointer-events:none}
+#home .pu-third-scrapbook.pu3-editing .pu3-edit-hint{opacity:1}
+#home .pu-third-scrapbook.pu3-editing .pu3-folder-cover,#home .pu-third-scrapbook.pu3-editing .pu3-extra-apps .bloom-icon{animation:pu3-wiggle .22s infinite alternate}
+@keyframes pu3-wiggle{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
+#home .pu3-folder-overlay{position:absolute;inset:0;z-index:30;background:rgba(245,244,248,.72);backdrop-filter:blur(13px);display:flex;align-items:center;justify-content:center;padding:16px}
+#home .pu3-folder-overlay[hidden]{display:none!important}
+#home .pu3-folder-panel{background:rgba(255,255,255,.95);border-radius:24px;width:100%;max-height:95%;overflow:auto;padding:17px;box-shadow:0 12px 36px #4442;display:flex;flex-direction:column;gap:14px;color:#5f5d66}
+#home .pu3-folder-heading{display:flex;justify-content:space-between;align-items:center}
+#home .pu3-folder-heading button{border:0;background:transparent;color:inherit;font-size:18px}
+#home .pu3-folder-heading .pu3-close{font-size:26px}
+#home .pu3-folder-apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px 7px;min-height:120px;align-content:start}
+#home .pu3-folder-apps .pu3-contained{display:flex;align-items:center;flex-direction:column;gap:5px;min-width:0;position:relative;border:0;background:transparent;color:inherit;font-size:10px}
+#home .pu3-folder-apps .pu3-contained .bloom-icon-symbol{width:48px!important;height:48px!important;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#f0eef2;overflow:hidden;font-size:22px}
+#home .pu3-folder-apps .pu3-contained img{width:100%;height:100%;object-fit:cover}
+#home .pu3-folder-apps .pu3-contained .pu3-remove{position:absolute;top:-7px;right:5px;border:0;border-radius:50%;background:#e6e3e8;color:#777;width:21px;height:21px;font-size:16px}
+#home .pu3-add,#home .pu3-finish{border:1px solid #e4e1e7;border-radius:12px;background:#f5f3f6;color:#686470;padding:11px;font-size:13px}
+#home .pu3-drag-ghost{position:fixed;z-index:999999;pointer-events:none;opacity:.85;transform:translate(-50%,-50%);background:#fff;border-radius:14px;padding:8px;box-shadow:0 5px 25px #0003;font-size:12px}
+#home .pu3-drop-active .pu3-folder-cover{outline:2px solid #a9a1bb;outline-offset:3px}
+@media(max-height:710px){#home .pu-third-scrapbook{gap:6px;padding-top:6px!important}#home .pu3-round{width:75px;height:75px}#home .pu3-center-avatar{width:83px;height:83px}#home .pu3-pills{gap:7px}#home .pu3-pills button{padding:7px 2px}#home .pu3-bottom-photo{min-height:110px}#home .pu3-folder-cover{padding:5px}}
+</style>
+<script id="pu-third-only-script">
+(function(){
+'use strict';
+const KEY='pu_third_folders_v1',TKEY='pu_third_text_v1';
+const defaults=['日常','收藏','灵感','其他'];
+let folders,words,active=-1,editing=false,drag=null,suppress=false;
+try{folders=JSON.parse(localStorage.getItem(KEY))}catch(e){};
+if(!Array.isArray(folders)||folders.length!==4)folders=defaults.map(name=>({name,apps:[]}));
+folders=folders.map((f,i)=>({name:String(f.name||defaults[i]).slice(0,20),apps:Array.isArray(f.apps)?f.apps.filter(x=>typeof x==='string'):[]}));
+try{words=JSON.parse(localStorage.getItem(TKEY))||{}}catch(e){words={}};
+const texts={ribbon:'Super happy ♡',subribbon:'✧ ♡ ☁ ✧',arc:'✧ ♫ ·˚ ♫ ✧',pill0:'♫ Music',pill1:'♡ Daily',pill2:'✿ Love',pill3:'✧ Note'};
+const esc3=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(folders))}catch(e){toast('文件夹保存失败')}}
+function label(id){const a=appItems.find(x=>x[0]===id);return (window.weiDeskCustom||{})[id]?.name||diySaved.icons[id]?.name||a?.[2]||id}
+function symbol(id){const a=appItems.find(x=>x[0]===id);if(!a)return '';const url=(window.weiDeskCustom||{})[id]?.image||diyAssetUrl(diySaved.icons[id]?.asset);return url?'<img alt="" src="'+esc3(url)+'">':a[1]}
+function catalog(){return appItems.filter(a=>!['contacts','moments','profile','api'].includes(a[0])).map(a=>a[0]).concat(['diy']).filter((x,i,arr)=>arr.indexOf(x)===i)}
+function taken(){return new Set(folders.flatMap(f=>f.apps))}
+function openApp(id){if(id==='diy'){go('diy');diyStart()}else go(id)}
+function render(){const root=document.getElementById('pu3Folders');if(!root)return;const names=['ribbon','subribbon','arc','pill0','pill1','pill2','pill3'];for(const k of names){const el=document.getElementById('pu3'+k[0].toUpperCase()+k.slice(1));if(el)el.textContent=words[k]??texts[k]}
+root.innerHTML=folders.map((f,i)=>'<button class="pu3-folder" data-folder="'+i+'" onclick="pu3Open('+i+')"><span class="pu3-folder-cover">'+[0,1,2,3].map(j=>'<span class="pu3-folder-mini">'+(f.apps[j]?symbol(f.apps[j]):'')+'</span>').join('')+'</span><span class="pu3-folder-label">'+esc3(f.name)+'</span></button>').join('');
+if(active>=0){document.getElementById('pu3FolderName').textContent=folders[active].name;document.getElementById('pu3FolderApps').innerHTML=folders[active].apps.map(id=>'<div class="pu3-contained" data-pu3-app="'+esc3(id)+'"><button type="button" class="pu3-contained-launch" onclick="pu3Launch(&quot;'+esc3(id)+'&quot;)"><span class="bloom-icon-symbol">'+symbol(id)+'</span><span>'+esc3(label(id))+'</span></button>'+(editing?'<button class="pu3-remove" onclick="pu3Remove(&quot;'+esc3(id)+'&quot;)" aria-label="移出软件">×</button>':'')+'</div>').join('');}
+const page=document.getElementById('puThirdPage');page.classList.toggle('pu3-editing',editing);
+}
+window.pu3EditText=function(k){if(!(k in texts))return;const v=prompt('修改文字',words[k]??texts[k]);if(v===null)return;words[k]=v.trim().slice(0,70);try{localStorage.setItem(TKEY,JSON.stringify(words))}catch(e){toast('文字保存失败')}render()};
+window.pu3Open=function(i){if(suppress){suppress=false;return}if(drag)return;active=i;document.getElementById('pu3Overlay').hidden=false;render()};
+window.pu3Close=function(){active=-1;document.getElementById('pu3Overlay').hidden=true;render()};
+window.pu3Rename=function(){if(active<0)return;const v=prompt('文件夹名称',folders[active].name);if(v===null)return;folders[active].name=v.trim().slice(0,20)||defaults[active];save();render()};
+window.pu3Launch=function(id){if(editing)return;pu3Close();openApp(id)};
+window.pu3Remove=function(id){if(active<0)return;folders[active].apps=folders[active].apps.filter(x=>x!==id);const p=weSaved.pages[2]||(weSaved.pages[2]=[]);if(!p.includes(id))p.push(id);try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){};save();bloomRenderHome();render()};
+window.pu3ToggleEdit=function(value){editing=!!value;render()};
+window.pu3AddApps=function(){if(active<0)return;const available=catalog().filter(id=>!taken().has(id));if(!available.length){toast('没有可添加的软件');return}const panel=document.getElementById('pu3FolderApps');const existing=document.getElementById('pu3Choose');if(existing)existing.remove();const choose=document.createElement('div');choose.id='pu3Choose';choose.style.cssText='grid-column:1/-1;display:grid;gap:8px;background:#f6f5f8;padding:12px;border-radius:12px;max-height:230px;overflow:auto';choose.innerHTML='<strong style="font-size:12px">选择要收纳的软件</strong>'+available.map(id=>'<label style="display:flex;gap:9px;align-items:center;font-size:12px"><input type="checkbox" value="'+esc3(id)+'">'+esc3(label(id))+'</label>').join('')+'<button type="button" id="pu3ConfirmAdd" style="padding:9px;background:white;border:1px solid #ddd;border-radius:9px">确认添加</button>';panel.appendChild(choose);choose.querySelector('#pu3ConfirmAdd').onclick=()=>{const ids=[...choose.querySelectorAll('input:checked')].map(x=>x.value);if(!ids.length){choose.remove();return}folders[active].apps.push(...ids);const page3=weSaved.pages[2]||[];weSaved.pages[2]=page3.filter(id=>!ids.includes(id));try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){}save();bloomRenderHome();render()};};
+const previous=bloomRenderHome;bloomRenderHome=function(){previous();for(const slot of ['thirdtopavatar','thirdtopphoto','thirdcenter','thirdbottom'])bloomSlot(slot);const third=document.getElementById('weThirdApps');if(third){const used=taken();third.querySelectorAll('.bloom-icon').forEach(el=>{const match=el.getAttribute('onclick')?.match(/go\('([^']+)'\)/);if(match&&used.has(match[1]))el.remove()})}render()};renderHome=bloomRenderHome;diyRenderHome=bloomRenderHome;
+// 长按后拖放到文件夹：只监听第三页，其他页面和 Dock 不受影响。
+const page=document.getElementById('puThirdPage');let timer=null,start=null;
+page.addEventListener('pointerdown',e=>{if(e.target.closest('.pu3-folder-overlay'))return;const target=e.target.closest('.pu3-folder,.pu3-extra-apps .bloom-icon');if(!target)return;const folder=target.closest('[data-folder]');const match=target.getAttribute('onclick')?.match(/go\('([^']+)'\)/);const id=match?.[1];start={x:e.clientX,y:e.clientY,target,id,folder:folder?Number(folder.dataset.folder):-1};clearTimeout(timer);timer=setTimeout(()=>{if(!start)return;editing=true;render();const ghost=document.createElement('div');ghost.className='pu3-drag-ghost';ghost.textContent=start.id?label(start.id):folders[start.folder]?.name;document.body.appendChild(ghost);drag={...start,ghost};ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';},500)},true);
+page.addEventListener('pointermove',e=>{if(start&&!drag&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>12){clearTimeout(timer);start=null}if(!drag)return;drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';document.querySelectorAll('#pu3Folders .pu3-folder').forEach(el=>el.classList.toggle('pu3-drop-active',el.getBoundingClientRect().left<=e.clientX&&el.getBoundingClientRect().right>=e.clientX&&el.getBoundingClientRect().top<=e.clientY&&el.getBoundingClientRect().bottom>=e.clientY));e.preventDefault()},true);
+function finish(e){clearTimeout(timer);start=null;if(!drag)return;const d=drag;drag=null;d.ghost.remove();document.querySelectorAll('.pu3-drop-active').forEach(el=>el.classList.remove('pu3-drop-active'));const dest=document.elementFromPoint(e.clientX,e.clientY)?.closest('#pu3Folders [data-folder]');if(dest&&d.id){const i=Number(dest.dataset.folder);folders.forEach(f=>f.apps=f.apps.filter(x=>x!==d.id));folders[i].apps.push(d.id);weSaved.pages[2]=(weSaved.pages[2]||[]).filter(x=>x!==d.id);try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weSaved))}catch(e){}save();bloomRenderHome()}else if(d.folder>=0&&dest&&Number(dest.dataset.folder)!==d.folder){const i=Number(dest.dataset.folder);[folders[i],folders[d.folder]]=[folders[d.folder],folders[i]];save();render()}suppress=true;setTimeout(()=>{suppress=false},350);}
+page.addEventListener('pointerup',finish,true);page.addEventListener('pointercancel',finish,true);page.addEventListener('click',e=>{if(suppress&&e.target.closest('.pu3-folder,.pu3-extra-apps .bloom-icon')){e.preventDefault();e.stopPropagation();suppress=false}},true);
+// 文件夹里的软件可长按进入整理，再用 × 移出；普通点击直接打开。
+page.addEventListener('pointerdown',e=>{const item=e.target.closest('.pu3-contained');if(!item)return;clearTimeout(timer);timer=setTimeout(()=>{editing=true;render()},500)},false);
+page.addEventListener('pointerup',()=>clearTimeout(timer),false);
+render();
+})();
 </script>
 </body></html>
