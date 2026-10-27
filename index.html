@@ -1176,6 +1176,90 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 #music .mr-friend-stats span{font-size:20px}
 #music .mr-friend-stats small{display:block;font-size:11px}
 #music .mr-settings-row{padding:20px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;font-size:14px}
+
+/* musicroom screenshot alignment pass 2026-10-27; no global selectors */
+#music{--mr-ink:#1b293b;--mr-muted:#9aa6b5}
+#music .mr-head b{font-size:18px;font-weight:600}
+#music .mr-head button{font-size:20px}
+#music .mr-profile-card h2{font-size:17px}
+#music .mr-profile-card>small{font-size:11px}
+#music .mr-section b{font-size:18px;font-weight:650}
+#music .mr-section small{font-size:10px}
+#music .mr-feature-text h3{font-size:15px;font-weight:600}
+#music .mr-feature-text small,#music .mr-feature-text p{font-size:11px}
+#music .mr-chips button{font-size:11px;padding:8px 14px}
+#music .mr-playlist-row b{font-size:14px}
+#music .mr-playlist-row small{font-size:11px}
+#music .mr-track-name b{font-size:13px}
+#music .mr-track-name small{font-size:11px}
+#music .mr-minehero h2{font-size:19px}
+#music .mr-horizontal b{font-size:12px}
+#music .mr-horizontal small{font-size:10px}
+#music .mr-nowplaying{font-size:10px;padding:12px 0 18px;letter-spacing:1px}
+#music .mr-nowplaying b{font-size:12px;display:inline-block;vertical-align:middle;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#music .mr-friends-strip{gap:15px;padding:12px 0 20px}
+#music .mr-friends-strip button{min-width:67px;width:67px;max-width:67px;overflow:hidden;font-size:11px}
+#music .mr-friends-strip small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+#music .mr-friend-ava{width:57px;height:57px;margin-bottom:8px}
+#music .mr-friends-list button{padding:12px 0;gap:13px;min-height:75px}
+#music .mr-friends-list b{font-size:14px;font-weight:600}
+#music .mr-friends-list small{font-size:11px;margin-top:5px}
+#music .mr-friends-list button>span{font-size:16px}
+#music .nm-mini{height:48px;margin:0 15px 4px;padding:4px 9px;border-radius:24px}
+#music .nm-mini .mr-mini-art{width:37px;height:37px}
+#music .nm-mini .mr-mini-title{font-size:12px}
+#music .nm-mini button{width:33px;height:33px;font-size:14px}
+#music .nm-nav{height:62px;min-height:62px}
+#music .nm-nav button{font-size:10px}
+#music .mr-navicon{font-size:22px}
+#music .mr-playerhead span{font-size:11px}
+#music .mr-vinyl{width:min(70vw,310px,35vh);max-height:35vh;position:relative;background:radial-gradient(circle at 37% 31%,#222327 0%,#111216 50%,#090a0c 100%);box-shadow:0 10px 32px #0003,0 0 48px 28px #03152750}
+#music .mr-vinyl:before{content:"";position:absolute;inset:5%;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 7px,#5a5b641f 8px,#0000 10px);pointer-events:none}
+#music .mr-vinyl:after{content:"";position:absolute;inset:-12%;border-radius:50%;background:radial-gradient(circle,transparent 49%,#061b2b25 62%,transparent 73%);pointer-events:none}
+#music .mr-vinyl-center{width:40%;height:40%;position:relative;z-index:1}
+#music .mr-song h1{font-size:clamp(21px,5.4vw,27px);font-weight:700}
+#music .mr-song p{font-size:13px}
+#music .mr-song button{font-size:24px}
+#music .mr-song-detail{font-size:13px;height:97px}
+#music .mr-song-detail small{font-size:11px}
+#music .mr-seek{font-size:10px}
+#music .mr-seek input{height:2px}
+#music .mr-play-controls .mr-mainplay{width:60px;height:60px;font-size:21px}
+#music .mr-play-controls button{font-size:21px}
+#music .mr-tools button{font-size:15px}
+#music .mr-lyrics p{font-size:15px}
+#music .mr-friend-hero{position:relative;min-height:290px;margin:0 -22px;padding:15px 24px 27px;background:linear-gradient(120deg,#303237cc,#11151ccc),linear-gradient(170deg,#515861,#14171b 70%);overflow:hidden}
+#music .mr-friend-hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(173deg,transparent 0 20px,#ffffff07 21px,transparent 23px);opacity:.35;pointer-events:none}
+#music .mr-profile-top{position:relative;display:flex;justify-content:space-between;z-index:2}
+#music .mr-profile-top button{border:0;background:none;color:#e1e3e8;font-size:20px;padding:2px 4px}
+#music .mr-profile-menu{position:absolute;right:0;top:30px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 10px 30px #0003;z-index:4}
+#music .mr-profile-menu button{color:#20242b;font-size:12px}
+#music .mr-profile-ident{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:30px;z-index:1}
+#music .mr-profile-copy{min-width:0;flex:1}
+#music .mr-profile-copy h1{font-size:21px;margin:0 0 10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#music .mr-profile-copy small{font-size:11px;color:#b0b1b7}
+#music .mr-profile-copy p{font-size:12px;margin:12px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#music .mr-friend-avatar{width:90px;height:90px;flex-shrink:0;margin:0;border:2px solid #ffffff9c}
+#music .mr-friend-stats{position:relative;z-index:1;gap:35px;margin-top:25px}
+#music .mr-friend-stats span{font-size:20px}
+#music .mr-friend-stats small{font-size:10px;margin-top:3px}
+#music .mr-friend-body{position:relative;background:#fff;margin:-18px -22px 0;border-radius:27px 27px 0 0;padding:26px 24px 50px;min-height:420px}
+#music .mr-favorite-label{display:flex;align-items:center;gap:10px;font-size:15px;color:#222;margin:4px 0 22px}
+#music .mr-favorite-label>span{color:#ed5582;font-size:18px}
+#music .mr-favorite-label b{font-size:16px}
+#music .mr-favorite-label small{color:#a2a4aa;font-size:11px}
+#music .mr-favorite-scroll{display:flex;overflow-x:auto;gap:14px;min-height:160px;margin-right:-24px;padding-bottom:12px}
+#music .mr-favorite-placeholder{flex:0 0 135px;color:#adb4c0;font-size:11px}
+#music .mr-favorite-placeholder-art{height:135px;width:135px;border-radius:15px;background:#f1f2f4;display:grid;place-items:center;font-size:25px;color:#c5cad1;margin-bottom:8px}
+#music .mr-friend-playlists{margin-top:20px}
+#music .mr-friend-playlist-row{display:flex;align-items:center;gap:14px;padding:10px 0}
+#music .mr-friend-playlist-art{width:62px;height:62px;border-radius:13px;background:#eceff2;display:grid;place-items:center;color:#9da7b6}
+#music .mr-friend-playlist-row>div:nth-child(2){flex:1}
+#music .mr-friend-playlist-row b{font-size:13px;display:block}
+#music .mr-friend-playlist-row small{font-size:11px;color:#9da7b6}
+#music .mr-friend-playlist-row>span{color:#cbd1d8}
+#music .mr-recent-title{margin-top:20px}
+#music .mr-recent-title .mr-section{margin:15px 0}
 </style></head>
 <body><main class="app">
 <!-- 每个功能都是一个独立 section，通过 active 类切换，不进行页面跳转 -->
@@ -5864,7 +5948,7 @@ function nmPlaylistRows(){return `<button class="mr-playlist-row" onclick="nm.pl
 function nmTracks(limit=0,q=''){let arr=tracks.map((t,i)=>({t,i})).filter(x=>nmSongName(x.t).toLowerCase().includes(q));if(nm.view==='playlist'&&nm.playlistType==='liked')arr=arr.filter(x=>nm.liked.includes(x.t.id));if(limit)arr=arr.slice(0,limit);return arr.map(({t,i})=>`<div class="mr-track"><span>${String(i+1).padStart(2,'0')}</span><button class="mr-track-art" onclick="playTrack(${i});nmOpenPlayer()">${nmCover(t)}</button><div class="mr-track-name" onclick="playTrack(${i});nmOpenPlayer()"><b>${nmEsc(nmTitle(t))}</b><small>${nmEsc(nmArtist(t))} · ${timeFmt(t.duration||0)}</small></div><button class="mr-heart" onclick="nmLikeSong(${i})">${nm.liked.includes(t.id)?'♥':MR_ICON.heart}</button><button class="mr-track-play" onclick="playTrack(${i});nmOpenPlayer()">▶</button></div>`).join('')||`<div class="mr-empty">还没有歌曲<br><button onclick="nmOpen('import')">＋ 导入本地音乐</button></div>`}
 function nmPlaylist(){let liked=nm.playlistType==='liked';return `<div class="mr-playlist-hero"><button onclick="nmBack()">${MR_ICON.back}</button><button onclick="nmShuffle()">${MR_ICON.share}</button><div class="mr-playlist-cover">${nmCover(liked?tracks.find(t=>nm.liked.includes(t.id)):tracks[0])}</div><div class="mr-playlist-description"><small>PLAYLIST ARCHIVE</small><h2>${liked?'我喜欢的音乐':'我的歌单'}</h2><p>${liked?nm.liked.length:tracks.length} tracks</p></div></div><div class="mr-playlist-body">${nmTracks()}<button class="mr-import" onclick="nmOpen('import')">＋ 导入歌曲</button></div>`}
 function mrFriends(){let chars=puChars.list||[];return `${mrHead()}<div class="mr-nowplaying"><span>▥</span> NOW PLAYING <b>${nmEsc(nmTitle(nmSong()))}</b> · ${nmEsc(nmArtist(nmSong()))}</div><div class="mr-friends-strip">${chars.map(c=>`<button onclick="nm.friendId='${nmEsc(c.id)}';nmOpen('friendprofile')"><div class="mr-friend-ava">${nmAvatar(nmAvatarOf(c))}</div><small>${nmEsc(puCharName(c))}</small></button>`).join('')}</div><div class="mr-friends-list">${chars.map(c=>`<button onclick="nm.friendId='${nmEsc(c.id)}';nmOpen('friendprofile')"><div class="mr-friend-ava">${nmAvatar(nmAvatarOf(c))}</div><div><b>${nmEsc(puCharName(c))}</b><small>音乐好友</small></div><span>➤</span></button>`).join('')||'<p class="mr-empty">还没有好友，添加 Char 后会显示在这里。</p>'}</div>`}
-function mrFriendProfile(){let c=puChars.list.find(x=>String(x.id)===String(nm.friendId));if(!c)return mrFriends();return `<div class="mr-friend-hero"><button onclick="nmBack()">${MR_ICON.back}</button><div class="mr-friend-avatar">${nmAvatar(nmAvatarOf(c))}</div><h1>${nmEsc(puCharName(c))}</h1><small>musicroom profile</small><div class="mr-friend-stats"><span>0<small>歌单</small></span><span>0<small>曲目</small></span><span>0<small>共鸣</small></span></div></div><div class="mr-friend-body">${mrSection('我喜欢的音乐','FAVORITES')}<p class="mr-empty">暂无公开音乐</p>${mrSection('最近动态','RECENT ACTIVITY')}<p class="mr-empty">暂无动态</p></div>`}
+function mrFriendProfile(){let c=puChars.list.find(x=>String(x.id)===String(nm.friendId));if(!c)return mrFriends();return `<div class="mr-friend-hero"><div class="mr-profile-top"><button onclick="nmBack()" aria-label="返回">${MR_ICON.back}</button><button class="mr-profile-more" aria-label="更多" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden">···</button><div class="mr-profile-menu" hidden><button onclick="this.closest('.mr-profile-menu').hidden=true">关闭</button></div></div><div class="mr-profile-ident"><div class="mr-profile-copy"><h1>${nmEsc(puCharName(c))}</h1><small>aka ${nmEsc(puCharName(c))}</small><p>${nmEsc(c.signature||c.bio||'')}</p></div><div class="mr-friend-avatar">${nmAvatar(nmAvatarOf(c))}</div></div><div class="mr-friend-stats"><span>0<small>歌单</small></span><span>0<small>曲目</small></span><span>0<small>共鸣</small></span></div></div><div class="mr-friend-body"><div class="mr-favorite-label"><span>♥</span><b>我喜欢的音乐</b><small>0 首</small></div><div class="mr-favorite-scroll"><div class="mr-favorite-placeholder"><div class="mr-favorite-placeholder-art">♫</div><small>暂无公开音乐</small></div></div><div class="mr-friend-playlists"><div class="mr-friend-playlist-row"><div class="mr-friend-playlist-art">♫</div><div><b>歌单</b><small>0 tracks</small></div><span>›</span></div></div><div class="mr-recent-title">${mrSection('最近动态','RECENT ACTIVITY')}</div><p class="mr-empty">暂无动态</p></div>`}
 function mrSettings(){return `${mrHead()}${mrSection('个人名片','PROFILE CARD')}<div class="mr-settings-row" onclick="document.getElementById('mrCardFile').click()">更换名片背景 <span>›</span></div><div class="mr-settings-row" onclick="nmOpen('import')">导入本地歌曲 <span>›</span></div>`}
 function nmNavRender(){let labels=['Feed','Mine','Friends'];let ids=['home','mine','friends'];let nav=document.getElementById('nmNav');nav.innerHTML=labels.map((label,i)=>`<button class="${nm.tab===ids[i]?'on':''}" onclick="nmTab('${ids[i]}')"><span class="mr-navicon">${i===0?'◉':i===1?'◎':'♙'}</span><span>${label}</span></button>`).join('')}
 function nmRender(){let main=document.getElementById('nmMain');if(!main)return;let overlay=document.getElementById('nmOverlay'),nav=document.getElementById('nmNav'),mini=document.getElementById('nmMini');nav.hidden=false;mini.hidden=true;overlay.hidden=true;main.innerHTML=nm.view==='import'?nmImport():nm.view==='playlist'?nmPlaylist():nm.view==='friendprofile'?mrFriendProfile():nm.view==='mrsettings'?mrSettings():nm.tab==='friends'?mrFriends():nm.tab==='mine'?nmMine():nm.tab==='search'?nmSearch():nmHome();nmNavRender();if(['player','lyrics'].includes(nm.view)){overlay.hidden=false;nav.hidden=true;overlay.innerHTML=nmPlayer();nmProgress()}else if(nmSong()){mini.hidden=false;mini.innerHTML=nmMini()}}
