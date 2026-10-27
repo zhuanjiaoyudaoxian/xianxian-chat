@@ -586,6 +586,27 @@ html[data-pu-mode="dark"] .wei-theme-dialog .wei-theme-cancel{color:#aaaab3}
 #music .mr-wall-title small{display:block;font-weight:400;font-size:11px;color:#9aa9b8;margin:4px 0 0 24px}
 #music .mr-wall-preview{height:100px;border-radius:13px;background:#eef2f8;color:#a5b2c2;display:grid;place-items:center;background-size:cover;background-position:center}
 #music .mr-wall-select{width:100%;margin:12px 0 14px;background:#eef2f8;border:0;border-radius:10px;color:#657b91;padding:11px}
+
+/* Second desktop page only: reference-card layout; other pages and dock unchanged. */
+#home .pu-second-redesign{display:flex;flex-direction:column;gap:0;padding-top:8px;padding-bottom:8px;overflow:hidden}
+#home .pu-second-redesign .pu-second-card{position:relative;flex:0 0 auto;width:100%;height:clamp(195px,31vh,270px);border-radius:27px;background:#fff;box-shadow:0 9px 24px #7777770d,0 0 0 1px #dadce02e;overflow:hidden}
+#home .pu-second-card-banner{position:relative;height:56%;background:linear-gradient(147deg,#f8f8f9 1%,#eeeff1 44%,#e3e4e7 100%)}
+#home .pu-second-spark{position:absolute;font-size:15px;color:#d4d5d9;font-weight:300}#home .pu-second-spark-left{top:12px;left:13px}#home .pu-second-spark-right{top:16px;right:15px;color:#fff}
+#home .pu-second-card-body{position:relative;height:44%;padding:0 13px 12px;background:rgba(255,255,255,.98);border-radius:24px 24px 0 0;margin-top:-12px;box-shadow:0 -2px 12px #fff8}
+#home .pu-second-card-notch{position:absolute;top:-10px;left:33px;width:23px;height:23px;background:#fff;transform:rotate(45deg);border-radius:3px;box-shadow:-2px -2px 4px #fff4}
+#home .pu-second-card-profile{position:relative;display:flex;align-items:center;gap:11px;height:65%;z-index:1}
+#home .pu-second-avatar{flex:0 0 auto;width:clamp(42px,6.7vh,57px);height:clamp(42px,6.7vh,57px);padding:0;border:3px solid #fff;border-radius:50%;background:linear-gradient(140deg,#f2f3f5,#dfe1e6);box-shadow:0 2px 9px #9ca1aa24;color:#adb1b9;overflow:hidden;font-size:16px;display:flex;align-items:center;justify-content:center}
+#home .pu-second-avatar img{width:100%;height:100%;object-fit:cover}
+#home .pu-second-identity{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;border:0;background:none;padding:0;text-align:left}
+#home .pu-second-identity strong{font-size:clamp(13px,1.9vh,16px);font-weight:650;letter-spacing:.1px;color:#35363a;max-width:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#home .pu-second-identity span{font-size:9px;letter-spacing:2.5px;color:#a9abb0;text-transform:uppercase;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:100%}
+#home .pu-second-sign{display:block;width:100%;height:32%;min-height:27px;max-height:42px;padding:5px 12px;text-align:left;border:1px solid #e6e7ea;border-radius:14px;background:#f4f4f6;color:#85878d;font-size:clamp(10px,1.45vh,12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:inset 0 1px 3px #77777709}
+#home .pu-second-redesign .bloom-grid-second{margin-top:clamp(15px,3vh,27px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:0 0 auto;justify-items:center}
+#home .pu-second-redesign .pu-second-spacer{flex:1;min-height:8px}
+#home .pu-second-redesign .bloom-quote{position:relative;border:1px solid #e4e0db;border-radius:0;background:#fffcf9f0;min-height:clamp(54px,9vh,78px);margin:0 0 6px;padding:13px 12px;box-shadow:0 4px 13px #66666610;isolation:isolate}
+#home .pu-second-redesign .bloom-quote::before,#home .pu-second-redesign .bloom-quote::after{content:"";position:absolute;left:-2px;right:-2px;height:7px;background:radial-gradient(circle at 6px 0,transparent 4px,#fffcf9 4.4px) repeat-x;background-size:13px 7px;pointer-events:none}
+#home .pu-second-redesign .bloom-quote::before{top:-5px;transform:rotate(180deg)}#home .pu-second-redesign .bloom-quote::after{bottom:-5px}
+
 </style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
 </style><style>
@@ -1326,21 +1347,21 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     
     <div class="pu44-clock-hidden" id="homeTime"></div><div class="pu44-clock-hidden" id="bloomBigDate"></div>
   </div>
-  <div class="bloom-page bloom-page-two wei-page-two">
-    <div class="wei-profile-shell">
-      <button class="wei-profile-cover" id="bloomImg_cover" onclick="bloomPick('cover')" aria-label="更换名片背景">＋<small>更换背景</small></button>
-      <div class="wei-profile-card">
-        <button class="wei-profile-avatar" id="bloomImg_myavatar" onclick="bloomPick('myavatar')" aria-label="更换头像">＋</button>
-        <div class="wei-profile-identity"><strong id="bloomCoverName" onclick="bloomEditText('profile')">我的名片</strong><small>PERSONAL SPACE</small></div>
-        <button class="wei-profile-sign" id="bloomCoverQuote" onclick="bloomEditText('profile')">点击编辑个性签名</button>
+  <div class="bloom-page bloom-page-two pu-second-redesign">
+    <div class="pu-second-card" aria-label="第二页个人名片">
+      <div class="pu-second-card-banner"><span class="pu-second-spark pu-second-spark-left">♡</span><span class="pu-second-spark pu-second-spark-right">✧</span></div>
+      <div class="pu-second-card-body">
+        <span class="pu-second-card-notch" aria-hidden="true"></span>
+        <div class="pu-second-card-profile">
+          <button type="button" class="pu-second-avatar" id="bloomImg_secondavatar" onclick="bloomPick('secondavatar')" aria-label="更换名片头像">＋</button>
+          <button type="button" class="pu-second-identity" onclick="puSecondEditCard()" aria-label="编辑名片昵称和标签"><strong id="puSecondName">我的名片</strong><span id="puSecondTag">SECTOR NINE</span></button>
+        </div>
+        <button type="button" class="pu-second-sign" id="puSecondSign" onclick="puSecondEditCard()" aria-label="编辑个性签名">点击编辑个性签名</button>
       </div>
     </div>
-    <div class="wei-page-two-apps" id="bloomGrid2" aria-label="第二页桌面软件"></div>
-    <div class="wei-page-two-bottom" aria-label="可编辑的小标签">
-      <button onclick="weiEditTag(0)" data-wei-tag="0"><small>01</small><span>猫在键盘上踩字</span></button>
-      <button onclick="weiEditTag(1)" data-wei-tag="1"><small>02</small><span>冰箱还有布丁</span></button>
-      <button onclick="weiEditTag(2)" data-wei-tag="2"><small>03</small><span>别忘记交电费</span></button>
-    </div>
+    <div class="bloom-grid bloom-grid-second" id="bloomGrid2"></div>
+    <div class="pu-second-spacer" aria-hidden="true"></div>
+    <button class="bloom-quote" onclick="bloomEditText('quote')"><span id="bloomQuoteText">人的心臟都在左邊，要怎樣擁抱才能心心相印</span></button>
   </div>
   <div class="bloom-page bloom-page-three pu46-new-third"><div id="weThirdApps"></div>
     <article class="pu-newspaper" aria-label="可编辑的每日小报">
@@ -1951,7 +1972,7 @@ function bloomPick(slot){bloomPickSlot=slot;$('bloomFile').click()}
 async function bloomFileChosen(input){const f=input.files?.[0];input.value='';if(!f)return;if(!f.type.startsWith('image/'))return toast('请选择图片');if(f.size>8*1024*1024)return toast('图片请小于 8MB');let id='bloom_'+uid();try{let db=await diyOpenAssets();await new Promise((resolve,reject)=>{let req=db.transaction('diy_assets','readwrite').objectStore('diy_assets').put({id,name:f.name,blob:f});req.onsuccess=resolve;req.onerror=()=>reject(req.error)});bloomMeta[bloomPickSlot]=id;bloomSave();await diyLoadAssets();bloomRenderHome();toast('图片已保存 ♡')}catch(e){console.error(e);toast('导入失败，请检查存储空间')}}
 function bloomSlot(slot){let id=bloomMeta[slot],url=id&&diyAssetUrl(id),el=$('bloomImg_'+slot);if(!el)return;if(url){el.innerHTML='<img alt="自定义图片" src="'+url+'">'}else{el.innerHTML=(slot==='chatleft'||slot==='chatright')?'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>':'＋<small>'+(slot==='musicart'?'导入图片':slot==='myavatar'?'头像':'导入图片')+'</small>'}}
 function bloomIcon(id){let item=appItems.find(a=>a[0]===id);if(!item)return '';let i=diySaved.icons[id]||{},custom=(window.weiDeskCustom||{})[id]||{},url=custom.image||diyAssetUrl(i.asset);return `<button class="bloom-icon" onclick="go('${id}')"><span class="bloom-icon-symbol">${url?'<img alt="" src="'+url+'">':(id==='calls'?'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.1 10a16 16 0 0 0 6 6l1.5-1.9a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.6 2.9Z"/></svg>':item[1])}</span><span>${esc(custom.name!==undefined?custom.name:(i.name||item[2]))}</span></button>`}
-function bloomRenderHome(){bloomClockApply();const d=new Date();$('homeTime').textContent=d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});$('homeDate').textContent=d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('bloomBigDate').textContent=$('homeDate').textContent;$('lockQuote').textContent=state.settings.quote;$('footerText').textContent=state.settings.footer;const order=[...new Set([...(diySaved.order||[]),...appItems.map(a=>a[0])])];$('bloomGrid1').innerHTML=['chat','world','memories','photos'].map(bloomIcon).join('');$('bloomGrid2').innerHTML=['notes','persona','backup'].map(bloomIcon).join('');$('bloomDock').innerHTML=['music','diy','settings'].map(id=>id==='diy'?`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`:bloomIcon(id)).join('');for(let slot of ['polaroid1','polaroid2','polaroid3','polaroid4','cover','myavatar','musicart','us1','us2','gallery1','gallery2','gallery3','round1','round2','round3','round4','paperphoto'])bloomSlot(slot);$('bloomCoverName')&&($('bloomCoverName').textContent=bloomMeta.myname||'我的名片');$('bloomCoverQuote')&&($('bloomCoverQuote').textContent=bloomMeta.mysign||'点击编辑个性签名');$('bloomQuoteText').textContent=bloomMeta.quote??'人的心臟都在左邊，要怎樣擁抱才能心心相印';$('appGrid').innerHTML=order.filter(id=>!['contacts','moments','profile','api'].includes(id)).map(bloomIcon).join('');$('bloomAllApps').innerHTML=order.filter(id=>!['contacts','moments','profile','api'].includes(id)).map(bloomIcon).join('')+`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`;diyApply(diySaved);if(typeof puPaperRender==='function')puPaperRender();bloomSyncMusic()}
+function bloomRenderHome(){bloomClockApply();const d=new Date();$('homeTime').textContent=d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});$('homeDate').textContent=d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('bloomBigDate').textContent=$('homeDate').textContent;$('lockQuote').textContent=state.settings.quote;$('footerText').textContent=state.settings.footer;const order=[...new Set([...(diySaved.order||[]),...appItems.map(a=>a[0])])];$('bloomGrid1').innerHTML=['chat','world','memories','photos'].map(bloomIcon).join('');$('bloomGrid2').innerHTML=['notes','persona','backup'].map(bloomIcon).join('');$('bloomDock').innerHTML=['music','diy','settings'].map(id=>id==='diy'?`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`:bloomIcon(id)).join('');for(let slot of ['polaroid1','polaroid2','polaroid3','polaroid4','cover','myavatar','musicart','us1','us2','gallery1','gallery2','gallery3','round1','round2','round3','round4','paperphoto','secondavatar'])bloomSlot(slot);$('bloomCoverName')&&($('bloomCoverName').textContent=bloomMeta.myname||'我的名片');$('bloomCoverQuote')&&($('bloomCoverQuote').textContent=bloomMeta.mysign||'点击编辑个性签名');$('puSecondName').textContent=bloomMeta.secondname||'我的名片';$('puSecondTag').textContent=bloomMeta.secondtag||'SECTOR NINE';$('puSecondSign').textContent=bloomMeta.secondsign||'点击编辑个性签名';$('bloomQuoteText').textContent=bloomMeta.quote??'人的心臟都在左邊，要怎樣擁抱才能心心相印';$('appGrid').innerHTML=order.filter(id=>!['contacts','moments','profile','api'].includes(id)).map(bloomIcon).join('');$('bloomAllApps').innerHTML=order.filter(id=>!['contacts','moments','profile','api'].includes(id)).map(bloomIcon).join('')+`<button class="bloom-icon" onclick="go('diy');diyStart()"><span class="bloom-icon-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg></span><span>美化</span></button>`;diyApply(diySaved);if(typeof puPaperRender==='function')puPaperRender();bloomSyncMusic()}
 function bloomPage(n){const el=$('bloomPages');el.scrollTo({left:el.clientWidth*n,behavior:'smooth'})}
 $('bloomPages').addEventListener('scroll',()=>{let el=$('bloomPages'),n=Math.max(0,Math.min(2,Math.round(el.scrollLeft/el.clientWidth)));document.querySelectorAll('#bloomDots button').forEach((b,i)=>b.classList.toggle('on',i===n))},{passive:true});
 function bloomEdit(){bloomEditing=!bloomEditing;$('home').classList.toggle('bloom-editing',bloomEditing);toast(bloomEditing?'点击照片可导入图片；美化 APP 可更换图标':'整理完成')}
@@ -1964,7 +1985,7 @@ const bloomClear=clearAll;clearAll=async function(){await bloomClear();if(!local
 const WE_DESK_KEY='wei_desktop_editor_v1';
 const weClone=o=>JSON.parse(JSON.stringify(o));
 const weCatalog=appItems.map(a=>({id:a[0],name:a[2]}));
-const weDefaults={pages:[['chat','world','memories','photos'],['notes','persona','backup'],[]],widgets:[['clock','polaroid1','dialogue','music'],[],['cover','us','paper']],size:52,gap:8,radius:12,labels:true,dock:true};
+const weDefaults={pages:[['chat','world','memories','photos'],['notes','persona','backup'],[]],widgets:[['clock','polaroid1','dialogue','music'],['collage','quote'],['cover','us','paper']],size:52,gap:8,radius:12,labels:true,dock:true};
 let weSaved;try{weSaved={...weDefaults,...JSON.parse(localStorage.getItem(WE_DESK_KEY)||'{}')}}catch(e){weSaved=weClone(weDefaults)}
 let weDraft=weClone(weSaved),wePage=0,weMode='apps',weSelected='',weNotice='';
 const weWidgets={clock:['时钟',4,1],polaroid1:['照片',2,2],dialogue:['对话组件',4,2],music:['音乐组件',2,2],collage:['相片拼贴',4,3],quote:['语录',4,1],cover:['个人封面',4,3],us:['圆形照片',4,2],paper:['每日小报',4,3]};
@@ -1984,6 +2005,7 @@ window.weInstallDesktopEditor=function(){const weOldOpen=window.weiModernOpen;wi
 /* 2.4: editable quote, self profile and synchronized music widgets */
 function bloomEditDialogue(side){const key=side==='left'?'chatlefttext':'chatrighttext';const fallback=side==='left'?'因为是心甘情愿地沉溺':'即使死亡也无需被拯救。';const v=prompt('修改'+(side==='left'?'左侧':'右侧')+'对话',bloomMeta[key]??fallback);if(v===null)return;bloomMeta[key]=v.trim().slice(0,120)||fallback;bloomSave();bloomRenderHome()}
 function bloomEditText(which){if(which==='quote'){let v=prompt('修改第二页文案',bloomMeta.quote||'');if(v===null)return;bloomMeta.quote=v.trim().slice(0,180);bloomSave();bloomRenderHome();return}let name=prompt('修改我的名片名称',bloomMeta.myname||'');if(name===null)return;let sign=prompt('修改个性签名',bloomMeta.mysign||'');if(sign===null)return;bloomMeta.myname=name.trim().slice(0,35)||'我的名片';bloomMeta.mysign=sign.trim().slice(0,100);bloomSave();bloomRenderHome()}
+function puSecondEditCard(){const name=prompt('第二页名片昵称',bloomMeta.secondname||'我的名片');if(name===null)return;const tag=prompt('名片小标签',bloomMeta.secondtag||'SECTOR NINE');if(tag===null)return;const sign=prompt('名片个性签名',bloomMeta.secondsign||'');if(sign===null)return;bloomMeta.secondname=name.trim().slice(0,40)||'我的名片';bloomMeta.secondtag=tag.trim().slice(0,35);bloomMeta.secondsign=sign.trim().slice(0,160);bloomSave();bloomRenderHome()}
 function bloomToggleRepeat(){let a=$('audio');a.loop=!a.loop;document.querySelectorAll('[data-bloom-repeat]').forEach(b=>b.classList.toggle('enabled',a.loop));toast(a.loop?'单曲循环已开启':'单曲循环已关闭')}
 const BLOOM_ICON_PLAY='<svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5.5 19 12 9 18.5Z"/></svg>';const BLOOM_ICON_PAUSE='<svg class="bloom-line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>';
 function bloomSyncMusic(){let a=$('audio');if(!a)return;let name=tracks?.[trackIndex]?.name||'暂无播放歌曲';document.querySelectorAll('[data-bloom-song]').forEach(el=>el.textContent=name);document.querySelectorAll('.bloom-seek').forEach(el=>{el.value=Number.isFinite(a.duration)&&a.duration?100*a.currentTime/a.duration:0});document.querySelectorAll('[data-bloom-play]').forEach(el=>{el.innerHTML=a.paused?BLOOM_ICON_PLAY:BLOOM_ICON_PAUSE});document.querySelectorAll('[data-bloom-repeat]').forEach(el=>el.classList.toggle('enabled',a.loop))}
@@ -6033,56 +6055,5 @@ function mrSetPlayerWall(input){mrSetWallFile(input,'mr_player_wall')}
 function mrSetWallFile(input,key){let f=input.files?.[0];input.value='';if(!f)return;if(f.size>3*1024*1024)return toast('请选择小于 3MB 的图片');let r=new FileReader();r.onload=()=>{try{localStorage.setItem(key,r.result);if(key==='mr_global_wall'){document.getElementById('mrWallPreview').style.backgroundImage='url('+JSON.stringify(r.result)+')';document.getElementById('mrWallPreview').textContent='';document.getElementById('nmMain').style.backgroundImage='url('+JSON.stringify(r.result)+')';document.getElementById('nmMain').style.backgroundSize='cover'}else{let ov=document.getElementById('nmOverlay');if(!ov.hidden)ov.style.backgroundImage='linear-gradient(#061b32aa,#061b32aa),url('+JSON.stringify(r.result)+')'}toast('壁纸已保存')}catch(e){toast('图片保存失败，可能是浏览器空间不足')}};r.readAsDataURL(f)}
 function mrRestoreFloat(){let b=document.getElementById('mrSettingsFloat');if(!b)return;try{let p=JSON.parse(localStorage.getItem('mr_float_pos'));if(p){b.style.right='auto';b.style.left=(p.x?Math.max(12,b.parentElement.clientWidth-b.offsetWidth-12):12)+'px';b.style.top=Math.max(10,Math.min(b.parentElement.clientHeight-b.offsetHeight-10,p.y*(b.parentElement.clientHeight-b.offsetHeight)))+'px'}}catch(e){}let bg=localStorage.getItem('mr_global_wall');if(bg){let m=document.getElementById('nmMain');m.style.backgroundImage='url('+JSON.stringify(bg)+')';m.style.backgroundSize='cover'}}
 mrRestoreFloat();
-</script>
-
-<style id="wei-second-page-add-app-css">
-#home .wei-page-two{display:flex;flex-direction:column;gap:clamp(10px,1.7vh,18px);padding:6px 16px 9px!important;min-height:0}
-#home .wei-profile-shell{position:relative;flex:0 0 auto;padding-bottom:0;filter:drop-shadow(0 5px 13px #65708010)}
-#home .wei-profile-cover{position:relative;display:flex;align-items:flex-start;justify-content:flex-end;width:100%;height:clamp(128px,23vh,215px);border:0;border-radius:25px 25px 0 0;padding:12px 13px;background:linear-gradient(130deg,#f5f5f7,#e7e8ec);color:#9fa4ae;font-size:13px;overflow:hidden;background-size:cover;background-position:center}
-#home .wei-profile-cover small{font-size:10px;padding:6px 10px;background:#ffffffbd;border-radius:15px}
-#home .wei-profile-cover img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:25px 25px 0 0}
-#home .wei-profile-card{position:relative;margin-top:-12px;padding:15px 13px 12px;border-radius:25px;background:#fffffff2;border:1px solid #ededf0;display:grid;grid-template-columns:54px minmax(0,1fr);gap:5px 11px;align-items:center}
-#home .wei-profile-avatar{width:52px;height:52px;border:3px solid white;border-radius:50%;background:#e7e8ed;color:#aab0b9;font-size:18px;overflow:hidden;display:grid;place-items:center;padding:0;margin-top:-30px;box-shadow:0 2px 10px #0001}
-#home .wei-profile-avatar img{width:100%;height:100%;object-fit:cover}
-#home .wei-profile-identity{min-width:0;display:flex;flex-direction:column;gap:3px}
-#home .wei-profile-identity strong{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#35343b}
-#home .wei-profile-identity small{font-size:8px;letter-spacing:2px;color:#aaaeb8}
-#home .wei-profile-sign{grid-column:1/-1;width:100%;border:1px solid #ececf0;background:#f6f6f8;color:#777b84;text-align:left;padding:9px 10px;border-radius:13px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#home .wei-page-two-apps{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:min-content;align-content:start;gap:clamp(9px,1.7vh,16px) 5px;overflow-y:auto;padding:5px 1px;scrollbar-width:none}
-#home .wei-page-two-apps::-webkit-scrollbar{display:none}
-#home .wei-page-two-bottom{flex:0 0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:7px;padding:9px 2px 5px;border-top:1px solid #e9e9ec}
-#home .wei-page-two-bottom button{display:flex;align-items:center;gap:6px;border:1px solid #dedee3;background:#fffffff0;border-radius:5px;color:#777b85;padding:7px 9px;max-width:100%;font-size:10px;box-shadow:0 2px 5px #00000008}
-#home .wei-page-two-bottom button small{font-size:9px;color:#adb1bb}
-#home .wei-add-icon{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;color:#9da6b1;font-size:10px;padding:0;min-width:0}
-#home .wei-add-icon>span:first-child{width:var(--we-icon-size,52px);height:var(--we-icon-size,52px);border:1px dashed #cdd3da;border-radius:var(--we-icon-radius,12%);background:#ffffff8c;display:grid;place-items:center;font-size:26px;font-weight:200;box-shadow:0 2px 9px #00000008}
-#home .wei-add-icon>span:last-child{font-size:10px}
-#home .wei-add-icon:active>span:first-child{background:#e9ebef}
-#weiAddAppPanel{display:none;position:absolute;inset:0;z-index:40;background:#0005;backdrop-filter:blur(5px);align-items:flex-end;justify-content:center}
-#weiAddAppPanel.open{display:flex}
-#weiAddAppPanel .wei-add-sheet{background:#fff;width:100%;max-height:72%;border-radius:25px 25px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));overflow:auto}
-#weiAddAppPanel .wei-add-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-#weiAddAppPanel h3{margin:0;font-size:16px;font-weight:600}
-#weiAddAppPanel .wei-add-head button{border:0;background:#f2f2f4;border-radius:50%;width:32px;height:32px;font-size:20px}
-#weiAddAppChoices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px 4px}
-#weiAddAppChoices .bloom-icon{font-size:11px}
-#weiAddAppChoices .bloom-icon-symbol{width:52px;height:52px;border-radius:14px;background:#f3f2f4;border:1px solid #eee;display:grid;place-items:center;margin:auto}
-@media(max-height:690px){#home .wei-profile-cover{height:115px}#home .wei-profile-card{padding:10px 12px}#home .wei-page-two{gap:7px}#home .wei-page-two-bottom{padding-top:5px}#home .wei-page-two-bottom button{padding:5px 7px}}
-</style>
-<div id="weiAddAppPanel" role="dialog" aria-modal="true" aria-label="添加桌面软件"><div class="wei-add-sheet"><div class="wei-add-head"><h3>添加软件到桌面</h3><button onclick="weiCloseAddApp()" aria-label="关闭">×</button></div><div id="weiAddAppChoices"></div></div></div>
-<script>
-(function(){
-const tagKey='wei_second_page_tags_v1';
-const tagDefaults=['猫在键盘上踩字','冰箱还有布丁','别忘记交电费'];
-function tags(){try{let t=JSON.parse(localStorage.getItem(tagKey)||'null');return Array.isArray(t)&&t.length===3?t:tagDefaults}catch(e){return tagDefaults}}
-function paintTags(){const t=tags();document.querySelectorAll('#home [data-wei-tag]').forEach(b=>{let i=Number(b.dataset.weiTag);const sp=b.querySelector('span');if(sp)sp.textContent=t[i]})}
-window.weiEditTag=function(i){let t=tags(),v=prompt('编辑第 '+(i+1)+' 个小标签',t[i]);if(v===null)return;t[i]=v.trim().slice(0,24)||tagDefaults[i];localStorage.setItem(tagKey,JSON.stringify(t));paintTags()};
-let targetPage=1;
-window.weiCloseAddApp=function(){document.getElementById('weiAddAppPanel')?.classList.remove('open')};
-window.weiOpenAddApp=function(page){targetPage=page;const panel=document.getElementById('weiAddAppPanel'),root=document.getElementById('weiAddAppChoices');if(!panel||!root)return;const used=new Set((weSaved.pages||[]).flat());const avail=weCatalog.filter(a=>!used.has(a.id));root.innerHTML=avail.length?avail.map(a=>{const html=bloomIcon(a.id);return html.replace(/onclick="go\('[^']+'\)"/,`onclick="weiChooseAddApp('${a.id}')"`)}).join(''):'<p style="grid-column:1/-1;text-align:center;color:#999">所有软件都已放到桌面</p>';panel.classList.add('open')};
-window.weiChooseAddApp=function(id){if(!weCatalog.some(a=>a.id===id))return;const next=weClone(weSaved);next.pages.forEach((arr,i)=>next.pages[i]=arr.filter(x=>x!==id));next.pages[targetPage].push(id);const err=weValidate(next,targetPage);if(err){toast(err);return}try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(next));weSaved=next;weDraft=weClone(next);weiCloseAddApp();bloomRenderHome();toast('已添加到桌面')}catch(e){toast('添加失败：'+e.message)}};
-function addSlots(){const containers=['bloomGrid1','bloomGrid2','weThirdApps'];containers.forEach((id,p)=>{const grid=document.getElementById(id);if(!grid)return;grid.querySelectorAll('.wei-add-icon').forEach(b=>b.remove());const count=(weSaved.pages[p]||[]).length;const capacity=p===0?4:p===1?12:8;if(count>=capacity)return;const btn=document.createElement('button');btn.className='wei-add-icon';btn.setAttribute('aria-label','在空位添加软件');btn.innerHTML='<span>＋</span><span>添加软件</span>';btn.onclick=()=>weiOpenAddApp(p);grid.appendChild(btn)})}
-const prev=weApplyHome;weApplyHome=function(d){prev(d);addSlots();paintTags()};
-try{weApplyHome(weSaved)}catch(e){console.warn('桌面快捷入口等待初始化',e)}
-})();
 </script>
 </body></html>
