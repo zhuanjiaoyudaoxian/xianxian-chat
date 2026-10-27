@@ -606,6 +606,39 @@ html[data-pu-mode="dark"] .wei-theme-dialog .wei-theme-cancel{color:#aaaab3}
 #home .pu-second-redesign .bloom-quote{position:relative;border:1px solid #e4e0db;border-radius:0;background:#fffcf9f0;min-height:clamp(54px,9vh,78px);margin:0 0 6px;padding:13px 12px;box-shadow:0 4px 13px #66666610;isolation:isolate}
 #home .pu-second-redesign .bloom-quote::before,#home .pu-second-redesign .bloom-quote::after{content:"";position:absolute;left:-2px;right:-2px;height:7px;background:radial-gradient(circle at 6px 0,transparent 4px,#fffcf9 4.4px) repeat-x;background-size:13px 7px;pointer-events:none}
 #home .pu-second-redesign .bloom-quote::before{top:-5px;transform:rotate(180deg)}#home .pu-second-redesign .bloom-quote::after{bottom:-5px}
+/* Page two only: fine, continuous perforated postage-stamp edge. */
+#home .pu-second-redesign .bloom-quote{
+  border:0!important;border-radius:0!important;
+  background:#fffdfbf2!important;
+  position:relative;isolation:isolate;
+  padding:17px 17px!important;
+  box-shadow:0 3px 10px #55483b12!important;
+  -webkit-mask-image:
+    radial-gradient(circle at 50% 0,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 50% 100%,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 0 50%,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 100% 50%,transparent 3.4px,#000 3.8px);
+  -webkit-mask-size:12px 100%,12px 100%,100% 12px,100% 12px;
+  -webkit-mask-repeat:repeat-x,repeat-x,repeat-y,repeat-y;
+  -webkit-mask-composite:source-in,source-in,source-in;
+  mask-image:
+    radial-gradient(circle at 50% 0,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 50% 100%,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 0 50%,transparent 3.4px,#000 3.8px),
+    radial-gradient(circle at 100% 50%,transparent 3.4px,#000 3.8px);
+  mask-size:12px 100%,12px 100%,100% 12px,100% 12px;
+  mask-repeat:repeat-x,repeat-x,repeat-y,repeat-y;
+  mask-composite:intersect;
+}
+#home .pu-second-redesign .bloom-quote::before{content:none!important}
+#home .pu-second-redesign .bloom-quote::after{
+  content:""!important;position:absolute!important;inset:8px!important;
+  width:auto!important;height:auto!important;top:8px!important;bottom:8px!important;
+  left:8px!important;right:8px!important;
+  background:transparent!important;border:1px solid #ded7cf!important;
+  border-radius:0!important;transform:none!important;pointer-events:none;
+}
+
 
 </style><style>
 .pu-mode-panel{position:absolute;z-index:70;top:58px;left:10px;right:10px;padding:15px;border-radius:18px;background:var(--card,#fff);color:var(--text,#333);box-shadow:0 9px 35px #0003;display:flex;flex-direction:column;gap:10px}.pu-mode-panel[hidden]{display:none!important}.pu-mode-head{display:flex;justify-content:space-between;align-items:center}.pu-mode-head button{border:0;background:transparent;font-size:19px}.pu-mode-panel label{font-size:12px;font-weight:700}.pu-mode-panel small{font-size:11px;opacity:.65;line-height:1.6}.pu-mode-options{display:flex;gap:8px}.pu-mode-options button{flex:1;border:1px solid #ddd;border-radius:12px;padding:10px 5px;background:transparent;font-size:12px}.pu-mode-options button.active{background:#f4dce6;border-color:#d990aa;color:#75384d}.pu-mode-panel select{padding:10px;border:1px solid #ddd;border-radius:10px;background:transparent;color:inherit}.pu-story-entry{margin:14px 4px;padding:18px 15px;border-radius:14px;background:var(--card,#fff);white-space:pre-wrap;line-height:1.9;font-size:14px;overflow-wrap:anywhere}.pu-story-entry.user{border-left:3px solid #d990aa}.pu-story-by{font-size:11px;opacity:.55;margin-bottom:9px}
