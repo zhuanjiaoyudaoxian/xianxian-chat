@@ -1961,7 +1961,57 @@ function weEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 function weApplyHome(d){for(let p=0;p<2;p++){const grid=document.getElementById('bloomGrid'+(p+1));if(grid)grid.innerHTML=(d.pages[p]||[]).filter(id=>weCatalog.some(a=>a.id===id)).map(id=>bloomIcon(id)).join('')};const third=document.getElementById('weThirdApps');if(third)third.innerHTML=(d.pages[2]||[]).map(id=>bloomIcon(id)).join('');document.getElementById('home')?.style.setProperty('--we-icon-size',d.size+'px');document.getElementById('home')?.style.setProperty('--we-icon-gap',d.gap+'px');document.getElementById('home')?.style.setProperty('--we-icon-radius',d.radius+'%');document.getElementById('home')?.classList.toggle('we-hide-labels',!d.labels);document.getElementById('bloomDock')?.classList.toggle('we-hidden',!d.dock);for(let p=0;p<3;p++){const pg=document.querySelectorAll('#bloomPages>.bloom-page')[p];if(!pg)continue;for(const [id,sel] of Object.entries(weSel)){const el=pg.querySelector(sel);if(el)el.classList.toggle('we-hidden',!(d.widgets[p]||[]).includes(id));}}}
 const weOldRender=bloomRenderHome;bloomRenderHome=function(){weOldRender();weApplyHome(weSaved)};renderHome=bloomRenderHome;diyRenderHome=bloomRenderHome;
 function weSnapshot(){const home=document.getElementById('home');if(!home)return '';const clone=home.cloneNode(true);clone.classList.add('active');clone.style.display='flex';clone.querySelectorAll('script').forEach(n=>n.remove());const pages=clone.querySelectorAll('.bloom-page');pages.forEach((pg,i)=>pg.style.display=i===wePage?'flex':'none');const grids=[clone.querySelector('#bloomGrid1'),clone.querySelector('#bloomGrid2'),clone.querySelector('#weThirdApps')];grids.forEach((g,i)=>{if(g)g.innerHTML=(weDraft.pages[i]||[]).map(id=>bloomIcon(id)).join('')});clone.style.setProperty('--we-icon-size',weDraft.size+'px');clone.style.setProperty('--we-icon-gap',weDraft.gap+'px');clone.style.setProperty('--we-icon-radius',weDraft.radius+'%');clone.classList.toggle('we-hide-labels',!weDraft.labels);clone.querySelector('#bloomDock')?.classList.toggle('we-hidden',!weDraft.dock);pages.forEach((pg,p)=>Object.entries(weSel).forEach(([id,sel])=>pg.querySelector(sel)?.classList.toggle('we-hidden',!(weDraft.widgets[p]||[]).includes(id))));const sc=clone.querySelector('#bloomPages');if(sc){sc.style.display='block';sc.style.overflow='hidden';sc.style.width='100%';sc.style.height='100%';pages.forEach(pg=>{pg.style.width='100%';pg.style.minWidth='100%';pg.style.height='100%'})}return clone.outerHTML}
-function wePreview(){const frame=document.getElementById('weLiveFrame');if(!frame)return;const styles=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+styles+'</style></head><body>'+weSnapshot()+'</body></html>'; }
+function wePreview(){const frame=document.getElementById('weLiveFrame');if(!frame)return;const styles=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+styles+'</style></head><body>'+weSnapshot()+'
+<!-- Weiwei responsive fullscreen adaptation: layout-only, preserves application data and handlers -->
+<style id="wei-responsive-fullscreen-20261027">
+/* A standalone home-screen app has a different usable viewport than a Safari tab. */
+html,body{width:100%;height:100%;height:100dvh;overscroll-behavior:none}
+.app{width:100%;height:100%;height:100dvh;max-height:100dvh;min-height:0}
+.screen{min-height:0;max-height:100%;}
+.screen>.body,.screen>.pu-contacts-body{min-height:0;-webkit-overflow-scrolling:touch}
+#home{height:100%;height:100dvh;max-height:100dvh;min-height:0}
+#home .bloom-pages,#home .bloom-page{min-height:0}
+#home .bloom-page{container-type:size;}
+#home .bloom-page-two .bloom-collage{min-height:0;min-width:0;isolation:isolate;overflow:visible;}
+/* Keep the three photographs overlapping, but size them against the available
+   collage area instead of a fixed phone-height assumption. */
+#home .bloom-page-two .bloom-collage .bloom-polaroid{
+  box-sizing:border-box;
+  width:min(53%, 25cqh, 185px);
+  max-width:58%;
+  padding:clamp(4px,.65cqh,7px) clamp(4px,.65cqh,7px) clamp(7px,1cqh,11px);
+}
+#home .bloom-page-two .bloom-collage .bloom-img{aspect-ratio:4/5}
+#home .bloom-page-two .collage-a{top:3%;left:4%}
+#home .bloom-page-two .collage-b{top:1%;right:4%}
+#home .bloom-page-two .collage-c{top:36%;left:30%}
+#home .bloom-page-two .bloom-quote{min-height:0;flex-shrink:0;padding-block:clamp(7px,1.2cqh,12px)}
+#home .bloom-page-two .bloom-grid-second{flex-shrink:0}
+/* Prevent a wide fixed widget or long song title from widening the screen. */
+#home .bloom-page>*{max-width:100%;min-width:0}
+#home .bloom-player-info,#home .bloom-first-right{min-width:0}
+#home .bloom-dock{min-width:0}
+#home .bloom-dock .bloom-icon{min-width:0}
+#home .bloom-dock .bloom-icon-symbol{max-width:100%}
+@media(max-height:740px){
+  #home .bloom-page-two .bloom-collage .bloom-polaroid{width:min(45%,22cqh,155px)}
+  #home .bloom-page-two .collage-c{top:32%;left:32%}
+  #home .bloom-page-two .bloom-quote{padding-block:6px}
+}
+@media(max-height:610px){
+  #home .bloom-page-two .bloom-collage .bloom-polaroid{width:min(39%,20cqh,125px)}
+  #home .bloom-page-two .collage-c{top:29%}
+  #home .bloom-page-two .bloom-quote>span{font-size:11px}
+}
+@media(max-width:350px){
+  #home .bloom-page{padding-inline:12px}
+  #home .bloom-dock{margin-inline:9px}
+  #home .bloom-page-two .bloom-collage .bloom-polaroid{max-width:46%}
+}
+/* Do not let mobile text auto-enlargement break the carefully sized music UI. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+</style>
+</body></html>'; }
 function weRenderEditor(){const root=document.getElementById('weDesktopEditor');if(!root)return;const isApp=weMode==='apps',items=isApp?weDraft.pages[wePage]:weDraft.widgets[wePage],lib=isApp?weCatalog:Object.entries(weWidgets).map(([id,v])=>({id,name:v[0]}));root.innerHTML=`<div class="we-title">桌面美化 <span>真实桌面实时预览</span></div><div class="we-switch">${['壁纸','组件','布局'].map((t,i)=>`<button onclick="weTab(${i})" class="${window.weTabIndex===i?'on':''}">${t}</button>`).join('')}</div><div class="we-switch">${[0,1,2].map(i=>`<button class="${wePage===i?'on':''}" onclick="wePageSet(${i})">第${['一','二','三'][i]}页</button>`).join('')}</div><div class="we-frame"><iframe id="weLiveFrame" title="真实桌面实时预览" sandbox="allow-same-origin"></iframe></div><p class="we-hint">预览复用当前桌面的实际结构、图片和图标；编辑时不会修改正式桌面。</p>${window.weTabIndex===0?`<div class="we-card"><b>桌面壁纸</b><p>沿用原有壁纸上传和背景设置。</p><button onclick="weOldPanel('wall')">打开原有壁纸设置</button></div>`:window.weTabIndex===1?`<div class="we-card"><b>组件内容</b><p>照片、文字、音乐等内容继续通过原有组件设置编辑。</p><button onclick="weOldPanel('widgets')">打开原有组件设置</button></div>`:`<div class="we-switch"><button class="${isApp?'on':''}" onclick="weModeSet('apps')">编辑软件</button><button class="${!isApp?'on':''}" onclick="weModeSet('widgets')">编辑组件</button></div><div class="we-card"><b>当前页面 · ${items.length} ${isApp?'个软件':'个组件'}</b><div class="we-list">${items.map((id,i)=>`<div class="we-item"><span>${weEsc(isApp?weItem(id):weWidgets[id]?.[0]||id)}</span><button onclick="weShift(${i},-1)" aria-label="前移">↑</button><button onclick="weShift(${i},1)" aria-label="后移">↓</button><button onclick="weAcross('${weEsc(id)}')">换页</button><button onclick="weRemove('${weEsc(id)}')">移除</button></div>`).join('')}</div><label class="we-field">添加${isApp?'软件':'组件'} <select id="weAddPick">${lib.filter(x=>!items.includes(x.id)).map(x=>`<option value="${weEsc(x.id)}">${weEsc(x.name)}</option>`).join('')}</select></label><button onclick="weAdd()">＋ 添加到本页</button></div><div class="we-card"><b>图标外观</b><label class="we-field">图标大小 <output id="weSizeValue">${weDraft.size}px</output><input type="range" min="32" max="80" value="${weDraft.size}" oninput="weStyle('size',+this.value)"></label><label class="we-field">图标间距 <output id="weGapValue">${weDraft.gap}px</output><input type="range" min="0" max="28" value="${weDraft.gap}" oninput="weStyle('gap',+this.value)"></label><label class="we-field">图标圆角 <output id="weRadiusValue">${weDraft.radius}px</output><input type="range" min="0" max="40" value="${weDraft.radius}" oninput="weStyle('radius',+this.value)"></label><label><input type="checkbox" ${weDraft.labels?'checked':''} onchange="weStyle('labels',this.checked)"> 显示名称</label><label><input type="checkbox" ${weDraft.dock?'checked':''} onchange="weStyle('dock',this.checked)"> 显示 Dock</label></div>`}${weNotice?`<div class="we-error" role="alert">⚠ ${weEsc(weNotice)}</div>`:''}<div class="we-actions"><button onclick="weCancel()">取消修改</button><button onclick="weSave()">保存桌面布局</button></div>`;wePreview()}
 window.weTabIndex=2;window.weTab=i=>{window.weTabIndex=i;weRenderEditor()};window.wePageSet=i=>{wePage=i;weNotice='';weRenderEditor()};window.weModeSet=m=>{weMode=m;weNotice='';weRenderEditor()};window.weShift=(i,d)=>weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'][wePage],j=i+d;if(j>=0&&j<a.length)[a[i],a[j]]=[a[j],a[i]]});window.weAcross=id=>{const target=Number(prompt('移动到第几页？请输入 1、2 或 3',String((wePage+1)%3+1)));if(![1,2,3].includes(target))return;weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];a[wePage]=a[wePage].filter(v=>v!==id);a[target-1].push(id)})};window.weRemove=id=>weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];a[wePage]=a[wePage].filter(v=>v!==id)});window.weAdd=()=>{let id=document.getElementById('weAddPick')?.value;if(!id)return;weTry(x=>{let a=x[weMode==='apps'?'pages':'widgets'];if(weMode==='apps')a.forEach((page,i)=>a[i]=page.filter(v=>v!==id));a[wePage].push(id)})};window.weStyle=(k,v)=>{weDraft[k]=v;const label=document.getElementById('we'+k[0].toUpperCase()+k.slice(1)+'Value');if(label)label.textContent=v+'px';wePreview()};window.weSave=()=>{const errors=[0,1,2].map(i=>weValidate(weDraft,i)).filter(Boolean);if(errors.length){weNotice=errors[0];weRenderEditor();return}try{localStorage.setItem(WE_DESK_KEY,JSON.stringify(weDraft));weSaved=weClone(weDraft);bloomRenderHome();toast('桌面布局已保存')}catch(e){toast('保存失败：'+e.message)}};window.weCancel=()=>{weDraft=weClone(weSaved);weNotice='';weRenderEditor();toast('未保存的布局修改已取消')};window.weOldPanel=t=>{document.getElementById('weDesktopEditor').hidden=true;document.getElementById('weiBeautyModern').hidden=false;window.weiModernDesktopTab(t==='wall'?'wallpaper':'widgets')};
 window.weInstallDesktopEditor=function(){const weOldOpen=window.weiModernOpen;window.weiModernOpen=function(s){weOldOpen(s);const root=document.getElementById('weDesktopEditor');if(s==='desktop'){weDraft=weClone(weSaved);weNotice='';root.hidden=false;document.getElementById('weiBeautyModern').hidden=true;weRenderEditor()}else root.hidden=true};};
